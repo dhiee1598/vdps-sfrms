@@ -11,7 +11,7 @@
         <div class="text-xl font-bold">
           Student Financial Record Management System
         </div>
-        <div class="font-extralight text-sm">
+        <div class="font-light text-sm">
           Virgen Del Pilar School Rodriguez, Inc.
         </div>
       </div>
@@ -29,7 +29,7 @@
       </div>
 
       <button class="btn btn-ghost btn-circle ml-3">
-        <div class="indicator">
+        <div class="indicator tooltip tooltip-bottom" data-tip="Logout">
           <Icon name="solar:logout-3-bold-duotone" size="24" />
         </div>
       </button>
