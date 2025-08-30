@@ -3,7 +3,7 @@
     <AppNavBar />
     <div class="drawer drawer-open">
       <div class="drawer-toggle" />
-      <div class="drawer-content flex justify-center items-center pt-16 pl-60">
+      <div class="drawer-content flex justify-start  pt-16 pl-60">
         <slot />
       </div>
       <div class="drawer-side">
@@ -14,6 +14,11 @@
           <li>
             <NuxtLink to="/dashboard" class="font-medium">
               <Icon name="solar:home-broken" size="25" /> Home
+            </NuxtLink>
+          </li>
+          <li>
+            <NuxtLink to="/dashboard/users" class="font-medium">
+              <Icon name="solar:users-group-rounded-line-duotone" size="25" /> Users
             </NuxtLink>
           </li>
         </ul>

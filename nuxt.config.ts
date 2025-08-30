@@ -10,6 +10,7 @@ export default defineNuxtConfig({
     '@nuxt/icon',
     '@nuxt/image',
     '@nuxtjs/google-fonts',
+    'nuxt-auth-utils',
   ],
   eslint: {
     config: {
