@@ -9,7 +9,7 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
     '@nuxt/icon',
     '@nuxt/image',
-    '@nuxt/fonts',
+    '@nuxtjs/google-fonts',
   ],
   eslint: {
     config: {
@@ -48,14 +48,13 @@ export default defineNuxtConfig({
       },
     ],
   },
-  fonts: {
-    families: [
-      {
-        name: 'Poppins',
-        provider: 'google',
-        weights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
-        display: 'swap',
-      },
-    ],
+  googleFonts: {
+    families: {
+      Poppins: [100, 300, 400, 500, 600, 700, 800, 900],
+    },
+    display: 'swap',
+    prefetch: true,
+    preconnect: true,
+    preload: true,
   },
 });
