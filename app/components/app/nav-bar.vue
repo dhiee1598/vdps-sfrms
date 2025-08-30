@@ -1,3 +1,11 @@
+<script setup lang="ts">
+const session = useUserSession();
+async function logout() {
+  await session.clear();
+  await navigateTo('/');
+}
+</script>
+
 <template>
   <div class="navbar bg-base-100 shadow-sm fixed z-100">
     <div class="navbar-start">
@@ -28,7 +36,7 @@
         </div>
       </div>
 
-      <button class="btn btn-ghost btn-circle ml-3">
+      <button class="btn btn-ghost btn-circle ml-3" @click="logout">
         <div class="indicator tooltip tooltip-bottom" data-tip="Logout">
           <Icon name="solar:logout-3-bold-duotone" size="24" />
         </div>
