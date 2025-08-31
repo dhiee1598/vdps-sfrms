@@ -1,50 +1,42 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 
-const yearLevels = ref<any[]>([]);
+// auto-fetch year levels
+const { data: yearLevels, pending, error, refresh } = await useFetch('/api/private/year-level');
+
 const showModal = ref(false);
-const isEditing = ref(false); // track mode
+const isEditing = ref(false);
 const editingId = ref<number | null>(null);
 
 const formData = ref({
   name: '',
 });
 
-// fetch users
-async function loadYearLevels() {
-  yearLevels.value = await $fetch('/api/private/year-level', { method: 'GET' });
-}
-
-// call on mount
-onMounted(() => {
-  loadYearLevels();
-});
-
 async function handleClick() {
   try {
     if (isEditing.value && editingId.value) {
       // UPDATE
-      const response = await $fetch(`/api/private/year-level/${editingId.value}`, {
+      await $fetch(`/api/private/year-level/${editingId.value}`, {
         method: 'PUT',
         body: formData.value,
       });
-      console.warn(response, 'update response');
     }
     else {
       // CREATE
-      const response = await $fetch('/api/private/year-level', {
+      await $fetch('/api/private/year-level', {
         method: 'POST',
         body: formData.value,
       });
-      console.warn(response, 'create response');
     }
 
-    // reset + reload
+    // reset
     showModal.value = false;
     isEditing.value = false;
     editingId.value = null;
     formData.value = { name: '' };
-    await loadYearLevels();
+
+    // refresh list
+    await refresh();
   }
   catch (err) {
     console.error(err);
@@ -76,17 +68,23 @@ function openEditModal(yearLevel: any) {
         Add
       </button>
     </div>
-    <table class="table">
-      <!-- head -->
+
+    <div v-if="pending">
+      Loading...
+    </div>
+    <div v-else-if="error">
+      Error loading year levels
+    </div>
+
+    <table v-else class="table">
       <thead>
         <tr>
           <th />
           <th>Name</th>
+          <th />
         </tr>
       </thead>
       <tbody>
-        <!-- row 1 -->
-
         <tr v-for="yearLevel in yearLevels" :key="yearLevel.id">
           <th>{{ yearLevel.id }}</th>
           <td>{{ yearLevel.name }}</td>
