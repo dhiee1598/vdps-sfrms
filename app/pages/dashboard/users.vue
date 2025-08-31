@@ -62,18 +62,45 @@ async function handleClick() {
 </template> -->
 
 <script setup lang="ts">
-const users = await $fetch('/api/private/users', { method: 'GET' });
-console.warn (users, 'users');
+import { onMounted, ref } from 'vue';
+
+const users = ref<any[]>([]); // make it reactive
+const showModal = ref(false); // modal state
+
 const formData = ref({
   name: '',
   email: '',
   password: '',
 });
 
+// fetch users
+async function loadUsers() {
+  users.value = await $fetch('/api/private/users', { method: 'GET' });
+}
+
+// call on mount
+onMounted(() => {
+  loadUsers();
+});
+
 async function handleClick() {
-  console.warn(formData.value);
-  const response = await $fetch('/api/private/users', { method: 'POST', body: formData.value });
-  console.warn(response, 'response');
+  try {
+    const response = await $fetch('/api/private/users', {
+      method: 'POST',
+      body: formData.value,
+    });
+    console.warn(response, 'response');
+
+    // if successful
+    showModal.value = false; // close modal
+    await loadUsers(); // refresh list
+
+    // reset form
+    formData.value = { name: '', email: '', password: '' };
+  }
+  catch (err) {
+    console.error(err);
+  }
 }
 </script>
 
@@ -83,7 +110,7 @@ async function handleClick() {
       <p class="text-3xl">
         List of Users
       </p>
-      <button class="btn btn-primary" onclick="my_modal_1.showModal()">
+      <button class="btn btn-primary" @click="() => showModal = true">
         Create New User
       </button>
     </div>
@@ -115,7 +142,7 @@ async function handleClick() {
       </tbody>
     </table>
 
-    <dialog id="my_modal_1" class="modal">
+    <dialog :open="showModal" class="modal">
       <div class="modal-box ">
         <h3 class="text-lg font-bold">
           Hello!
@@ -167,9 +194,13 @@ async function handleClick() {
               <button type="submit" class="btn btn-primary">
                 create
               </button>
-              <!-- <button type="submit" class="btn btn-warning">
+              <button
+                type="button"
+                class="btn btn-warning"
+                @click="showModal = false"
+              >
                 close
-              </button> -->
+              </button>
             </div>
           </form>
         </div>
