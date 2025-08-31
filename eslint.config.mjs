@@ -13,6 +13,7 @@ export default withNuxt(antfu({
     semi: true,
     quotes: 'single',
   },
+  ignores: ["**/migrations/*"],
 }, {
   rules: {
     'vue/max-attributes-per-line': ['error', {
