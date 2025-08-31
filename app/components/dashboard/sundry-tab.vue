@@ -3,7 +3,7 @@
 import { ref } from 'vue';
 
 const { data: sundries, pending, error, refresh } = await useFetch('/api/private/sundries');
-const { data: feeTypes, pending: feeTypesPending, error: feeTypesError, refresh: feeTypesRefresh } = await useFetch('/api/private/fee-types');
+const { data: feeTypes } = await useFetch('/api/private/fee-types');
 const showModal = ref(false);
 const isEditing = ref(false);
 const editingId = ref<number | null>(null);
@@ -80,6 +80,12 @@ function openEditModal(item: any) {
       </button>
     </div>
 
+    <div v-if="pending">
+      Loading...
+    </div>
+    <div v-else-if="error">
+      Error loading courses
+    </div>
     <table class="table w-full">
       <thead>
         <tr>
