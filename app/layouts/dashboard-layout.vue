@@ -32,6 +32,12 @@
               <Icon name="solar:notebook-minimalistic-linear" size="25" /> Courses
             </NuxtLink>
           </li>
+
+          <li>
+            <NuxtLink to="/dashboard/settings" class="font-medium">
+              <Icon name="solar:settings-linear" size="25" /> Settings
+            </NuxtLink>
+          </li>
         </ul>
       </div>
     </div>
