@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 
-const courses = ref<any[]>([]);
+const { data: courses, pending, error, refresh } = await useFetch('/api/private/courses');
+
 const showModal = ref(false);
-const isEditing = ref(false); // track mode
+const isEditing = ref(false);
 const editingId = ref<number | null>(null);
 
 const formData = ref({
@@ -11,33 +12,21 @@ const formData = ref({
   course_description: '',
 });
 
-// fetch users
-async function loadCourses() {
-  courses.value = await $fetch('/api/private/courses', { method: 'GET' });
-}
-
-// call on mount
-onMounted(() => {
-  loadCourses();
-});
-
 async function handleClick() {
   try {
     if (isEditing.value && editingId.value) {
       // UPDATE
-      const response = await $fetch(`/api/private/courses/${editingId.value}`, {
+      await $fetch(`/api/private/courses/${editingId.value}`, {
         method: 'PUT',
         body: formData.value,
       });
-      console.warn(response, 'update response');
     }
     else {
       // CREATE
-      const response = await $fetch('/api/private/courses', {
+      await $fetch('/api/private/courses', {
         method: 'POST',
         body: formData.value,
       });
-      console.warn(response, 'create response');
     }
 
     // reset + reload
@@ -45,7 +34,9 @@ async function handleClick() {
     isEditing.value = false;
     editingId.value = null;
     formData.value = { course_name: '', course_description: '' };
-    await loadCourses();
+
+    // refresh Nuxt data
+    await refresh();
   }
   catch (err) {
     console.error(err);
@@ -62,7 +53,10 @@ function openCreateModal() {
 function openEditModal(course: any) {
   isEditing.value = true;
   editingId.value = course.id;
-  formData.value = { course_name: course.course_name, course_description: course.course_description };
+  formData.value = {
+    course_name: course.course_name,
+    course_description: course.course_description,
+  };
   showModal.value = true;
 }
 </script>
@@ -77,18 +71,23 @@ function openEditModal(course: any) {
         Add
       </button>
     </div>
-    <table class="table">
-      <!-- head -->
+
+    <div v-if="pending">
+      Loading...
+    </div>
+    <div v-else-if="error">
+      Error loading courses
+    </div>
+    <table v-else class="table">
       <thead>
         <tr>
           <th />
           <th>Course Name</th>
           <th>Course Description</th>
+          <th />
         </tr>
       </thead>
       <tbody>
-        <!-- row 1 -->
-
         <tr v-for="course in courses" :key="course.id">
           <th>{{ course.id }}</th>
           <td>{{ course.course_name }}</td>
