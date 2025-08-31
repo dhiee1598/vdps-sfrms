@@ -26,6 +26,12 @@
               <Icon name="solar:square-academic-cap-2-outline" size="25" /> Year Level
             </NuxtLink>
           </li>
+
+          <li>
+            <NuxtLink to="/dashboard/courses" class="font-medium">
+              <Icon name="solar:notebook-minimalistic-linear" size="25" /> Courses
+            </NuxtLink>
+          </li>
         </ul>
       </div>
     </div>
