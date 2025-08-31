@@ -3,7 +3,7 @@
     <AppNavBar />
     <div class="drawer drawer-open">
       <div class="drawer-toggle" />
-      <div class="drawer-content flex justify-start  pt-16 pl-60">
+      <div class="drawer-content flex justify-start  pt-18 pl-60">
         <slot />
       </div>
       <div class="drawer-side">

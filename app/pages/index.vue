@@ -8,11 +8,10 @@ const formData = ref({
 });
 
 async function handleClick() {
-  console.warn(formData.value);
-  const response = await $fetch('/api/auth/login', { method: 'POST', body: formData.value });
-  console.warn(response.success, 'response');
-  if (response.success) {
-    navigateTo('/dashboard');
+  const { success } = await $fetch('/api/auth/login', { method: 'POST', body: formData.value });
+
+  if (success) {
+    await navigateTo('/dashboard');
   }
 }
 </script>
