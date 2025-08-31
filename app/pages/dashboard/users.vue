@@ -64,10 +64,29 @@ async function handleClick() {
 <script setup lang="ts">
 const users = await $fetch('/api/private/users', { method: 'GET' });
 console.warn (users, 'users');
+const formData = ref({
+  name: '',
+  email: '',
+  password: '',
+});
+
+async function handleClick() {
+  console.warn(formData.value);
+  const response = await $fetch('/api/private/users', { method: 'POST', body: formData.value });
+  console.warn(response, 'response');
+}
 </script>
 
 <template>
   <div class="w-full p-10">
+    <div class="flex flex-row justify-between my-4">
+      <p class="text-3xl">
+        List of Users
+      </p>
+      <button class="btn btn-primary" onclick="my_modal_1.showModal()">
+        Create New User
+      </button>
+    </div>
     <table class="table">
       <!-- head -->
       <thead>
@@ -95,5 +114,66 @@ console.warn (users, 'users');
         </tr>
       </tbody>
     </table>
+
+    <dialog id="my_modal_1" class="modal">
+      <div class="modal-box ">
+        <h3 class="text-lg font-bold">
+          Hello!
+        </h3>
+        <p class="py-4">
+          Press ESC key or click the button below to close
+        </p>
+        <div class="modal-action">
+          <form class="flex flex-col gap-4 w-full" @submit.prevent="handleClick">
+            <fieldset class="fieldset">
+              <legend class="fieldset-legend">
+                User's Full Name?
+              </legend>
+              <input
+                v-model="formData.name"
+                type="text"
+                class="input w-full"
+                placeholder="Type here"
+                required
+              >
+            </fieldset>
+
+            <fieldset class="fieldset">
+              <legend class="fieldset-legend">
+                User's Email
+              </legend>
+              <input
+                v-model="formData.email"
+                type="email"
+                class="input w-full"
+                placeholder="Type here"
+                required
+              >
+            </fieldset>
+
+            <fieldset class="fieldset">
+              <legend class="fieldset-legend">
+                User's Password
+              </legend>
+              <input
+                v-model="formData.password"
+                type="password"
+                class="input w-full"
+                placeholder="Type here"
+                required
+              >
+            </fieldset>
+            <div class="flex flex-row justify-end gap-2">
+              <button type="submit" class="btn btn-primary">
+                create
+              </button>
+              <!-- <button type="submit" class="btn btn-warning">
+                close
+              </button> -->
+            </div>
+          </form>
+        </div>
+      </div>
+    </dialog>
   </div>
 </template>
