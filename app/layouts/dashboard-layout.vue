@@ -21,6 +21,11 @@
               <Icon name="solar:users-group-rounded-line-duotone" size="25" /> Users
             </NuxtLink>
           </li>
+          <li>
+            <NuxtLink to="/dashboard/year-level" class="font-medium">
+              <Icon name="solar:square-academic-cap-2-outline" size="25" /> Year Level
+            </NuxtLink>
+          </li>
         </ul>
       </div>
     </div>
