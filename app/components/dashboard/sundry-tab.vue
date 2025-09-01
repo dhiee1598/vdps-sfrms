@@ -76,7 +76,7 @@ function openEditModal(item: any) {
         List of Sundries
       </h2>
       <button class="btn btn-primary" @click="openCreateModal">
-        New Sundry
+        <Icon name="solar:add-circle-linear" size="24" />New Sundry
       </button>
     </div>
 
@@ -89,11 +89,19 @@ function openEditModal(item: any) {
     <table class="table w-full">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Amount (₱)</th>
-          <th>Type</th>
-          <th />
+          <th class="w-1/5">
+            ID
+          </th>
+          <th class="w-1/5">
+            Name
+          </th>
+          <th class="w-1/5">
+            Amount (₱)
+          </th>
+          <th class="w-full">
+            Type
+          </th>
+          <th class="w-1/5 " />
         </tr>
       </thead>
       <tbody>
@@ -150,7 +158,7 @@ function openEditModal(item: any) {
 
             <fieldset class="fieldset">
               <legend class="fieldset-legend">
-                Price
+                Amount
               </legend>
               <input
                 v-model="formData.amount"
