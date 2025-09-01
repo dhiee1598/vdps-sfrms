@@ -18,7 +18,7 @@
           </li>
           <li>
             <NuxtLink to="/dashboard/users" class="font-medium">
-              <Icon name="solar:users-group-rounded-line-duotone" size="25" /> Users
+              <Icon name="solar:key-broken" size="25" /> Accounts
             </NuxtLink>
           </li>
           <li>
@@ -32,10 +32,9 @@
               <Icon name="solar:notebook-minimalistic-linear" size="25" /> Courses
             </NuxtLink>
           </li>
-
           <li>
-            <NuxtLink to="/dashboard/settings" class="font-medium">
-              <Icon name="solar:settings-linear" size="25" /> Settings
+            <NuxtLink to="/dashboard/students" class="font-medium">
+              <Icon name="solar:users-group-rounded-line-duotone" size="25" /> Students
             </NuxtLink>
           </li>
         </ul>
