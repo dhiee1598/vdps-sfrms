@@ -28,7 +28,7 @@ watch(() => props.student, (newVal) => {
   <div>
     <form @submit.prevent="emit('submit', formData)">
       <h3 class="text-lg font-bold">
-        {{ props.isEditing ? 'Update Student' : 'Add Student' }}
+        {{ props.isEditing ? `Student ID: ${localStudent.id}` : 'Add Student' }}
       </h3>
       <fieldset class="fieldset">
         <legend class="fieldset-legend">

@@ -9,3 +9,6 @@
 body {
   font-family: 'Poppins';
 }
+html {
+  scrollbar-gutter: auto !important;
+}
