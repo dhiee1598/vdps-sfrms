@@ -67,7 +67,7 @@ function resetForm() {
         List of Fee Types
       </h2>
       <button class="btn btn-primary" @click="openNewModal">
-        New Fee
+        <Icon name="solar:add-circle-linear" size="24" />New Fee
       </button>
     </div>
 
@@ -91,9 +91,13 @@ function resetForm() {
       <table class="table w-full">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th />
+            <th class="w-1/3">
+              ID
+            </th>
+            <th class="w-full">
+              Name
+            </th>
+            <th class="w-1" />
           </tr>
         </thead>
         <tbody>
