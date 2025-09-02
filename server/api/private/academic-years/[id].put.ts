@@ -1,5 +1,5 @@
 import db from '~~/server/db';
-import { yearLevel } from '~~/server/db/schema/year-level-schema';
+import { academicYears } from '~~/server/db/schema/academic-years-schema';
 import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
@@ -10,9 +10,9 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event);
 
-  const result = await db.update(yearLevel)
-    .set({ name: body.name })
-    .where(eq(yearLevel.id, id))
+  const result = await db.update(academicYears)
+    .set({ academic_year: body.academic_year, status: body.status })
+    .where(eq(academicYears.id, id))
     .execute();
 
   return { success: true, data: result };

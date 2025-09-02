@@ -1,5 +1,5 @@
 import db from '~~/server/db';
-import { course } from '~~/server/db/schema/course-schema';
+import { fees } from '~~/server/db/schema/fees-schema';
 import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
@@ -10,9 +10,9 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event);
 
-  const result = await db.update(course)
-    .set({ course_name: body.course_name, course_description: body.course_description })
-    .where(eq(course.id, id))
+  const result = await db.update(fees)
+    .set({ fee_name: body.fee_name })
+    .where(eq(fees.id, id))
     .execute();
 
   return { success: true, data: result };

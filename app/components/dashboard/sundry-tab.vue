@@ -3,16 +3,14 @@
 import { ref } from 'vue';
 
 const { data: sundries, pending, error, refresh } = await useFetch('/api/private/sundries');
-const { data: feeTypes } = await useFetch('/api/private/fee-types');
 const showModal = ref(false);
 const isEditing = ref(false);
 const editingId = ref<number | null>(null);
 
 const formData = ref({
-  name: '',
-  description: '',
-  amount: '',
-  typeId: '',
+  sundry_name: '',
+  sundry_description: '',
+  sundry_amount: '',
 });
 
 async function handleClick() {
@@ -37,7 +35,7 @@ async function handleClick() {
     showModal.value = false;
     isEditing.value = false;
     editingId.value = null;
-    formData.value = { name: '', description: '', amount: '', typeId: '' };
+    formData.value = { sundry_name: '', sundry_description: '', sundry_amount: '' };
 
     // refresh Nuxt data
     await refresh();
@@ -50,7 +48,7 @@ async function handleClick() {
 function openCreateModal() {
   isEditing.value = false;
   editingId.value = null;
-  formData.value = { name: '', description: '', amount: '', typeId: '' };
+  formData.value = { sundry_name: '', sundry_description: '', sundry_amount: '' };
   showModal.value = true;
 }
 
@@ -59,10 +57,9 @@ function openEditModal(item: any) {
   editingId.value = item.id;
 
   formData.value = {
-    name: item.name,
-    description: item.description,
-    amount: item.amount,
-    typeId: String(item.typeId), // store the raw typeId for the <select>
+    sundry_name: item.sundry_name,
+    sundry_description: item.sundry_description,
+    sundry_amount: item.sundry_amount,
   };
 
   showModal.value = true;
@@ -70,13 +67,13 @@ function openEditModal(item: any) {
 </script>
 
 <template>
-  <div class="p-4">
-    <div class="flex flex-row justify-between">
-      <h2 class="text-xl font-bold mb-4">
+  <div class="p-10 w-full">
+    <div class="flex flex-row justify-between my-4">
+      <p class="text-3xl">
         List of Sundries
-      </h2>
+      </p>
       <button class="btn btn-primary" @click="openCreateModal">
-        <Icon name="solar:add-circle-linear" size="24" />New Sundry
+        <Icon name="solar:add-circle-linear" size="24" />Add Sundry
       </button>
     </div>
 
@@ -92,27 +89,23 @@ function openEditModal(item: any) {
           <th class="w-1/5">
             ID
           </th>
-          <th class="w-1/5">
+          <th class="w-1/3">
             Name
           </th>
-          <th class="w-1/5">
-            Amount (₱)
-          </th>
           <th class="w-full">
-            Type
+            Amount (₱)
           </th>
           <th class="w-1/5 " />
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in sundries" :key="item.id">
-          <td>{{ item.id }}</td>
-          <td>{{ item.name }}</td>
-          <td>{{ item.amount }}</td>
-          <td>{{ item.feeTypeName }}</td>
+        <tr v-for="sundry in sundries" :key="sundry.id">
+          <td>{{ sundry.id }}</td>
+          <td>{{ sundry.sundry_name }}</td>
+          <td>{{ sundry.sundry_amount }}</td>
 
           <td>
-            <button class="btn btn-sm btn-primary" @click="openEditModal(item)">
+            <button class="btn btn-sm btn-primary" @click="openEditModal(sundry)">
               Edit
             </button>
           </td>
@@ -135,7 +128,7 @@ function openEditModal(item: any) {
                 Sundry Name
               </legend>
               <input
-                v-model="formData.name"
+                v-model="formData.sundry_name"
                 type="text"
                 class="input w-full"
                 placeholder="Type here"
@@ -148,7 +141,7 @@ function openEditModal(item: any) {
                 Description
               </legend>
               <input
-                v-model="formData.description"
+                v-model="formData.sundry_description"
                 type="text"
                 class="input w-full"
                 placeholder="Type here"
@@ -161,34 +154,12 @@ function openEditModal(item: any) {
                 Amount
               </legend>
               <input
-                v-model="formData.amount"
+                v-model="formData.sundry_amount"
                 type="text"
                 class="input w-full"
                 placeholder="Type here"
                 required
               >
-            </fieldset>
-
-            <fieldset class="fieldset">
-              <legend class="fieldset-legend">
-                Type
-              </legend>
-              <select
-                v-model="formData.typeId"
-                class="select w-full"
-                required
-              >
-                <option value="">
-                  Select a type
-                </option>
-                <option
-                  v-for="type in feeTypes"
-                  :key="type.id"
-                  :value="String(type.id)"
-                >
-                  {{ type.name }}
-                </option>
-              </select>
             </fieldset>
 
             <div class="flex flex-row justify-end gap-2">

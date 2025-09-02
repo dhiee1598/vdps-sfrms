@@ -13,9 +13,9 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { name, description, typeId, amount } = body.data;
+  const { sundry_name, sundry_description, sundry_amount } = body.data;
 
-  const [existingSundry] = await db.select().from(sundries).where(eq(sundries.name, name));
+  const [existingSundry] = await db.select().from(sundries).where(eq(sundries.sundry_name, sundry_name));
 
   if (existingSundry) {
     throw createError({
@@ -26,10 +26,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const [createdSundry] = await db.insert(sundries).values({
-    name,
-    description,
-    typeId,
-    amount,
+    sundry_name,
+    sundry_description,
+    sundry_amount,
   }).$returningId();
 
   return {

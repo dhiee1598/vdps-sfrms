@@ -16,13 +16,12 @@ export default defineEventHandler(async (event) => {
 
   // ✅ 2. Read and validate body payload
   const body = await readBody<{
-    name?: string;
-    description?: string;
-    amount?: string;
-    typeId?: number;
+    sundry_name?: string;
+    sundry_description?: string;
+    sundry_amount?: string;
   }>(event);
 
-  if (!body || !body.name || !body.amount || !body.typeId) {
+  if (!body || !body.sundry_name || !body.sundry_amount) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Missing Fields',
@@ -34,10 +33,9 @@ export default defineEventHandler(async (event) => {
   const result = await db
     .update(sundries)
     .set({
-      name: body.name,
-      description: body.description ?? null,
-      amount: body.amount,
-      typeId: body.typeId,
+      sundry_name: body.sundry_name,
+      sundry_description: body.sundry_description ?? null,
+      sundry_amount: body.sundry_amount,
     })
     .where(eq(sundries.id, id))
     .execute();

@@ -1,27 +1,29 @@
 <!-- components/dashboard/SundryTab.vue -->
 <script setup lang="ts">
-const { data: feeTypes, pending, error, refresh } = await useFetch('/api/private/fee-types');
+const { data: fees, pending, error, refresh } = await useFetch('/api/private/fees');
 
 const showModal = ref(false);
 const isEditing = ref(false);
 const editingId = ref<number | null>(null);
 
 const formData = ref({
-  name: '',
+  fee_name: '',
+  fee_amount: '',
+  fee_description: '',
 });
 
 async function handleClick() {
   try {
     if (isEditing.value && editingId.value) {
       // UPDATE
-      await $fetch(`/api/private/fee-types/${editingId.value}`, {
+      await $fetch(`/api/private/fees/${editingId.value}`, {
         method: 'PUT',
         body: formData.value,
       });
     }
     else {
       // CREATE
-      await $fetch('/api/private/fee-types', {
+      await $fetch('/api/private/fees', {
         method: 'POST',
         body: formData.value,
       });
@@ -38,11 +40,13 @@ async function handleClick() {
   }
 }
 
-function openEditModal(feeType: any) {
+function openEditModal(fee: any) {
   isEditing.value = true;
-  editingId.value = feeType.id;
+  editingId.value = fee.id;
   formData.value = {
-    name: feeType.name,
+    fee_name: fee.fee_name,
+    fee_amount: fee.fee_amount,
+    fee_description: fee.fee_description,
   };
   showModal.value = true;
 }
@@ -55,15 +59,15 @@ function openNewModal() {
 function resetForm() {
   isEditing.value = false;
   editingId.value = null;
-  formData.value = { name: '' };
+  formData.value = { fee_name: '', fee_amount: '', fee_description: '' };
   showModal.value = false;
 }
 </script>
 
 <template>
-  <div class="p-4 w-full">
-    <div class="flex flex-row justify-between">
-      <h2 class="text-xl font-bold mb-4">
+  <div class="p-10 w-full">
+    <div class="flex flex-row justify-between my-4">
+      <h2 class="text-3xl">
         List of Fee Types
       </h2>
       <button class="btn btn-primary" @click="openNewModal">
@@ -82,7 +86,7 @@ function resetForm() {
     </div>
 
     <!-- Empty -->
-    <div v-else-if="!feeTypes?.length" class="flex justify-center items-center py-10 shadow-lg">
+    <div v-else-if="!fees?.length" class="flex justify-center items-center py-10 shadow-lg">
       <span class="font-bold">NO FEE FOUND</span>
     </div>
 
@@ -91,19 +95,27 @@ function resetForm() {
       <table class="table w-full">
         <thead>
           <tr>
-            <th class="w-1/3">
+            <th class="w-1/8">
               ID
             </th>
-            <th class="w-full">
+            <th class="w-1/3">
               Name
             </th>
-            <th class="w-1" />
+            <th class="w-1/3">
+              Description
+            </th>
+            <th class="w-full">
+              Amount
+            </th>
+            <th />
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in feeTypes" :key="item.id">
+          <tr v-for="item in fees" :key="item.id">
             <td>{{ item.id }}</td>
-            <td>{{ item.name }}</td>
+            <td>{{ item.fee_name }}</td>
+            <td>{{ item.fee_description }}</td>
+            <td>{{ item.fee_amount }}</td>
             <td>
               <button class="btn btn-sm btn-primary" @click="openEditModal(item)">
                 Edit
@@ -128,11 +140,36 @@ function resetForm() {
         >
           <fieldset class="fieldset">
             <legend class="fieldset-legend">
-              Fee Type Name
+              Fee Name
             </legend>
             <input
-              v-model="formData.name"
+              v-model="formData.fee_name"
               type="text"
+              class="input w-full"
+              placeholder="Type here"
+              required
+            >
+          </fieldset>
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">
+              Fee Description
+            </legend>
+            <input
+              v-model="formData.fee_description"
+              type="text"
+              class="input w-full"
+              placeholder="Type here"
+              required
+            >
+          </fieldset>
+
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">
+              Fee Amount
+            </legend>
+            <input
+              v-model="formData.fee_amount"
+              type="number"
               class="input w-full"
               placeholder="Type here"
               required
