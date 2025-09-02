@@ -1,0 +1,3 @@
+<template>
+  the strands
+</template>
