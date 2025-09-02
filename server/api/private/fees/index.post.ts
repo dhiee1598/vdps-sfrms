@@ -1,12 +1,12 @@
 import db from '~~/server/db';
-import { feeTypeInsertSchema, feeTypes } from '~~/server/db/schema/fee-type-schema';
+import { fees, feesInsertSchema } from '~~/server/db/schema/fees-schema';
 import { eq } from 'drizzle-orm';
 // A Nuxt.js server route handler for creating a new year level.
 export default defineEventHandler(async (event) => {
   // Read and validate the request body against the year level insertion schema.
   // The yearLevelInsertSchema.safeParse() method ensures type-safe and
   // robust validation, returning a result object for easy error handling.
-  const body = await readValidatedBody(event, feeTypeInsertSchema.safeParse);
+  const body = await readValidatedBody(event, feesInsertSchema.safeParse);
 
   // If validation fails, throw a 400 Bad Request error with a descriptive message.
   if (!body.success) {
@@ -18,10 +18,10 @@ export default defineEventHandler(async (event) => {
   }
 
   // Destructure the validated data from the successful parsing result.
-  const { name } = body.data;
+  const { fee_name, fee_description, fee_amount } = body.data;
 
   // Check if a year level with the same name already exists in the database.
-  const [existingFeeType] = await db.select().from(feeTypes).where(eq(feeTypes.name, name));
+  const [existingFeeType] = await db.select().from(fees).where(eq(fees.fee_name, fee_name));
 
   // If a duplicate year level is found, throw a 409 Conflict error.
   if (existingFeeType) {
@@ -35,8 +35,10 @@ export default defineEventHandler(async (event) => {
   // Insert the new year level into the database and return the newly created record.
   // The .returning() method is used here to get the complete inserted object,
   // including the auto-generated ID, in a single, efficient operation.
-  const [createdFeeType] = await db.insert(feeTypes).values({
-    name,
+  const [createdFeeType] = await db.insert(fees).values({
+    fee_name,
+    fee_description,
+    fee_amount,
   }).$returningId();
 
   // Return a success response along with the created year level data.

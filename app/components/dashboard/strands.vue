@@ -1,31 +1,29 @@
-<!-- components/dashboard/SundryTab.vue -->
 <script setup lang="ts">
 import { ref } from 'vue';
 
-const { data: sundries, pending, error, refresh } = await useFetch('/api/private/sundries');
+const { data: strands, pending, error, refresh } = await useFetch('/api/private/strands');
+
 const showModal = ref(false);
 const isEditing = ref(false);
 const editingId = ref<number | null>(null);
 
 const formData = ref({
-  sundry_name: '',
-  sundry_description: '',
-  sundry_amount: '',
+  strand_name: '',
+  strand_description: '',
 });
 
 async function handleClick() {
-  console.warn(formData.value);
   try {
     if (isEditing.value && editingId.value) {
       // UPDATE
-      await $fetch(`/api/private/sundries/${editingId.value}`, {
+      await $fetch(`/api/private/strands/${editingId.value}`, {
         method: 'PUT',
         body: formData.value,
       });
     }
     else {
       // CREATE
-      await $fetch('/api/private/sundries', {
+      await $fetch('/api/private/strands', {
         method: 'POST',
         body: formData.value,
       });
@@ -35,7 +33,7 @@ async function handleClick() {
     showModal.value = false;
     isEditing.value = false;
     editingId.value = null;
-    formData.value = { sundry_name: '', sundry_description: '', sundry_amount: '' };
+    formData.value = { strand_name: '', strand_description: '' };
 
     // refresh Nuxt data
     await refresh();
@@ -48,32 +46,29 @@ async function handleClick() {
 function openCreateModal() {
   isEditing.value = false;
   editingId.value = null;
-  formData.value = { sundry_name: '', sundry_description: '', sundry_amount: '' };
+  formData.value = { strand_name: '', strand_description: '' };
   showModal.value = true;
 }
 
-function openEditModal(item: any) {
+function openEditModal(strand: any) {
   isEditing.value = true;
-  editingId.value = item.id;
-
+  editingId.value = strand.id;
   formData.value = {
-    sundry_name: item.sundry_name,
-    sundry_description: item.sundry_description,
-    sundry_amount: item.sundry_amount,
+    strand_name: strand.strand_name,
+    strand_description: strand.strand_description,
   };
-
   showModal.value = true;
 }
 </script>
 
 <template>
-  <div class="p-10 w-full">
+  <div class="w-full p-10">
     <div class="flex flex-row justify-between my-4">
       <p class="text-3xl">
-        List of Sundries
+        List of Strands
       </p>
       <button class="btn btn-primary" @click="openCreateModal">
-        <Icon name="solar:add-circle-linear" size="24" />Add Sundry
+        <Icon name="solar:add-circle-linear" size="24" />Add Strand
       </button>
     </div>
 
@@ -83,52 +78,49 @@ function openEditModal(item: any) {
     <div v-else-if="error">
       Error loading courses
     </div>
-    <table class="table w-full">
+    <table v-else class="table">
       <thead>
         <tr>
-          <th class="w-1/5">
+          <th class="w-1/3">
             ID
           </th>
           <th class="w-1/3">
-            Name
+            Strand Name
           </th>
           <th class="w-full">
-            Amount (₱)
+            Strand Description
           </th>
-          <th class="w-1/5 " />
+          <th class="1" />
         </tr>
       </thead>
       <tbody>
-        <tr v-for="sundry in sundries" :key="sundry.id">
-          <td>{{ sundry.id }}</td>
-          <td>{{ sundry.sundry_name }}</td>
-          <td>{{ sundry.sundry_amount }}</td>
-
+        <tr v-for="strand in strands" :key="strand.id">
+          <th>{{ strand.id }}</th>
+          <td>{{ strand.strand_name }}</td>
+          <td>{{ strand.strand_description }}</td>
           <td>
-            <button class="btn btn-sm btn-primary" @click="openEditModal(sundry)">
-              Edit
+            <button class="btn btn-primary btn-sm" @click="openEditModal(strand)">
+              update
             </button>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <!-- MODAL -->
-
     <dialog :open="showModal" class="modal">
       <div class="modal-box">
         <h3 class="text-lg font-bold">
-          {{ isEditing ? 'Update Sundry' : 'Add Sundry' }}
+          {{ isEditing ? 'Update Course' : 'Add Course' }}
         </h3>
 
         <div class="modal-action">
           <form class="flex flex-col gap-4 w-full" @submit.prevent="handleClick">
             <fieldset class="fieldset">
               <legend class="fieldset-legend">
-                Sundry Name
+                Course Name
               </legend>
               <input
-                v-model="formData.sundry_name"
+                v-model="formData.strand_name"
                 type="text"
                 class="input w-full"
                 placeholder="Type here"
@@ -138,23 +130,10 @@ function openEditModal(item: any) {
 
             <fieldset class="fieldset">
               <legend class="fieldset-legend">
-                Description
+                Course Description
               </legend>
               <input
-                v-model="formData.sundry_description"
-                type="text"
-                class="input w-full"
-                placeholder="Type here"
-                required
-              >
-            </fieldset>
-
-            <fieldset class="fieldset">
-              <legend class="fieldset-legend">
-                Amount
-              </legend>
-              <input
-                v-model="formData.sundry_amount"
+                v-model="formData.strand_description"
                 type="text"
                 class="input w-full"
                 placeholder="Type here"
@@ -178,6 +157,5 @@ function openEditModal(item: any) {
         </div>
       </div>
     </dialog>
-    <!-- END MODAL -->
   </div>
 </template>

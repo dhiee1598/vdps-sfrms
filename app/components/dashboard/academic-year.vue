@@ -1,41 +1,41 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-const { data: courses, pending, error, refresh } = await useFetch('/api/private/courses');
+// auto-fetch year levels
+const { data: academicYears, pending, error, refresh } = await useFetch('/api/private/academic-years');
 
 const showModal = ref(false);
 const isEditing = ref(false);
 const editingId = ref<number | null>(null);
 
 const formData = ref({
-  course_name: '',
-  course_description: '',
+  academic_year: '',
 });
 
 async function handleClick() {
   try {
     if (isEditing.value && editingId.value) {
       // UPDATE
-      await $fetch(`/api/private/courses/${editingId.value}`, {
+      await $fetch(`/api/private/academic-years/${editingId.value}`, {
         method: 'PUT',
         body: formData.value,
       });
     }
     else {
       // CREATE
-      await $fetch('/api/private/courses', {
+      await $fetch('/api/private/academic-years', {
         method: 'POST',
         body: formData.value,
       });
     }
 
-    // reset + reload
+    // reset
     showModal.value = false;
     isEditing.value = false;
     editingId.value = null;
-    formData.value = { course_name: '', course_description: '' };
+    formData.value = { academic_year: '' };
 
-    // refresh Nuxt data
+    // refresh list
     await refresh();
   }
   catch (err) {
@@ -46,18 +46,28 @@ async function handleClick() {
 function openCreateModal() {
   isEditing.value = false;
   editingId.value = null;
-  formData.value = { course_name: '', course_description: '' };
+  formData.value = { academic_year: '' };
   showModal.value = true;
 }
 
-function openEditModal(course: any) {
+function openEditModal(academicYear: any) {
   isEditing.value = true;
-  editingId.value = course.id;
-  formData.value = {
-    course_name: course.course_name,
-    course_description: course.course_description,
-  };
+  editingId.value = academicYear.id;
+  formData.value = { academic_year: academicYear.academic_year };
   showModal.value = true;
+}
+
+async function toggleStatus(id: number, newStatus: boolean) {
+  try {
+    await $fetch(`/api/private/academic-years/${id}`, {
+      method: 'PUT',
+      body: { status: newStatus },
+    });
+    refresh(); // re-fetch the list
+  }
+  catch (err) {
+    console.error(err);
+  }
 }
 </script>
 
@@ -65,10 +75,10 @@ function openEditModal(course: any) {
   <div class="w-full p-10">
     <div class="flex flex-row justify-between my-4">
       <p class="text-3xl">
-        List of Courses
+        List of Academic Years
       </p>
       <button class="btn btn-primary" @click="openCreateModal">
-        Add
+        <Icon name="solar:add-circle-linear" size="24" /> Add Academic Year
       </button>
     </div>
 
@@ -76,24 +86,38 @@ function openEditModal(course: any) {
       Loading...
     </div>
     <div v-else-if="error">
-      Error loading courses
+      Error loading year levels
     </div>
+
     <table v-else class="table">
       <thead>
         <tr>
-          <th />
-          <th>Course Name</th>
-          <th>Course Description</th>
-          <th />
+          <th class="w-1/3">
+            ID
+          </th>
+          <th class="w-1/3">
+            Name
+          </th>
+          <th class="w-full">
+            Status
+          </th>
+          <th class="w-1" />
         </tr>
       </thead>
       <tbody>
-        <tr v-for="course in courses" :key="course.id">
-          <th>{{ course.id }}</th>
-          <td>{{ course.course_name }}</td>
-          <td>{{ course.course_description }}</td>
+        <tr v-for="item in academicYears" :key="item.id">
+          <th>{{ item.id }}</th>
+          <td>{{ item.academic_year }}</td>
           <td>
-            <button class="btn btn-primary" @click="openEditModal(course)">
+            <input
+              type="checkbox"
+              class="toggle toggle-success"
+              :checked="item.status"
+              @change="toggleStatus(item.id, !item.status)"
+            >
+          </td>
+          <td>
+            <button class="btn btn-primary btn-sm" @click="openEditModal(item)">
               update
             </button>
           </td>
@@ -104,30 +128,17 @@ function openEditModal(course: any) {
     <dialog :open="showModal" class="modal">
       <div class="modal-box">
         <h3 class="text-lg font-bold">
-          {{ isEditing ? 'Update Course' : 'Add Course' }}
+          {{ isEditing ? 'Update Academic Level' : 'Add Academic Level' }}
         </h3>
 
         <div class="modal-action">
           <form class="flex flex-col gap-4 w-full" @submit.prevent="handleClick">
             <fieldset class="fieldset">
               <legend class="fieldset-legend">
-                Course Name
+                Academic Level Name
               </legend>
               <input
-                v-model="formData.course_name"
-                type="text"
-                class="input w-full"
-                placeholder="Type here"
-                required
-              >
-            </fieldset>
-
-            <fieldset class="fieldset">
-              <legend class="fieldset-legend">
-                Course Description
-              </legend>
-              <input
-                v-model="formData.course_description"
+                v-model="formData.academic_year"
                 type="text"
                 class="input w-full"
                 placeholder="Type here"
