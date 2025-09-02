@@ -15,6 +15,27 @@
       "when": 1756651235533,
       "tag": "0001_lively_lightspeed",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1756656993176,
+      "tag": "0002_clever_sasquatch",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1756658279094,
+      "tag": "0003_bouncy_maximus",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1756724278630,
+      "tag": "0004_optimal_scream",
+      "breakpoints": true
     }
   ]
 }
