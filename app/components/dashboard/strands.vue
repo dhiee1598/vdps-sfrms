@@ -117,7 +117,7 @@ function openEditModal(strand: any) {
           <form class="flex flex-col gap-4 w-full" @submit.prevent="handleClick">
             <fieldset class="fieldset">
               <legend class="fieldset-legend">
-                Course Name
+                Strand Name
               </legend>
               <input
                 v-model="formData.strand_name"
@@ -130,7 +130,7 @@ function openEditModal(strand: any) {
 
             <fieldset class="fieldset">
               <legend class="fieldset-legend">
-                Course Description
+                Strand Description
               </legend>
               <input
                 v-model="formData.strand_description"

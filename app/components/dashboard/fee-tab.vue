@@ -68,7 +68,7 @@ function resetForm() {
   <div class="p-10 w-full">
     <div class="flex flex-row justify-between my-4">
       <h2 class="text-3xl">
-        List of Fee Types
+        List of Fees
       </h2>
       <button class="btn btn-primary" @click="openNewModal">
         <Icon name="solar:add-circle-linear" size="24" />New Fee
