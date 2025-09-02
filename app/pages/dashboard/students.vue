@@ -6,7 +6,9 @@ const isEditing = ref(false);
 const showFormModal = ref(false);
 const isSubmitting = ref(false);
 const currentPage = ref(1);
-const pageSize = 8;
+const pageSize = 5;
+const maxVisiblePages = 4;
+const searchQuery = ref('');
 
 const { isMessage, isError, responseMessage, showMessage } = useNotification();
 
@@ -18,6 +20,62 @@ const studentData = ref<Student>({
   last_name: '',
   address: '',
   contact_number: '',
+});
+
+const filteredStudents = computed(() => {
+  if (!students.value?.data)
+    return [];
+  if (!searchQuery.value)
+    return students.value.data;
+
+  return students.value.data.filter(s =>
+    `${s.first_name} ${s.middle_name} ${s.last_name} ${s.address} ${s.contact_number}`
+      .toLowerCase()
+      .includes(searchQuery.value.toLowerCase()),
+  );
+});
+
+const paginatedStudents = computed(() => {
+  const start = (currentPage.value - 1) * pageSize;
+  return filteredStudents.value.slice(start, start + pageSize);
+});
+
+const totalPages = computed(() => {
+  return Math.max(1, Math.ceil(filteredStudents.value.length / pageSize));
+});
+
+const visiblePages = computed(() => {
+  const total = totalPages.value;
+  const current = currentPage.value;
+
+  if (total <= maxVisiblePages) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages: number[] = [];
+  const half = Math.floor(maxVisiblePages / 2);
+
+  let start = Math.max(2, current - half);
+  let end = Math.min(total - 1, current + half);
+
+  if (current <= half) {
+    start = 2;
+    end = maxVisiblePages;
+  }
+  else if (current >= total - half) {
+    start = total - maxVisiblePages + 1;
+    end = total - 1;
+  }
+
+  pages.push(1);
+  if (start > 2)
+    pages.push(-1);
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < total - 1)
+    pages.push(-2);
+  pages.push(total);
+
+  return pages;
 });
 
 function openAddStudentModal() {
@@ -35,10 +93,21 @@ function openAddStudentModal() {
 async function handleFormSubmit() {
   isSubmitting.value = true;
   try {
-    const response = await $fetch('/api/private/student', {
-      method: 'POST',
-      body: studentData.value,
-    });
+    let response;
+
+    if (isEditing.value) {
+      response = await $fetch(`/api/private/student/${studentData.value.id}`, {
+        method: 'PUT',
+        body: studentData.value,
+      });
+    }
+    else {
+      response = await $fetch('/api/private/student', {
+        method: 'POST',
+        body: studentData.value,
+      });
+    }
+
     showFormModal.value = false;
     showMessage(response.message, false);
     await refresh();
@@ -52,32 +121,37 @@ async function handleFormSubmit() {
   }
 }
 
-const paginatedStudents = computed(() => {
-  if (!students.value?.data)
-    return [];
-  const start = (currentPage.value - 1) * pageSize;
-  return students.value.data.slice(start, start + pageSize);
-});
+function updateStudent(student: Student) {
+  studentData.value = { ...student };
+  isEditing.value = true;
+  showFormModal.value = true;
+}
 
-const totalPages = computed(() => {
-  if (!students.value?.data)
-    return 1;
-  return Math.ceil(students.value.data.length / pageSize);
+watch(searchQuery, () => {
+  currentPage.value = 1;
 });
 </script>
 
 <template>
   <div class="w-full p-10">
-    <div class="flex flex-row justify-between my-4">
+    <div class="flex flex-row justify-between my-4 items-center">
       <p class="text-3xl">
         List of Students
       </p>
-      <button class="btn btn-primary" @click="openAddStudentModal">
-        <Icon name="solar:add-square-linear" size="24" /> Add Student
-      </button>
+      <div class="flex space-x-2">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search students..."
+          class="input input-bordered w-64"
+        >
+        <button class="btn btn-primary" @click="openAddStudentModal">
+          <Icon name="solar:add-square-linear" size="24" /> Add Student
+        </button>
+      </div>
     </div>
 
-    <table class="table table-xs table-pin-rows bg-base-200">
+    <table class="table">
       <thead>
         <tr>
           <th>ID</th>
@@ -114,7 +188,7 @@ const totalPages = computed(() => {
           <td>{{ student.address }}</td>
           <td>{{ student.contact_number }}</td>
           <td>
-            <button class="btn btn-primary btn-sm">
+            <button class="btn btn-primary btn-sm" @click="updateStudent(student)">
               Update
             </button>
           </td>
@@ -130,15 +204,19 @@ const totalPages = computed(() => {
       >
         Prev
       </button>
-      <button
-        v-for="page in totalPages"
-        :key="page"
-        class="btn btn-sm"
-        :class="{ 'btn-active': currentPage === page }"
-        @click="currentPage = page"
-      >
-        {{ page }}
-      </button>
+
+      <template v-for="page in visiblePages" :key="page">
+        <button
+          v-if="page > 0"
+          class="btn btn-sm"
+          :class="{ 'btn-active': currentPage === page }"
+          @click="currentPage = page"
+        >
+          {{ page }}
+        </button>
+        <span v-else class="px-2">…</span>
+      </template>
+
       <button
         class="btn btn-sm"
         :disabled="currentPage === totalPages"

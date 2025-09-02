@@ -6,8 +6,9 @@ const loginSchema = z.object({
 });
 
 const studentSchema = z.object({
+  id: z.number().optional(),
   first_name: z.string().min(1),
-  middle_name: z.string().min(1),
+  middle_name: z.string().nullable(),
   last_name: z.string().min(1),
   address: z.string().min(1),
   contact_number: z.string().min(1),
