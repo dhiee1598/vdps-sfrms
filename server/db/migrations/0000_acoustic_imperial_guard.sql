@@ -35,8 +35,8 @@ CREATE TABLE `students` (
 	`first_name` varchar(255) NOT NULL,
 	`middle_name` varchar(255),
 	`last_name` varchar(255) NOT NULL,
-	`address` varchar(255),
-	`contact_number` varchar(255),
+	`address` varchar(255) NOT NULL,
+	`contact_number` varchar(255) NOT NULL,
 	CONSTRAINT `students_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -54,6 +54,7 @@ CREATE TABLE `users` (
 	`name` varchar(255) NOT NULL,
 	`email` varchar(255) NOT NULL,
 	`password` varchar(255) NOT NULL,
+	`role` varchar(255) NOT NULL,
 	`createdAt` timestamp DEFAULT (now()),
 	CONSTRAINT `users_id` PRIMARY KEY(`id`),
 	CONSTRAINT `users_email_unique` UNIQUE(`email`)
