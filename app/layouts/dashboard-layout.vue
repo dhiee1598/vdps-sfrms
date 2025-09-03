@@ -21,6 +21,11 @@
               <Icon name="solar:key-broken" size="25" /> Accounts
             </NuxtLink>
           </li>
+          <li>
+            <NuxtLink to="/dashboard/masterlist" class="font-medium">
+              <Icon name="solar:key-broken" size="25" /> Masterlist
+            </NuxtLink>
+          </li>
 
           <li>
             <NuxtLink to="/dashboard/students" class="font-medium">

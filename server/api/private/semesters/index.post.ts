@@ -1,0 +1,37 @@
+import db from '~~/server/db';
+import { semesters, semestersInsertSchema } from '~~/server/db/schema/semester-schema';
+import { eq } from 'drizzle-orm';
+
+// A Nuxt.js server route handler for creating a new academic year.
+export default defineEventHandler(async (event) => {
+  const body = await readValidatedBody(event, semestersInsertSchema.safeParse);
+
+  if (!body.success) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Bad Request',
+      message: 'Invalid data provided. Please check the required fields.',
+    });
+  }
+
+  const { semester } = body.data;
+
+  const [existingSemester] = await db.select().from(semesters).where(eq(semesters.semester, semester));
+
+  if (existingSemester) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Conflict',
+      message: 'An academic year with this name already exists.',
+    });
+  }
+
+  const [createdSemester] = await db.insert(semesters).values({
+    semester,
+  }).$returningId();
+
+  return {
+    success: true,
+    data: createdSemester,
+  };
+});
