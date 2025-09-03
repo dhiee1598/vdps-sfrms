@@ -2,7 +2,7 @@
 const session = useUserSession();
 async function logout() {
   await session.clear();
-  await navigateTo('/');
+  await navigateTo('/auth/login');
 }
 </script>
 

@@ -1,11 +1,12 @@
 import { int, mysqlTable, timestamp, varchar } from 'drizzle-orm/mysql-core';
-import { createInsertSchema } from 'drizzle-zod';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 
 const users = mysqlTable('users', {
   id: int('id').autoincrement().primaryKey(),
   name: varchar({ length: 255 }).notNull(),
   email: varchar({ length: 255 }).notNull().unique(),
   password: varchar({ length: 255 }).notNull(),
+  role: varchar({ length: 255 }).notNull(),
   createdAt: timestamp().defaultNow(),
 });
 
@@ -18,11 +19,6 @@ const userInsertSchema = createInsertSchema(users, {
   createdAt: true,
 });
 
-export { userInsertSchema, users };
+const userSelectSchema = createSelectSchema(users).omit({ password: true });
 
-// const user = { name: 'John' };
-// const parsed: { name: string, age: number } = userInsertSchema.parse(user); // Error: `age` is not defined
-
-// const user = { name: 'Jane', age: 30 };
-// const parsed: { name: string, age: number } = userInsertSchema.parse(user); // Will parse successfully
-// await db.insert(users).values(parsed);
+export { userInsertSchema, users, userSelectSchema };

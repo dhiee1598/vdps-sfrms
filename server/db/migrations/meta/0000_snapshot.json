@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "5370f4e1-43ef-4774-a7bd-2e292c799650",
+  "id": "ba7c2a84-0bad-44c7-9144-1e049188f60a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "academicYears": {
@@ -224,14 +224,14 @@
           "name": "address",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "contact_number": {
           "name": "contact_number",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         }
       },
@@ -327,6 +327,13 @@
         },
         "password": {
           "name": "password",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true,

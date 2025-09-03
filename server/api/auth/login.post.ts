@@ -40,6 +40,7 @@ export default defineEventHandler(async (event) => {
     user: {
       id: user.id,
       name: user.name,
+      role: user.role,
     },
     lastLoggedIn: new Date(),
   }, {
@@ -49,5 +50,6 @@ export default defineEventHandler(async (event) => {
 
   return {
     success: true,
+    role: user.role,
   };
 });
