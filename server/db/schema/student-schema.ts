@@ -1,0 +1,15 @@
+import { mysqlTable, varchar } from 'drizzle-orm/mysql-core';
+import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-zod';
+
+export const students = mysqlTable('students', {
+  id: varchar({ length: 255 }).notNull().primaryKey(),
+  first_name: varchar({ length: 255 }).notNull(),
+  middle_name: varchar({ length: 255 }),
+  last_name: varchar({ length: 255 }).notNull(),
+  address: varchar({ length: 255 }).notNull(),
+  contact_number: varchar({ length: 255 }).notNull(),
+});
+
+export const studentInsertSchema = createInsertSchema(students).omit({ id: true });
+export const studentUpdateSchema = createUpdateSchema(students);
+export const studentSelectSchema = createSelectSchema(students);

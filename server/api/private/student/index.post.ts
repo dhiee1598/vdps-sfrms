@@ -1,50 +1,81 @@
+// server/api/private/student.post.ts
 import db from '~~/server/db';
-import { studentInsertSchema, students, studentSelectSchema } from '~~/server/db/schema/student.schema';
-import { and, eq } from 'drizzle-orm';
+import {
+  studentInsertSchema,
+  students,
+  studentSelectSchema,
+} from '~~/server/db/schema/student-schema';
+import { and, desc, eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
-  // * Read and validate the request body against the studentInsertSchema.
+  // 1. Validate body
   const body = await readValidatedBody(event, studentInsertSchema.safeParse);
 
-  // ! If body validation fails, throw a 400 Bad Request error.
   if (!body.success) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Bad Request',
       message: 'Invalid request body provided.',
     });
   }
 
-  const whereConditions = [eq(students.first_name, body.data.first_name), eq(students.last_name, body.data.last_name)];
-
+  // 2. Check for duplicate student (first + last + middle name if given)
+  const conditions = [
+    eq(students.first_name, body.data.first_name),
+    eq(students.last_name, body.data.last_name),
+  ];
   if (body.data.middle_name) {
-    whereConditions.push(eq(students.middle_name, body.data.middle_name));
+    conditions.push(eq(students.middle_name, body.data.middle_name));
   }
 
-  // *  Check for existing student base on where conditions
-  const [existingStudent] = await db.select()
+  const [existingStudent] = await db
+    .select()
     .from(students)
-    .where(and(...whereConditions));
+    .where(and(...conditions));
 
-  // ! If student exists, throw a 409 Conflict error
   if (existingStudent) {
     throw createError({
       statusCode: 409,
-      statusMessage: 'Conflict',
-      message: 'Student already exist',
+      message: 'Student already exists.',
     });
   }
 
-  // * Insert new student
-  const [createdStudent] = await db.insert(students).values(body.data).$returningId();
+  // 3. Generate custom ID (STU-0001-YYYY)
+  const last = await db
+    .select({ id: students.id })
+    .from(students)
+    .orderBy(desc(students.id))
+    .limit(1);
 
-  // * Retrieve and return created student data
-  const [getNewStudent] = await db.select().from(students).where(eq(students.id, createdStudent.id));
-  const parsedStudent = studentSelectSchema.parse(getNewStudent);
+  let nextNumber = 1;
+  const year = new Date().getFullYear();
 
-  // * Set the HTTP status code to 201 Created
+  if (last.length > 0) {
+    const lastId = last[0].id; // e.g. STU-0005-2025
+    const parts = lastId.split('-');
+    if (parts[2] === String(year)) {
+      nextNumber = Number.parseInt(parts[1], 10) + 1;
+    }
+  }
+
+  const formattedNumber = String(nextNumber).padStart(4, '0');
+  const newId = `STU-${formattedNumber}-${year}`;
+
+  // 4. Insert student
+  await db.insert(students).values({
+    ...body.data,
+    id: newId,
+  });
+
+  // 5. Retrieve new student
+  const [newStudent] = await db
+    .select()
+    .from(students)
+    .where(eq(students.id, newId));
+
+  const parsedStudent = studentSelectSchema.parse(newStudent);
+
+  // 6. Return response
   setResponseStatus(event, 201);
-
   return {
     message: 'Student successfully created.',
     data: parsedStudent,

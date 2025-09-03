@@ -1,8 +1,16 @@
+<script setup lang="ts">
+const { data: academicYears } = await useFetch('/api/private/academic-years');
+const { data: semesters } = await useFetch('/api/private/semesters');
+const { data: students } = await useFetch('/api/private/student');
+
+console.warn(students.value?.data.length, 'students');
+</script>
+
 <template>
   <div class="p-10 container">
     <div class="flex flex-col gap-4">
       <p class="text-3xl font-bold">
-        Cashier Dashboard
+        Admin Dashboard
       </p>
       <p>
         Process student payments and manage transactions
@@ -13,11 +21,14 @@
       <div class="card w-full card-md shadow-sm bg-green-100 text-green-800">
         <div class="card-body">
           <h2 class="card-title">
-            Today's Collection
+            Total Students
           </h2>
           <p class="text-5xl font-bold">
-            P0.00
-          </p><p>+0 transactions completed</p>
+            {{ students?.data.length }}
+          </p>
+          <p class="text-sm">
+            Total number of students
+          </p>
         </div>
       </div>
 
