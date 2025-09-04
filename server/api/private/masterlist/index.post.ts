@@ -13,12 +13,12 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { student_id, strand_id, gradeLevel_id, semester_id, academic_year_id } = body.data;
+  const { student_id, strand_id, grade_level_id, semester_id, academic_year_id } = body.data;
 
   const [createdCourse] = await db.insert(enrollments).values({
     student_id,
     strand_id,
-    gradeLevel_id,
+    grade_level_id,
     semester_id,
     academic_year_id,
 

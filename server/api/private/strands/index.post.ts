@@ -13,6 +13,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: 'Bad Request',
+      data: body.error,
       message: 'Invalid data provided. Please check the required fields.',
     });
   }
@@ -21,21 +22,21 @@ export default defineEventHandler(async (event) => {
   const { strand_name, strand_description } = body.data;
 
   // Check if a year level with the same name already exists in the database.
-  const [existingCourse] = await db.select().from(strands).where(eq(strands.strand_name, strand_name));
+  const [existingStrand] = await db.select().from(strands).where(eq(strands.strand_name, strand_name));
 
   // If a duplicate year level is found, throw a 409 Conflict error.
-  if (existingCourse) {
+  if (existingStrand) {
     throw createError({
       statusCode: 409,
       statusMessage: 'Conflict',
-      message: 'A year level with this name already exists.',
+      message: 'A strand with this name already exists.',
     });
   }
 
   // Insert the new year level into the database and return the newly created record.
   // The .returning() method is used here to get the complete inserted object,
   // including the auto-generated ID, in a single, efficient operation.
-  const [createdCourse] = await db.insert(strands).values({
+  const [createdStrand] = await db.insert(strands).values({
     strand_name,
     strand_description,
   }).$returningId();
@@ -44,6 +45,6 @@ export default defineEventHandler(async (event) => {
   // A 201 Created status code would be ideal for this operation.
   return {
     success: true,
-    data: createdCourse,
+    data: createdStrand,
   };
 });

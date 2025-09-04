@@ -9,8 +9,8 @@ const strands = mysqlTable('strands', {
 });
 
 const strandsInsertSchema = createInsertSchema(strands, {
-  strand_name: schema => schema.min(3),
-  strand_description: schema => schema.min(3),
+  strand_name: schema => schema.min(3, { message: 'Strand name must be at least 3 characters.' }),
+  strand_description: schema => schema.min(3, { message: 'Strand description must be at least 3 characters.' }),
 }).omit({
   id: true,
   createdAt: true,
