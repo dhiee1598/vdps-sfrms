@@ -16,13 +16,11 @@ const searchQuery = ref('');
 
 // fetch students from backend
 const { data: students, pending, error, refresh } = await useFetch('/api/private/masterlist', { lazy: true });
-const { data: allStudents } = await useFetch('/api/private/student');
+const { data: allStudents } = await useFetch('/api/private/student?enrolled=true');
 const { data: semesters } = await useFetch('/api/private/semesters');
 const { data: gradeLevels } = await useFetch('/api/private/grade-level');
 const { data: strands } = await useFetch('/api/private/strands');
 const { data: academicYears } = await useFetch('/api/private/academic-years');
-
-console.warn(students.value?.data, 'students');
 
 const studentsData = computed(() =>
   (allStudents.value?.data ?? []).map((student: any) => ({
