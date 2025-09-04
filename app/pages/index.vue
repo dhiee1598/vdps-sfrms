@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 
-// --- Mock data ---
-const students = ref([
-  { id: 1, name: 'Juan Dela Cruz' },
-  { id: 2, name: 'Maria Santos' },
-  { id: 3, name: 'Jose Rizal' },
-]);
+const { data: students, pending, error, refresh } = await useFetch('/api/private/masterlist', { lazy: true });
+
+// // --- Mock data ---
+// const students = ref([
+//   { id: 1, name: 'Juan Dela Cruz' },
+//   { id: 2, name: 'Maria Santos' },
+//   { id: 3, name: 'Jose Rizal' },
+// ]);
 
 // --- State ---
 const searchQuery = ref('');
@@ -28,10 +30,18 @@ const sundries = ref([
 ]);
 
 // --- Computed ---
+const allStudents = computed(() =>
+  (students.value?.data ?? []).map((s: any) => ({
+    id: s.student?.id,
+    name: `${s.student?.first_name ?? ''} ${s.student?.middle_name ?? ''} ${s.student?.last_name ?? ''}`.trim(),
+  })),
+);
+
+// --- Computed ---
 const filteredStudents = computed(() => {
   if (!searchQuery.value)
     return [];
-  return students.value.filter(s =>
+  return allStudents.value.filter(s =>
     s.name.toLowerCase().includes(searchQuery.value.toLowerCase()),
   );
 });
@@ -99,34 +109,28 @@ function resetKiosk() {
 
       <!-- Search Student -->
       <div v-else-if="!selectedStudent">
-        <label class="form-control w-full mb-4">
-          <span class="label-text">Search your name</span>
-          <input
-            v-model="searchQuery"
-            type="text"
-            class="input input-bordered w-full"
-            placeholder="Type your name..."
-          >
-        </label>
-
-        <ul v-if="filteredStudents.length" class="menu bg-base-100 rounded-box shadow-md">
-          <li v-for="student in filteredStudents" :key="student.id">
-            <button @click="selectStudent(student)">
-              {{ student.name }}
-            </button>
-          </li>
-        </ul>
-
-        <p v-else-if="searchQuery" class="text-center text-sm text-gray-500">
-          No results found
-        </p>
+        <Multiselect
+          v-model="selectedStudent"
+          :options="allStudents"
+          :searchable="true"
+          label="name"
+          track-by="id"
+          placeholder="Search by name..."
+          :max-height="200"
+          class="w-full "
+        />
       </div>
 
       <!-- Payment Form -->
       <div v-else>
-        <h2 class="text-lg font-semibold mb-4">
-          Selected: {{ selectedStudent.name }}
-        </h2>
+        <div class="flex flex-row gap-4">
+          <h2 class="text-lg font-semibold mb-4 uppercase">
+            Selected: {{ selectedStudent.name }}
+          </h2>
+          <h2 class="text-lg font-semibold mb-4">
+            ID: {{ selectedStudent.id }}
+          </h2>
+        </div>
 
         <!-- Quarters -->
         <div class="mb-4">
