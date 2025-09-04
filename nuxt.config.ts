@@ -14,6 +14,7 @@ export default defineNuxtConfig({
     '@nuxtjs/google-fonts',
     'nuxt-auth-utils',
   ],
+  plugins: ['~/plugins/vue-multiselect.ts'],
   eslint: {
     config: {
       standalone: false,
