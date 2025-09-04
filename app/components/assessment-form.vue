@@ -1,12 +1,6 @@
 <script setup lang="ts">
 import type { Assessment } from '~~/server/lib/zod-schema';
 
-type StudentOption = {
-  value: string;
-  enrollmentId: number | null;
-  name: string;
-};
-
 const props = defineProps<{
   isEditing: boolean;
   assessment: Assessment;
@@ -16,10 +10,11 @@ const emit = defineEmits<{
   (e: 'update:assessment', value: Assessment): void;
   (e: 'showModal'): void;
   (e: 'submit', formData: Assessment): void;
+  (e: 'refreshStudents', refresh: () => Promise<void>): void;
 }>();
 
 const { data: fees } = useFetch('/api/private/fees');
-const { data: students } = useFetch('/api/private/enrollment?withoutAssessment=true');
+const { data: students, refresh } = useFetch('/api/private/enrollment?withoutAssessment=true');
 
 const formData = computed({
   get: () => props.assessment,
@@ -27,6 +22,7 @@ const formData = computed({
 });
 
 const localAssessment = ref(props.assessment);
+const selectedStudents = ref();
 
 const totalAmountDue = computed(() => {
   const sum = formData.value.fees.reduce((total, fee) => {
@@ -36,7 +32,13 @@ const totalAmountDue = computed(() => {
   return sum.toFixed(2);
 });
 
+async function onSubmit() {
+  emit('submit', formData.value);
+  await refresh();
+}
+
 watch(() => props.assessment, (newVal) => {
+  selectedStudents.value = [];
   localAssessment.value = newVal;
 });
 
@@ -44,9 +46,10 @@ watch(totalAmountDue, (newSum) => {
   formData.value.total_fees = Number(newSum);
 });
 
-function onStudentSelect(selected: StudentOption | null) {
-  formData.value.enrollment_id = selected ? selected.enrollmentId : null;
-}
+watch(selectedStudents, (newVal) => {
+  formData.value.enrollment_id = newVal.enrollmentId;
+  formData.value.student_id = newVal.value;
+});
 </script>
 
 <template>
@@ -56,13 +59,13 @@ function onStudentSelect(selected: StudentOption | null) {
         Student Assessment
       </h3>
 
-      <form @submit.prevent="emit('submit', formData)">
+      <form @submit.prevent="onSubmit">
         <div class="form-control mb-6">
           <label class="label mb-1">
             <span>Select a Student:</span>
           </label>
           <Multiselect
-            v-model="formData.students"
+            v-model="selectedStudents"
             :options="(students?.data ?? []).map((s) => ({
               value: s.student_id,
               enrollmentId: s.id,
@@ -70,7 +73,6 @@ function onStudentSelect(selected: StudentOption | null) {
             }))"
             label="name"
             track-by="value"
-            @select="onStudentSelect"
           />
         </div>
 
