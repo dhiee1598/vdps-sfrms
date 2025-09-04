@@ -10,7 +10,6 @@ const emit = defineEmits<{
   (e: 'update:assessment', value: Assessment): void;
   (e: 'showModal'): void;
   (e: 'submit', formData: Assessment): void;
-  (e: 'refreshStudents', refresh: () => Promise<void>): void;
 }>();
 
 const { data: fees } = useFetch('/api/private/fees');

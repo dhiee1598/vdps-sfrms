@@ -6,9 +6,10 @@ const isEditing = ref(false);
 const showFormModal = ref(false);
 const showViewModal = ref(false);
 const isSubmitting = ref(false);
+const selectedStudentAssessment = ref();
 
 const { isMessage, isError, responseMessage, showMessage } = useNotification();
-const { data: studentAssessments, pending, error } = useFetch('/api/private/assessment', { lazy: true });
+const { data: studentAssessments, pending, error, refresh } = useFetch('/api/private/assessment', { lazy: true });
 
 const assessmentData = ref<Assessment>({
   enrollment_id: null,
@@ -28,7 +29,8 @@ function openAddStudentAssessment() {
   };
 }
 
-function openViewStudentAssessment() {
+function openViewStudentAssessment(studentAssessment: any) {
+  selectedStudentAssessment.value = studentAssessment;
   showViewModal.value = true;
 }
 
@@ -39,6 +41,7 @@ async function handleFormSubmit() {
 
     showFormModal.value = false;
     showMessage(response.message, false);
+    await refresh();
   }
   catch (e) {
     const error = e as FetchError;
@@ -122,7 +125,7 @@ async function handleFormSubmit() {
             }}
           </td>
           <td class="flex gap-2 justify-center items-center">
-            <button class="btn btn-sm btn-success" @click="openViewStudentAssessment">
+            <button class="btn btn-sm btn-success" @click="openViewStudentAssessment(item)">
               <Icon name="solar:eye-linear" size="24" />
             </button>
           </td>
@@ -142,8 +145,8 @@ async function handleFormSubmit() {
     </dialog>
 
     <dialog :open="showViewModal" class="modal">
-      <div class="modal-box">
-        <div>Hello</div>
+      <div class="modal-box w-11/12 max-w-5xl">
+        <ViewAssessment :data="selectedStudentAssessment" @show-modal="showViewModal = false" />
       </div>
     </dialog>
 
