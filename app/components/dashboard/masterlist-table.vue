@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { FetchError } from 'ofetch';
+
+import Multiselect from 'vue-multiselect'; // ✅ import the component
 // ✅ import styles
 const { isMessage, isError, responseMessage, showMessage } = useNotification();
 

@@ -86,7 +86,7 @@ function resetForm() {
     </div>
 
     <!-- Empty -->
-    <div v-else-if="!fees?.length" class="flex justify-center items-center py-10 shadow-lg">
+    <div v-else-if="fees?.data.length === 0" class="flex justify-center items-center py-10 shadow-lg">
       <span class="font-bold">NO FEE FOUND</span>
     </div>
 
@@ -111,7 +111,7 @@ function resetForm() {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in fees" :key="item.id">
+          <tr v-for="item in fees?.data" :key="item.id">
             <td>{{ item.id }}</td>
             <td>{{ item.fee_name }}</td>
             <td>{{ item.fee_description }}</td>

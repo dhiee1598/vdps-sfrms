@@ -17,19 +17,24 @@
             </NuxtLink>
           </li>
           <li>
-            <NuxtLink to="/dashboard/users" class="font-medium">
-              <Icon name="solar:key-broken" size="25" /> Accounts
+            <NuxtLink to="/dashboard/masterlist" class="font-medium">
+              <Icon name="solar:bill-list-broken" size="25" /> Masterlist
             </NuxtLink>
           </li>
           <li>
-            <NuxtLink to="/dashboard/masterlist" class="font-medium">
-              <Icon name="solar:key-broken" size="25" /> Masterlist
+            <NuxtLink to="/dashboard/assessment" class="font-medium">
+              <Icon name="solar:hand-money-outline" size="25" /> Assessment
             </NuxtLink>
           </li>
 
           <li>
             <NuxtLink to="/dashboard/students" class="font-medium">
               <Icon name="solar:users-group-rounded-line-duotone" size="25" /> Students
+            </NuxtLink>
+          </li>
+          <li>
+            <NuxtLink to="/dashboard/users" class="font-medium">
+              <Icon name="solar:key-broken" size="25" /> Accounts
             </NuxtLink>
           </li>
           <li>

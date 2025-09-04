@@ -1,6 +1,5 @@
 import db from '~~/server/db';
 import { enrollments, enrollmentsInsertSchema } from '~~/server/db/schema/enrollment-schema';
-import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, enrollmentsInsertSchema.safeParse);
