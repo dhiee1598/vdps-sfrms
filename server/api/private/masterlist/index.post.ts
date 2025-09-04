@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
 
   const { student_id, strand_id, grade_level_id, semester_id, academic_year_id } = body.data;
 
-  const [createdCourse] = await db.insert(enrollments).values({
+  const [enrolledStudent] = await db.insert(enrollments).values({
     student_id,
     strand_id,
     grade_level_id,
@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
 
   return {
     success: true,
-    data: createdCourse,
+    data: enrolledStudent,
+    message: 'Student Enrolled created successfully.',
   };
 });
