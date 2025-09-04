@@ -12,3 +12,8 @@ body {
 html {
   scrollbar-gutter: auto !important;
 }
+
+.multiselect__content-wrapper {
+  max-height: 50px;  /* adjust height */
+  overflow-y: auto;
+}

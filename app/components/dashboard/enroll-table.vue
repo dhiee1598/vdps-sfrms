@@ -134,7 +134,6 @@ async function handleSave() {
       });
     }
 
-    // if successful → close modal + reset form
     showFormModal.value = false;
     formData.value = { selectedStudent: null, selectedSemester: null, selectedGradeLevel: null, selectedStrand: null, selectedAcademicYear: null };
     showMessage(response.message, false);
@@ -164,8 +163,8 @@ watch(searchQuery, () => {
         placeholder="Search students..."
         class="input input-bordered w-64"
       >
-      <button class="btn btn-primary" @click="openAddStudentModal">
-        <Icon name="solar:add-square-linear" size="24" /> Enroll Student
+      <button class="btn btn-accent" @click="openAddStudentModal">
+        <Icon name="solar:add-circle-linear" size="24" /> Enroll Student
       </button>
     </div>
   </div>
@@ -208,9 +207,6 @@ watch(searchQuery, () => {
         <td class="flex gap-2 justify-center items-center">
           <button class="btn btn-sm btn-success">
             <Icon name="solar:eye-linear" size="24" />
-          </button>
-          <button class="btn btn-sm btn-primary">
-            <Icon name="solar:wallet-money-linear" size="24" />
           </button>
         </td>
       </tr>
@@ -260,53 +256,75 @@ watch(searchQuery, () => {
       </div>
       <form class="flex flex-col gap-4 w-full mt-4" @submit.prevent="handleSave">
         <div class="flex flex-col gap-4 mt-4">
-          <Multiselect
-            v-model="formData.selectedStudent"
-            :options="studentsData"
-            :searchable="true"
-            label="fullName"
-            track-by="fullName"
-            placeholder="Search by id, first name, last name or full name..."
-          />
+          <div class="label flex-col items-start">
+            Select Student:
+            <Multiselect
+              v-model="formData.selectedStudent"
+              :options="studentsData"
+              label="fullName"
+              track-by="id"
+              placeholder="Search by id, first name, last name or full name"
+              max-height="150"
+              open-direction="below"
+            >
+              <template #noResult>
+                <span>Student Not Found.</span>
+              </template>
+            </Multiselect>
+          </div>
+          <div class="label flex-col items-start">
+            Select Strand:
+            <Multiselect
+              v-model="formData.selectedStrand"
+              :options="strands?.map((s) => ({ id: s.id, strand_name: s.strand_name })) ?? []"
+              :searchable="false"
+              label="strand_name"
+              track-by="strand_name"
+              placeholder=""
+              open-direction="below"
+            >
+              <template #option="{ option }">
+                {{ option.strand_name }}
+              </template>
+              <template #singleLabel="{ option }">
+                {{ option.strand_name }}
+              </template>
+            </Multiselect>
+          </div>
 
-          <Multiselect
-            v-model="formData.selectedStrand"
-            :options="strands?.map((s) => ({ id: s.id, strand_name: s.strand_name })) ?? []"
-            :searchable="true"
-            label="strand_name"
-            track-by="strand_name"
-            placeholder="Search strand..."
-          >
-            <template #option="{ option }">
-              {{ option.strand_name }}
-            </template>
-            <template #singleLabel="{ option }">
-              {{ option.strand_name }}
-            </template>
-          </Multiselect>
-
-          <Multiselect
-            v-model="formData.selectedGradeLevel"
-            :options="gradeLevels?.map((g) => ({ id: g.id, grade_level_name: g.grade_level_name })) ?? []"
-            :searchable="true"
-            label="grade_level_name"
-            track-by="grade_level_name"
-            placeholder="Search grade level..."
-          >
-            <template #option="{ option }">
-              {{ option.grade_level_name }}
-            </template>
-            <template #singleLabel="{ option }">
-              {{ option.grade_level_name }}
-            </template>
-          </Multiselect>
+          <div class="label flex-col items-start">
+            Select Grade Level:
+            <Multiselect
+              v-model="formData.selectedGradeLevel"
+              :options="gradeLevels?.map((g) => ({ id: g.id, grade_level_name: g.grade_level_name })) ?? []"
+              :searchable="false"
+              label="grade_level_name"
+              track-by="grade_level_name"
+              placeholder=""
+              open-direction="below"
+            >
+              <template #option="{ option }">
+                {{ option.grade_level_name }}
+              </template>
+              <template #singleLabel="{ option }">
+                {{ option.grade_level_name }}
+              </template>
+            </Multiselect>
+          </div>
         </div>
 
-        <div class="modal-action">
-          <button class="btn btn-primary" type="submit">
-            Save
+        <div class="modal-action flex-col">
+          <button
+            type="submit"
+            class="btn btn-accent w-full"
+          >
+            Submit Form
           </button>
-          <button class="btn" @click="showFormModal = false">
+          <button
+            type="button"
+            class="btn"
+            @click="showFormModal = false"
+          >
             Close
           </button>
         </div>

@@ -53,9 +53,9 @@ watch(selectedStudents, (newVal) => {
 
 <template>
   <div class="p-6">
-    <div class="card p-6 w-full max-w-lg mx-auto">
+    <div class="card w-full max-w-lg mx-auto">
       <h3 class="text-2xl font-bold text-center mb-6">
-        Student Assessment
+        Assess New Enrolled Student
       </h3>
 
       <form @submit.prevent="onSubmit">
@@ -99,29 +99,29 @@ watch(selectedStudents, (newVal) => {
                     }
                   }"
                 >
-                {{ fee.fee_name }} - ₱{{ fee.fee_amount }}
+                {{ fee.fee_name }} - ₱ {{ fee.fee_amount }}
               </label>
             </div>
           </div>
         </fieldset>
 
-        <div class="text-right text-lg font-bold mt-4 mb-6">
-          Total Amount Due: <span class="text-primary pl-2">₱{{ totalAmountDue }}</span>
+        <div class="text-center text-lg font-bold mt-4 mb-6">
+          Total Amount Due: <span class="pl-2">₱ {{ totalAmountDue }}</span>
         </div>
 
-        <div class="flex flex-row justify-end gap-3 pt-2">
+        <div class="flex flex-col justify-end gap-2 pt-2">
+          <button
+            type="submit"
+            class="btn btn-accent"
+          >
+            {{ isEditing ? 'Update' : 'Submit Form' }}
+          </button>
           <button
             type="button"
-            class="btn btn-warning rounded-full shadow-md hover:shadow-lg transition-shadow"
+            class="btn"
             @click="emit('showModal')"
           >
             Close
-          </button>
-          <button
-            type="submit"
-            class="btn btn-primary rounded-full shadow-md hover:shadow-lg transition-shadow"
-          >
-            {{ isEditing ? 'Update' : 'Add' }}
           </button>
         </div>
       </form>

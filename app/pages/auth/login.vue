@@ -1,24 +1,44 @@
 <script setup lang="ts">
+import type { FetchError } from 'ofetch';
+
+const { isMessage, isError, responseMessage, showMessage } = useNotification();
+
+const isLoading = ref(false);
+const isPasswordShown = ref(false);
+
 const formData = ref({
   email: '',
   password: '',
 });
 
 async function handleClick() {
-  const { success, role } = await $fetch('/api/auth/login', { method: 'POST', body: formData.value });
+  try {
+    const response = await $fetch('/api/auth/login', { method: 'POST', body: formData.value });
 
-  if (success) {
-    if (role === 'admin')
+    if (response.role === 'admin')
       return await navigateTo('/dashboard');
 
     return await navigateTo('/cashier');
   }
+  catch (e) {
+    const error = e as FetchError;
+    responseMessage.value = error.data.message || 'Unknown error occur';
+    formData.value.email = '';
+    formData.value.password = '';
+    isError.value = true;
+    showMessage(responseMessage.value, true);
+  }
+  isLoading.value = false;
+}
+
+function togglePasswordVisibility() {
+  isPasswordShown.value = !isPasswordShown.value;
 }
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-base-200 p-6">
-    <div class="flex flex-col lg:flex-row items-center justify-center gap-12 w-full max-w-5xl">
+  <div class="min-h-screen flex items-center justify-center p-6">
+    <div class="flex flex-col glass lg:flex-row items-center justify-center gap-12 w-full max-w-5xl shadow-md px-4 py-10 rounded-lg">
       <div class="flex flex-col items-center text-center lg:text-left max-w-md">
         <NuxtImg
           src="/vdps-logo.png"
@@ -36,34 +56,59 @@ async function handleClick() {
       </div>
 
       <form @submit.prevent="handleClick">
-        <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-sm border px-4 py-8">
-          <legend class="fieldset-legend text-2xl">
+        <fieldset class="fieldset rounded-box w-sm border border-accent px-4 py-8 back">
+          <legend class="fieldset-legend text-2xl font-light text-accent">
             Login
           </legend>
 
-          <label class="label">Email</label>
-          <input
-            v-model="formData.email"
-            type="email"
-            class="input input-bordered w-full mb-4"
-            placeholder="Enter your email"
-            required
-          >
+          <label class="input input-accent mb-6 w-full" :class="{ 'input-error': isError }">
+            <Icon
+              name="tabler:user-filled"
+              size="18"
+              class="text-accent-content"
+            />
+            <input
+              v-model="formData.email"
+              type="email"
+              required
+              placeholder="Email"
+              @input="isError = false"
+            >
+          </label>
 
-          <label class="label">Password</label>
-          <input
-            v-model="formData.password"
-            type="password"
-            class="input input-bordered w-full"
-            placeholder="Enter your password"
-            required
-          >
+          <label class="input input-accent mb-6 w-full" :class="{ 'input-error': isError }">
+            <Icon
+              name="tabler:lock-password"
+              size="18"
+              class="text-accent-content"
+            />
+            <input
+              v-model="formData.password"
+              :type="isPasswordShown ? 'text' : 'password'"
+              required
+              placeholder="Password"
+              @input="isError = false"
+            >
+            <button type="button" @click.prevent="togglePasswordVisibility">
+              <Icon
+                :name="isPasswordShown ? 'tabler:eye-off' : 'tabler:eye'"
+                size="18"
+                class="text-accent-content"
+              />
+            </button>
+          </label>
 
-          <button type="submit" class="btn btn-neutral mt-4">
-            Login
+          <button type="submit" class="btn btn-accent mt-4">
+            Sign In
           </button>
         </fieldset>
       </form>
     </div>
+
+    <ToastNotification
+      :is-message="isMessage"
+      :is-error="isError"
+      :response-message="responseMessage"
+    />
   </div>
 </template>

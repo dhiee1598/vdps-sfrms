@@ -145,8 +145,8 @@ watch(searchQuery, () => {
           placeholder="Search students..."
           class="input input-bordered w-64"
         >
-        <button class="btn btn-primary" @click="openAddStudentModal">
-          <Icon name="solar:add-square-linear" size="24" /> Add Student
+        <button class="btn btn-accent" @click="openAddStudentModal">
+          <Icon name="solar:add-circle-linear" size="24" /> Add Student
         </button>
       </div>
     </div>
@@ -188,8 +188,8 @@ watch(searchQuery, () => {
           <td>{{ student.address }}</td>
           <td>{{ student.contact_number }}</td>
           <td>
-            <button class="btn btn-primary btn-sm" @click="updateStudent(student)">
-              Update
+            <button class="btn btn-success btn-sm" @click="updateStudent(student)">
+              <Icon name="solar:eye-linear" size="24" />
             </button>
           </td>
         </tr>
