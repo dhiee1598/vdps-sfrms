@@ -26,7 +26,7 @@ export default defineNuxtRouteMiddleware(async (to, _from) => {
   else {
     if (!publicRoutes.includes(to.path)) {
       await fetch();
-      if (!loggedIn) {
+      if (!loggedIn.value) {
         return navigateTo('/auth/login');
       }
     }

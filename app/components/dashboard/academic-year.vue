@@ -77,7 +77,7 @@ async function toggleStatus(id: number, newStatus: boolean) {
       <p class="text-3xl">
         List of Academic Years
       </p>
-      <button class="btn btn-primary" @click="openCreateModal">
+      <button class="btn btn-accent" @click="openCreateModal">
         <Icon name="solar:add-circle-linear" size="24" /> Add Academic Year
       </button>
     </div>
@@ -117,8 +117,8 @@ async function toggleStatus(id: number, newStatus: boolean) {
             >
           </td>
           <td>
-            <button class="btn btn-primary btn-sm" @click="openEditModal(item)">
-              update
+            <button class="btn btn-info btn-sm" @click="openEditModal(item)">
+              <Icon name="solar:smartphone-update-broken" size="24" />
             </button>
           </td>
         </tr>

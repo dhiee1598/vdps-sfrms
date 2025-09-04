@@ -42,61 +42,61 @@ const balance = computed(() => {
       </h2>
       <button
         type="button"
-        class="btn"
+        class="btn btn-error rounded-full p-2"
         @click="emit('showModal')"
       >
-        <Icon name="solar:close-circle-bold" size="24" />
+        <Icon name="solar:close-circle-bold" size="25" />
       </button>
     </div>
 
-    <div class="mb-6 border-b pb-4">
-      <h3 class="text-lg font-semibold mb-2">
+    <div class="mb-6 border-b border-accent-content pb-4">
+      <h3 class="text-xl font-medium mb-2">
         Student Information
       </h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
         <div>
-          <span class="font-medium">Name:</span> {{ localStudentAssessment.student.first_name }} {{ localStudentAssessment.student.middle_name }} {{ localStudentAssessment.student.last_name }}
+          <span class="font-light">Name:</span> {{ localStudentAssessment.student.first_name }} {{ localStudentAssessment.student.middle_name }} {{ localStudentAssessment.student.last_name }}
         </div>
         <div>
-          <span class="font-medium">Student ID:</span> {{ localStudentAssessment.student.id }}
+          <span class="font-light">Student ID:</span> {{ localStudentAssessment.student.id }}
         </div>
         <div>
-          <span class="font-medium">Address:</span> {{ localStudentAssessment.student.address }}
+          <span class="font-light">Address:</span> {{ localStudentAssessment.student.address }}
         </div>
         <div>
-          <span class="font-medium">Contact:</span> {{ localStudentAssessment.student.contact_number }}
+          <span class="font-light">Contact:</span> {{ localStudentAssessment.student.contact_number }}
         </div>
         <div>
-          <span class="font-medium">Year:</span> {{ academicYears?.data[0]?.academic_year }}
+          <span class="font-light">Year:</span> {{ academicYears?.data[0]?.academic_year }}
         </div>
         <div>
-          <span class="font-medium">Semester:</span> {{ semesters?.data[0]?.semester }}
+          <span class="font-light">Semester:</span> {{ semesters?.data[0]?.semester }}
         </div>
       </div>
     </div>
 
-    <div class="mb-6 border-b pb-4">
+    <div class="mb-6 border-b border-accent-content pb-4">
       <h3 class="text-lg font-semibold mb-2">
         Financial Summary
       </h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 font-bold">
-        <div class="bg-gray-100 p-3 rounded-md">
-          <span class="block text-gray-500 font-normal">Total Fees</span>
-          <span class="text-xl text-green-600">₱{{ parseFloat(localStudentAssessment.total_amount_due).toFixed(2) }}</span>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-bold">
+        <div class="p-3 rounded-md border border-accent-content">
+          <span class="block font-normal label">Total Fees</span>
+          <span class="text-xl text-green-500">₱ {{ parseFloat(localStudentAssessment.total_amount_due).toFixed(2) }}</span>
         </div>
-        <div class="bg-gray-100 p-3 rounded-md">
-          <span class="block text-gray-500 font-normal">Total Paid</span>
-          <span class="text-xl text-blue-600">₱{{ totalPaid.toFixed(2) }}</span>
+        <div class=" p-3 rounded-md border border-accent-content">
+          <span class="block font-normal label">Total Paid</span>
+          <span class="text-xl text-blue-500">₱ {{ totalPaid.toFixed(2) }}</span>
         </div>
-        <div class="bg-gray-100 p-3 rounded-md">
-          <span class="block text-gray-500 font-normal">Balance</span>
-          <span class="text-xl" :class="{ 'text-red-600': balance > 0, 'text-green-600': balance === 0 }">₱{{ balance.toFixed(2) }}</span>
+        <div class="p-3 rounded-md border border-accent-content">
+          <span class="block  font-normal label">Balance</span>
+          <span class="text-xl" :class="{ 'text-red-500': balance > 0, 'text-green-600': balance === 0 }">₱ {{ balance.toFixed(2) }}</span>
         </div>
       </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="border rounded-lg overflow-hidden">
+      <div class="border rounded-lg overflow-hidden border-accent-content">
         <h4 class="p-3 font-medium">
           Fees Breakdown
         </h4>
@@ -129,7 +129,7 @@ const balance = computed(() => {
         </div>
       </div>
 
-      <div class="border rounded-lg overflow-hidden">
+      <div class="border rounded-lg overflow-hidden border-accent-content">
         <h4 class="p-3 font-medium">
           Payments History
         </h4>

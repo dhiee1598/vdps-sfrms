@@ -7,6 +7,10 @@ const showFormModal = ref(false);
 const showViewModal = ref(false);
 const isSubmitting = ref(false);
 const selectedStudentAssessment = ref();
+const currentPage = ref(1);
+const pageSize = 5;
+const maxVisiblePages = 4;
+const searchQuery = ref('');
 
 const { isMessage, isError, responseMessage, showMessage } = useNotification();
 const { data: studentAssessments, pending, error, refresh } = useFetch('/api/private/assessment', { lazy: true });
@@ -16,6 +20,66 @@ const assessmentData = ref<Assessment>({
   student_id: '',
   fees: [],
   total_fees: 0,
+});
+
+const filteredStudents = computed(() => {
+  if (!studentAssessments.value?.data)
+    return [];
+  if (!searchQuery.value)
+    return studentAssessments.value.data;
+
+  return studentAssessments.value.data.filter((s) => {
+    const stu = s.student;
+    if (!stu)
+      return false;
+
+    return `${stu.first_name ?? ''} ${stu.middle_name ?? ''} ${stu.last_name ?? ''} ${stu.address ?? ''} ${stu.contact_number ?? ''}`
+      .toLowerCase()
+      .includes(searchQuery.value.toLowerCase());
+  });
+});
+
+const paginatedStudents = computed(() => {
+  const start = (currentPage.value - 1) * pageSize;
+  return filteredStudents.value.slice(start, start + pageSize);
+});
+
+const totalPages = computed(() => {
+  return Math.max(1, Math.ceil(filteredStudents.value.length / pageSize));
+});
+
+const visiblePages = computed(() => {
+  const total = totalPages.value;
+  const current = currentPage.value;
+
+  if (total <= maxVisiblePages) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages: number[] = [];
+  const half = Math.floor(maxVisiblePages / 2);
+
+  let start = Math.max(2, current - half);
+  let end = Math.min(total - 1, current + half);
+
+  if (current <= half) {
+    start = 2;
+    end = maxVisiblePages;
+  }
+  else if (current >= total - half) {
+    start = total - maxVisiblePages + 1;
+    end = total - 1;
+  }
+
+  pages.push(1);
+  if (start > 2)
+    pages.push(-1);
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < total - 1)
+    pages.push(-2);
+  pages.push(total);
+
+  return pages;
 });
 
 function openAddStudentAssessment() {
@@ -61,12 +125,13 @@ async function handleFormSubmit() {
       </p>
       <div class="flex space-x-2">
         <input
+          v-model="searchQuery"
           type="text"
           placeholder="Search students..."
           class="input input-bordered w-64"
         >
-        <button class="btn btn-primary" @click="openAddStudentAssessment">
-          <Icon name="solar:add-square-linear" size="24" /> Assess Student
+        <button class="btn btn-accent" @click="openAddStudentAssessment">
+          <Icon name="solar:add-circle-linear" size="24" /> Assess Student
         </button>
       </div>
     </div>
@@ -99,7 +164,7 @@ async function handleFormSubmit() {
         </tr>
 
         <tr
-          v-for="item in studentAssessments?.data"
+          v-for="item in paginatedStudents"
           v-else
           :key="item.id"
         >
@@ -132,6 +197,36 @@ async function handleFormSubmit() {
         </tr>
       </tbody>
     </table>
+
+    <div class="flex justify-center mt-4 space-x-2">
+      <button
+        class="btn btn-sm"
+        :disabled="currentPage === 1"
+        @click="currentPage--"
+      >
+        Prev
+      </button>
+
+      <template v-for="page in visiblePages" :key="page">
+        <button
+          v-if="page > 0"
+          class="btn btn-sm"
+          :class="{ 'btn-active': currentPage === page }"
+          @click="currentPage = page"
+        >
+          {{ page }}
+        </button>
+        <span v-else class="px-2">…</span>
+      </template>
+
+      <button
+        class="btn btn-sm"
+        :disabled="currentPage === totalPages"
+        @click="currentPage++"
+      >
+        Next
+      </button>
+    </div>
 
     <dialog :open="showFormModal" class="modal">
       <div class="modal-box">
