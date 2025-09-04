@@ -1,5 +1,5 @@
 import { int, mysqlTable, timestamp, varchar } from 'drizzle-orm/mysql-core';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-zod';
 
 const enrollments = mysqlTable('enrollments', {
   student_id: varchar({ length: 255 }).primaryKey().notNull(),
@@ -18,5 +18,6 @@ const enrollmentsInsertSchema = createInsertSchema(enrollments, {}).omit({
 });
 
 export const enrollmentSelectSchema = createSelectSchema(enrollments);
+export const enrollmentUpdateSchema = createUpdateSchema(enrollments);
 
 export { enrollments, enrollmentsInsertSchema };
