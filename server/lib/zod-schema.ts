@@ -25,7 +25,7 @@ const feeSchema = z.object({
 const assessmentSchema = z.object({
   id: z.int().optional(),
   enrollment_id: z.number().int().nullable(),
-  students: z.array(studentSchema).nullable(),
+  student_id: z.string(),
   fees: z.array(feeSchema),
   total_fees: z.number().positive(),
 });

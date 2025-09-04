@@ -82,7 +82,7 @@ async function toggleStatus(id: number, newStatus: boolean) {
       </button>
     </div>
 
-    <div v-if="pending">
+    <div v-if="pending && !academicYears?.data">
       Loading...
     </div>
     <div v-else-if="error">

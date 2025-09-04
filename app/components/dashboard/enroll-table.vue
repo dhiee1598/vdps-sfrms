@@ -12,8 +12,8 @@ const maxVisiblePages = 4;
 const searchQuery = ref('');
 
 // fetch students from backend
-const { data: students, pending, error, refresh } = await useFetch('/api/private/enrollment', { lazy: true });
-const { data: allStudents } = await useFetch('/api/private/student?enrolled=true');
+const { data: students, pending, error, refresh: refreshEnroll } = await useFetch('/api/private/enrollment', { lazy: true });
+const { data: allStudents, refresh: refreshStudent } = await useFetch('/api/private/student?enrolled=true');
 const { data: semesters } = await useFetch('/api/private/semesters?activeSemester=true');
 const { data: gradeLevels } = await useFetch('/api/private/grade-level');
 const { data: strands } = await useFetch('/api/private/strands');
@@ -138,7 +138,8 @@ async function handleSave() {
     showFormModal.value = false;
     formData.value = { selectedStudent: null, selectedSemester: null, selectedGradeLevel: null, selectedStrand: null, selectedAcademicYear: null };
     showMessage(response.message, false);
-    await refresh();
+    await refreshEnroll();
+    await refreshStudent();
   }
   catch (e) {
     const error = e as FetchError;
