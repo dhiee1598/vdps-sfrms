@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import type { FetchError } from 'ofetch';
 
-import Multiselect from 'vue-multiselect'; // ✅ import the component
-// ✅ import styles
 const { isMessage, isError, responseMessage, showMessage } = useNotification();
 
 const isEditing = ref(false);
@@ -14,12 +12,12 @@ const maxVisiblePages = 4;
 const searchQuery = ref('');
 
 // fetch students from backend
-const { data: students, pending, error, refresh } = await useFetch('/api/private/masterlist', { lazy: true });
+const { data: students, pending, error, refresh } = await useFetch('/api/private/enrollment', { lazy: true });
 const { data: allStudents } = await useFetch('/api/private/student?enrolled=true');
-const { data: semesters } = await useFetch('/api/private/semesters');
+const { data: semesters } = await useFetch('/api/private/semesters?activeSemester=true');
 const { data: gradeLevels } = await useFetch('/api/private/grade-level');
 const { data: strands } = await useFetch('/api/private/strands');
-const { data: academicYears } = await useFetch('/api/private/academic-years');
+const { data: academicYears } = await useFetch('/api/private/academic-years?activeYear=true');
 
 const studentsData = computed(() =>
   (allStudents.value?.data ?? []).map((student: any) => ({
@@ -38,7 +36,7 @@ const filteredStudents = computed(() => {
     return students.value.data;
 
   return students.value.data.filter((s) => {
-    const stu = s.student;
+    const stu = s;
     if (!stu)
       return false; // in case leftJoin gave null
 
@@ -113,10 +111,10 @@ async function handleSave() {
   // build payload here → only IDs
   const payload = {
     student_id: formData.value.selectedStudent?.id,
-    semester_id: formData.value.selectedSemester?.id,
+    semester_id: semesters.value?.data[0]?.id,
     grade_level_id: formData.value.selectedGradeLevel?.id,
     strand_id: formData.value.selectedStrand?.id,
-    academic_year_id: formData.value.selectedAcademicYear?.id,
+    academic_year_id: academicYears.value?.data[0]?.id,
   };
 
   isSubmitting.value = true;
@@ -124,13 +122,13 @@ async function handleSave() {
   try {
     let response;
     if (isEditing.value) {
-      response = await $fetch(`/api/private/masterlist/${payload.student_id}`, {
+      response = await $fetch(`/api/private/enrollment/${payload.student_id}`, {
         method: 'PUT',
         body: payload,
       });
     }
     else {
-      response = await $fetch('/api/private/masterlist', {
+      response = await $fetch('/api/private/enrollment', {
         method: 'POST',
         body: payload,
       });
@@ -156,7 +154,7 @@ watch(searchQuery, () => {
 <template>
   <div class="flex flex-row justify-between my-4 items-center">
     <p class="text-3xl">
-      MASTERLIST
+      List of Enrolled Students
     </p>
     <div class="flex space-x-2">
       <input
@@ -198,14 +196,14 @@ watch(searchQuery, () => {
           Failed to load students. Please try again.
         </td>
       </tr>
-      <tr v-for="item in paginatedStudents" :key="item.enrollment.student_id">
-        <td>{{ item.student?.id }}</td>
-        <td>{{ item.student?.first_name }}</td>
-        <td>{{ item.student?.middle_name }}</td>
-        <td>{{ item.student?.last_name }}</td>
-        <td>{{ item.student?.address }}</td>
-        <td>{{ item.student?.contact_number }}</td>
-        <td>{{ item.enrollment.enroll_status }}</td>
+      <tr v-for="item in paginatedStudents" :key="item.id">
+        <td>{{ item?.id }}</td>
+        <td>{{ item?.first_name }}</td>
+        <td>{{ item?.middle_name }}</td>
+        <td>{{ item?.last_name }}</td>
+        <td>{{ item?.address }}</td>
+        <td>{{ item?.contact_number }}</td>
+        <td>{{ item.enroll_status }}</td>
         <td class="flex gap-2 justify-center items-center">
           <button class="btn btn-sm btn-success">
             <Icon name="solar:eye-linear" size="24" />
@@ -248,9 +246,17 @@ watch(searchQuery, () => {
   </div>
   <dialog :open="showFormModal" class="modal">
     <div class="modal-box">
-      <h3 class="font-bold text-lg">
-        Enroll A Student
+      <h3 class="font-bold text-2xl mb-6 text-center">
+        New Enrollment Form
       </h3>
+      <div class="flex flex-col">
+        <di class="font-light">
+          Year: {{ academicYears?.data[0]?.academic_year }}
+        </di>
+        <di class="font-light">
+          Semester: {{ semesters?.data[0]?.semester }}
+        </di>
+      </div>
       <form class="flex flex-col gap-4 w-full mt-4" @submit.prevent="handleSave">
         <div class="flex flex-col gap-4 mt-4">
           <Multiselect
@@ -261,22 +267,6 @@ watch(searchQuery, () => {
             track-by="fullName"
             placeholder="Search by id, first name, last name or full name..."
           />
-
-          <Multiselect
-            v-model="formData.selectedAcademicYear"
-            :options="academicYears?.filter((s) => s.status).map((s) => ({ id: s.id, academic_year: s.academic_year })) ?? []"
-            :searchable="true"
-            label="academic_year"
-            track-by="academic_year"
-            placeholder="Search academic year..."
-          >
-            <template #option="{ option }">
-              {{ option.academic_year }}
-            </template>
-            <template #singleLabel="{ option }">
-              {{ option.academic_year }}
-            </template>
-          </Multiselect>
 
           <Multiselect
             v-model="formData.selectedStrand"
@@ -307,22 +297,6 @@ watch(searchQuery, () => {
             </template>
             <template #singleLabel="{ option }">
               {{ option.grade_level_name }}
-            </template>
-          </Multiselect>
-
-          <Multiselect
-            v-model="formData.selectedSemester"
-            :options="semesters?.filter((s) => s.status).map((s) => ({ id: s.id, semester: s.semester })) ?? []"
-            :searchable="true"
-            label="semester"
-            track-by="semester"
-            placeholder="Search semester..."
-          >
-            <template #option="{ option }">
-              {{ option.semester }}
-            </template>
-            <template #singleLabel="{ option }">
-              {{ option.semester }}
             </template>
           </Multiselect>
         </div>

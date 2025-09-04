@@ -1,10 +1,15 @@
 <script setup lang="ts">
-import type { Assessment, Fees } from '~~/server/lib/zod-schema';
+import type { Assessment } from '~~/server/lib/zod-schema';
+
+type StudentOption = {
+  value: string;
+  enrollmentId: number | null;
+  name: string;
+};
 
 const props = defineProps<{
   isEditing: boolean;
   assessment: Assessment;
-  fees: Fees[];
 }>();
 
 const emit = defineEmits<{
@@ -12,6 +17,9 @@ const emit = defineEmits<{
   (e: 'showModal'): void;
   (e: 'submit', formData: Assessment): void;
 }>();
+
+const { data: fees } = useFetch('/api/private/fees');
+const { data: students } = useFetch('/api/private/enrollment?withoutAssessment=true');
 
 const formData = computed({
   get: () => props.assessment,
@@ -35,6 +43,10 @@ watch(() => props.assessment, (newVal) => {
 watch(totalAmountDue, (newSum) => {
   formData.value.total_fees = Number(newSum);
 });
+
+function onStudentSelect(selected: StudentOption | null) {
+  formData.value.enrollment_id = selected ? selected.enrollmentId : null;
+}
 </script>
 
 <template>
@@ -49,15 +61,26 @@ watch(totalAmountDue, (newSum) => {
           <label class="label mb-1">
             <span>Select a Student:</span>
           </label>
+          <Multiselect
+            v-model="formData.students"
+            :options="(students?.data ?? []).map((s) => ({
+              value: s.student_id,
+              enrollmentId: s.id,
+              name: `${s.first_name} ${s.middle_name} ${s.last_name}`,
+            }))"
+            label="name"
+            track-by="value"
+            @select="onStudentSelect"
+          />
         </div>
 
         <fieldset class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4">
-          <legend class="fieldset-legend">
+          <legend class="fieldset-legend text-2xl">
             List of Fees
           </legend>
           <div class="space-y-2">
             <div
-              v-for="fee in fees"
+              v-for="fee in fees?.data"
               :key="fee.id"
             >
               <label class="label">
@@ -81,9 +104,8 @@ watch(totalAmountDue, (newSum) => {
           </div>
         </fieldset>
 
-        <!-- Total Amount Display -->
-        <div class="text-right text-lg font-bold text-gray-900 mt-4 mb-6">
-          Total Amount Due: <span class="text-primary">${{ totalAmountDue }}</span>
+        <div class="text-right text-lg font-bold mt-4 mb-6">
+          Total Amount Due: <span class="text-primary pl-2">₱{{ totalAmountDue }}</span>
         </div>
 
         <div class="flex flex-row justify-end gap-3 pt-2">

@@ -5,13 +5,22 @@ import { eq } from 'drizzle-orm';
 export default defineEventHandler(async (event) => {
   const id = Number(event.context.params?.id);
   if (!id) {
-    throw createError({ statusCode: 400, statusMessage: 'ID is required', message: 'ID is required' });
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'ID is required',
+      message: 'ID is required',
+    });
   }
 
   const body = await readBody(event);
+  await db.update(academicYears).set({ status: false }).execute();
 
-  const result = await db.update(academicYears)
-    .set({ academic_year: body.academic_year, status: body.status })
+  const result = await db
+    .update(academicYears)
+    .set({
+      academic_year: body.academic_year,
+      status: body.status,
+    })
     .where(eq(academicYears.id, id))
     .execute();
 

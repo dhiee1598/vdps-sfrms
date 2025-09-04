@@ -17,8 +17,8 @@
             </NuxtLink>
           </li>
           <li>
-            <NuxtLink to="/dashboard/masterlist" class="font-medium">
-              <Icon name="solar:bill-list-broken" size="25" /> Masterlist
+            <NuxtLink to="/dashboard/enrollment" class="font-medium">
+              <Icon name="solar:bill-list-broken" size="25" /> Enrollment
             </NuxtLink>
           </li>
           <li>

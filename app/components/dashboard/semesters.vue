@@ -105,7 +105,7 @@ async function toggleStatus(id: number, newStatus: boolean) {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in semesters" :key="item.id">
+        <tr v-for="item in semesters?.data" :key="item.id">
           <th>{{ item.id }}</th>
           <td>{{ item.semester }}</td>
           <td>
