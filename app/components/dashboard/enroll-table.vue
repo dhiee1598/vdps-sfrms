@@ -250,12 +250,12 @@ watch(searchQuery, () => {
         New Enrollment Form
       </h3>
       <div class="flex flex-col">
-        <di class="font-light">
+        <div class="font-light">
           Year: {{ academicYears?.data[0]?.academic_year }}
-        </di>
-        <di class="font-light">
+        </div>
+        <div class="font-light">
           Semester: {{ semesters?.data[0]?.semester }}
-        </di>
+        </div>
       </div>
       <form class="flex flex-col gap-4 w-full mt-4" @submit.prevent="handleSave">
         <div class="flex flex-col gap-4 mt-4">
