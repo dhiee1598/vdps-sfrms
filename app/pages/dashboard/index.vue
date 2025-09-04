@@ -1,9 +1,5 @@
 <script setup lang="ts">
-const { data: academicYears } = await useFetch('/api/private/academic-years');
-const { data: semesters } = await useFetch('/api/private/semesters');
 const { data: students } = await useFetch('/api/private/student');
-
-console.warn(students.value?.data.length, 'students');
 </script>
 
 <template>

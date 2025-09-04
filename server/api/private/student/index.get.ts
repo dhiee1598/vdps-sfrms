@@ -1,11 +1,10 @@
 import db from '~~/server/db';
 import { academicYears } from '~~/server/db/schema/academic-years-schema';
-import { enrollments, enrollmentSelectSchema } from '~~/server/db/schema/enrollment-schema';
+import { enrollments } from '~~/server/db/schema/enrollment-schema';
 import { semesters } from '~~/server/db/schema/semester-schema';
 import { students, studentSelectSchema } from '~~/server/db/schema/student-schema';
-import { and, eq, isNull, not } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { getQuery } from 'h3';
-import { z } from 'zod';
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
