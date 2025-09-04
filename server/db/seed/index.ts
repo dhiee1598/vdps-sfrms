@@ -2,6 +2,28 @@ import 'dotenv/config';
 
 import db from '..';
 import { users } from '../schema/user-schema';
+import { students } from '../schema/student-schema';
+import { enrollments } from '../schema/enrollment-schema';
+import { sql } from 'drizzle-orm';
+
+function randomItem<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function randomPhone() {
+  return '09' + Math.floor(100000000 + Math.random() * 900000000).toString();
+}
+
+function randomId(i: number) {
+  // e.g. STU-0001-2025
+  return `STU-${String(i).padStart(4, '0')}-2025`;
+}
+
+const firstNames = ['Juan', 'Maria', 'Jose', 'Ana', 'Pedro', 'Luis', 'Carmen', 'Elena', 'Miguel', 'Sofia'];
+const middleNames = ['Santos', 'Cruz', 'Garcia', 'Reyes', 'Dela', 'Torres', 'Castro', 'Navarro', 'Diaz', 'Flores'];
+const lastNames = ['Dela Cruz', 'Santos', 'Reyes', 'Garcia', 'Torres', 'Mendoza', 'Castillo', 'Ramos', 'Fernandez', 'Morales'];
+const addresses = ['Quezon City', 'Manila', 'Cebu City', 'Davao City', 'Baguio', 'Iloilo City'];
+
 
 async function main() {
   // Insert Admin Account
@@ -33,10 +55,55 @@ async function main() {
   });
 }
 
+async function seedStudentsAndEnrollments() {
+  const studentData: any[] = [];
+  const enrollmentData: any[] = [];
+
+  for (let i = 1; i <= 100; i++) {
+    const id = randomId(i);
+    const first = randomItem(firstNames);
+    const middle = randomItem(middleNames);
+    const last = randomItem(lastNames);
+
+    studentData.push({
+      id,
+      first_name: first,
+      middle_name: middle,
+      last_name: last,
+      address: randomItem(addresses),
+      contact_number: randomPhone(),
+    });
+
+    enrollmentData.push({
+      student_id: id,
+      strand_id: Math.floor(Math.random() * 5) + 1,       // 1–5 strands
+      grade_level_id: Math.floor(Math.random() * 2) + 11, // 11 or 12
+      semester_id: Math.floor(Math.random() * 2) + 1,     // 1 or 2
+      academic_year_id: 1,                             // fixed for now
+      enroll_status: 'enrolled',
+    });
+  }
+
+  await db.insert(students).values(studentData).onDuplicateKeyUpdate({
+    set: {
+          first_name: sql`VALUES(first_name)`,
+    last_name: sql`VALUES(last_name)`,
+    },
+  });
+
+  await db.insert(enrollments).values(enrollmentData).onDuplicateKeyUpdate({
+    set: {
+         enroll_status: sql`VALUES(enroll_status)`,
+    },
+  });
+}
+
 
 (async () => {
   try {
     await main();
+    await seedStudentsAndEnrollments();
+
     console.log('Seed complete');
     process.exit(0);
   }
