@@ -16,9 +16,9 @@ const formData = ref({
   transaction_items: [],
 });
 
+const isSubmitting = ref(false);
 async function handleStepClick() {
   if (step.value < 4) {
-    console.warn('were passing data', formData.value);
     step.value++;
     if (step.value === 3) {
       formData.value.transaction_items = formData.value.transaction_items.filter(
@@ -28,7 +28,7 @@ async function handleStepClick() {
   }
   else {
     console.warn('were passing data', formData.value);
-
+    isSubmitting.value = true;
     // Step 4 reached — submit the form
     try {
       const response = await $fetch('/api/private/transactions', {
@@ -43,6 +43,13 @@ async function handleStepClick() {
     catch (error) {
       console.error('Failed to submit payment:', error);
     }
+    step.value = 1;
+    formData.value = {
+      assessment_id: '',
+      student_id: '',
+      total_amount: '',
+      transaction_items: [],
+    };
   }
 }
 
@@ -103,8 +110,17 @@ watch(selectedStudent, (newVal) => {
         >
           Back
         </button>
-        <button class="btn btn-accent w-full sm:w-1/3 mt-4" @click="handleStepClick">
-          {{ step === 4 ? 'Submit' : 'Next' }}
+        <button
+          class="btn btn-accent w-full sm:w-1/3 mt-4"
+          :disabled="isSubmitting && step === 4"
+          @click="handleStepClick"
+        >
+          <span v-if="step === 4">
+            {{ isSubmitting ? 'Submitting...' : 'Submit' }}
+          </span>
+          <span v-else>
+            Next
+          </span>
         </button>
       </div>
     </div>

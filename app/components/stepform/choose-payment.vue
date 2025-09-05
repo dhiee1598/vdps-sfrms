@@ -31,9 +31,9 @@ watch(totalPayment, (newTotal) => {
   localFormData.value.total_amount = newTotal;
 });
 
-// watch(selectedPaymentOption, (newVal) => {
-//   localFormData.value.selected_payment_option = newVal;
-// });
+watch(selectedPaymentOption, (newVal) => {
+  localFormData.value.selected_payment_option = newVal;
+});
 
 watch(datas, (newVal) => {
   emit('update:datas', newVal);
