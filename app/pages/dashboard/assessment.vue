@@ -144,7 +144,7 @@ async function handleFormSubmit() {
           <th>Middle Name</th>
           <th>Last Name</th>
           <th>Total Fees</th>
-          <th>Balance</th>
+          <th>Total Paid</th>
           <th>Remaining</th>
           <th class="text-center">
             Action
@@ -173,22 +173,8 @@ async function handleFormSubmit() {
           <td>{{ item?.student.middle_name }}</td>
           <td>{{ item?.student.last_name }}</td>
           <td>{{ item?.total_amount_due }}</td>
-          <td>
-            {{
-              Number(
-                item.payments?.reduce((sum: number, p: { amount: string | number }) => sum + Number(p.amount), 0),
-              ).toFixed(2)
-            }}
-          </td>
-
-          <td>
-            {{
-              (
-                Number(item.total_amount_due)
-                - item.payments?.reduce((sum: number, p: { amount: string | number }) => sum + Number(p.amount), 0)
-              ).toFixed(2)
-            }}
-          </td>
+          <td>{{ item?.totalPaid }}</td>
+          <td>{{ item?.balance }}</td>
           <td class="flex gap-2 justify-center items-center">
             <button class="btn btn-sm btn-success" @click="openViewStudentAssessment(item)">
               <Icon name="solar:eye-linear" size="24" />

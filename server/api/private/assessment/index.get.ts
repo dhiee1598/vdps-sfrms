@@ -4,9 +4,10 @@ import { assessments, assessmentSelectSchema } from '~~/server/db/schema/asesssm
 import { assessmentFees } from '~~/server/db/schema/assessment-fees-schema';
 import { enrollments, enrollmentSelectSchema } from '~~/server/db/schema/enrollment-schema';
 import { fees } from '~~/server/db/schema/fees-schema';
-import { payments } from '~~/server/db/schema/payments-schema';
 import { semesters } from '~~/server/db/schema/semester-schema';
 import { students, studentSelectSchema } from '~~/server/db/schema/student-schema';
+import { transaction_items } from '~~/server/db/schema/transaction-items-schema';
+import { transactions } from '~~/server/db/schema/transaction-schema';
 import { and, eq } from 'drizzle-orm';
 import z from 'zod';
 
@@ -45,14 +46,16 @@ export default defineEventHandler(async (_event) => {
       enrollment: enrollments,
       student: students,
       fee: fees,
-      payment: payments,
+      transactions,
+      transactions_item: transaction_items,
     })
     .from(assessments)
     .leftJoin(enrollments, eq(enrollments.id, assessments.enrollment_id))
     .leftJoin(students, eq(students.id, assessments.student_id))
     .leftJoin(assessmentFees, eq(assessmentFees.assessment_id, assessments.id))
     .leftJoin(fees, eq(fees.id, assessmentFees.fee_id))
-    .leftJoin(payments, eq(payments.assessment_id, assessments.id))
+    .leftJoin(transactions, eq(transactions.assessment_id, assessments.id))
+    .leftJoin(transaction_items, eq(transaction_items.transaction_id, transactions.transaction_id))
     .where(and(...conditions));
 
   const grouped = Object.values(
@@ -65,24 +68,40 @@ export default defineEventHandler(async (_event) => {
           enrollment: row.enrollment,
           student: row.student,
           fees: [],
-          payments: [],
+          transactions: [], // <-- transactions array
+          totalPaid: 0,
+          balance: a.total_amount_due || 0, // initialize balance if needed
         };
       }
 
+      // Add fees
       if (row.fee?.id) {
         acc[a.id].fees.push(row.fee);
       }
 
-      if (row.payment?.assessment_id) {
-        const alreadyExists = acc[a.id].payments.some(
-          (p: any) => p.id === row.payment?.id,
+      // Add transactions and their items
+      if (row.transactions?.transaction_id) {
+      // Check if this transaction already exists
+        let transaction = acc[a.id].transactions.find(
+          (t: any) => t.transaction_id === row.transactions!.transaction_id,
         );
-        if (!alreadyExists) {
-          acc[a.id].payments.push(row.payment);
+
+        if (!transaction) {
+          transaction = {
+            ...row.transactions,
+            items: [], // <-- each transaction has an items array
+          };
+          acc[a.id].transactions.push(transaction);
         }
 
-        if (row.payment.status === 'paid') {
-          const amt = Number(row.payment.amount) || 0;
+        // Add transaction item
+        if (row.transactions_item?.id) {
+          transaction.items.push(row.transactions_item);
+        }
+
+        // Update totalPaid and balance
+        if (row.transactions.status === 'paid') {
+          const amt = Number(row.transactions_item?.amount) || 0;
           acc[a.id].totalPaid += amt;
           acc[a.id].balance -= amt;
         }
