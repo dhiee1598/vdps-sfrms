@@ -4,11 +4,12 @@ import { z } from 'zod';
 
 const payments = mysqlTable('payments', {
   id: int('id').autoincrement().primaryKey(),
+  transaction_id: varchar('transaction_id', { length: 36 }).notNull(),
   assessment_id: int('assessment_id').notNull(),
   student_id: varchar('student_id', { length: 255 }).notNull(),
   amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
   payment_type: varchar('payment_type', { length: 255 }).notNull(),
-  status: mysqlEnum('status', ['pending', 'paid', 'expired']).notNull().default('pending'),
+  // status: mysqlEnum('status', ['pending', 'paid', 'expired']).notNull().default('pending'),
   date_paid: timestamp('date_paid'),
   createdAt: timestamp('created_at').defaultNow(),
 });
