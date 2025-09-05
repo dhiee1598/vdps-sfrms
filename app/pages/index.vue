@@ -18,6 +18,7 @@ const formData = ref({
 
 const isSubmitting = ref(false);
 async function handleStepClick() {
+  console.warn('were passing data', formData.value);
   if (step.value < 4) {
     step.value++;
     if (step.value === 3) {
