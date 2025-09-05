@@ -8,7 +8,7 @@ const enrollments = mysqlTable('enrollments', {
   grade_level_id: int().notNull(),
   semester_id: int().notNull(),
   academic_year_id: int().notNull(),
-  enroll_status: varchar('enroll_status', { length: 255 }).notNull().default('enrolled'),
+  enroll_status: varchar('enroll_status', { length: 255 }).notNull().default('ENROLLED'),
   date_enrolled: timestamp('date_enrolled').notNull().defaultNow(),
   createdAt: timestamp('created_at').defaultNow(),
 });

@@ -33,12 +33,12 @@ const totalAmountDue = computed(() => {
 
 async function onSubmit() {
   emit('submit', formData.value);
-  await refresh();
 }
 
-watch(() => props.assessment, (newVal) => {
+watch(() => props.assessment, async (newVal) => {
   selectedStudents.value = [];
   localAssessment.value = newVal;
+  await refresh();
 });
 
 watch(totalAmountDue, (newSum) => {
