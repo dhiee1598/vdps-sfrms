@@ -19,9 +19,62 @@ function randomId(i: number) {
   return `STU-${String(i).padStart(4, '0')}-2025`;
 }
 
-const firstNames = ['Juan', 'Maria', 'Jose', 'Ana', 'Pedro', 'Luis', 'Carmen', 'Elena', 'Miguel', 'Sofia'];
+const firstNames = [
+  'Juan',
+  'Maria',
+  'Jose',
+  'Ana',
+  'Pedro',
+  'Luis',
+  'Carmen',
+  'Elena',
+  'Miguel',
+  'Sofia',
+  'Gabriel',
+  'Isabella',
+  'Alexander',
+  'Olivia',
+  'Julian',
+  'Ava',
+];
 const middleNames = ['Santos', 'Cruz', 'Garcia', 'Reyes', 'Dela', 'Torres', 'Castro', 'Navarro', 'Diaz', 'Flores'];
-const lastNames = ['Dela Cruz', 'Santos', 'Reyes', 'Garcia', 'Torres', 'Mendoza', 'Castillo', 'Ramos', 'Fernandez', 'Morales'];
+const lastNames = [
+  'Dela Cruz',
+  'Santos',
+  'Reyes',
+  'Garcia',
+  'Torres',
+  'Mendoza',
+  'Castillo',
+  'Ramos',
+  'Fernandez',
+  'Morales',
+  'Gonzales',
+  'Hernandez',
+  'Martinez',
+  'Lopez',
+  'Sanchez',
+  'Perez',
+  'Gomez',
+  'Rodriguez',
+  'Flores',
+  'Diaz',
+  'Santiago',
+  'Rivera',
+  'Ortiz',
+  'Cruz',
+  'Gutierrez',
+  'Vega',
+  'Gonzalez',
+  'Vasquez',
+  'Bautista',
+  'Romero',
+  'Medina',
+  'Chavez',
+  'Jimenez',
+  'Aguilar',
+  'Rubio',
+];
 const addresses = ['Quezon City', 'Manila', 'Cebu City', 'Davao City', 'Baguio', 'Iloilo City'];
 
 
@@ -74,14 +127,6 @@ async function seedStudentsAndEnrollments() {
       contact_number: randomPhone(),
     });
 
-    enrollmentData.push({
-      student_id: id,
-      strand_id: Math.floor(Math.random() * 5) + 1,       // 1–5 strands
-      grade_level_id: Math.floor(Math.random() * 2) + 11, // 11 or 12
-      semester_id: Math.floor(Math.random() * 2) + 1,     // 1 or 2
-      academic_year_id: 1,                             // fixed for now
-      enroll_status: 'enrolled',
-    });
   }
 
   await db.insert(students).values(studentData).onDuplicateKeyUpdate({
@@ -91,11 +136,6 @@ async function seedStudentsAndEnrollments() {
     },
   });
 
-  await db.insert(enrollments).values(enrollmentData).onDuplicateKeyUpdate({
-    set: {
-         enroll_status: sql`VALUES(enroll_status)`,
-    },
-  });
 }
 
 

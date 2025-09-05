@@ -74,7 +74,12 @@ export default defineEventHandler(async (_event) => {
       }
 
       if (row.payment?.assessment_id) {
-        acc[a.id].payments.push(row.payment);
+        const alreadyExists = acc[a.id].payments.some(
+          (p: any) => p.id === row.payment?.id,
+        );
+        if (!alreadyExists) {
+          acc[a.id].payments.push(row.payment);
+        }
 
         if (row.payment.status === 'paid') {
           const amt = Number(row.payment.amount) || 0;
