@@ -129,7 +129,7 @@ const balance = computed(() => {
         </div>
       </div>
 
-      <div class="border rounded-lg overflow-hidden border-accent-content">
+      <!-- <div class="border rounded-lg overflow-hidden border-accent-content">
         <h4 class="p-3 font-medium">
           Payments History
         </h4>
@@ -166,7 +166,7 @@ const balance = computed(() => {
             </tbody>
           </table>
         </div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
