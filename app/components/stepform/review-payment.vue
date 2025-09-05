@@ -29,11 +29,15 @@ const props = defineProps<{
             class="flex justify-between items-center text-base text-gray-600"
           >
             <template v-if="item.payment_type === 'Downpayment' || item.payment_type === 'Fullpayment' || item.payment_type === '1st Quarter' || item.payment_type === '2nd Quarter' || item.payment_type === '3rd Quarter' || item.payment_type === '4th Quarter'">
-              <p class="text-lg font-semibold text-gray-700">
-                Tuition Fees
-              </p>
-              <span>{{ item.payment_type }}</span>
-              <span>₱{{ item.amount.toFixed(2) }}</span>
+              <div class="flex flex-col w-full gap-2">
+                <p class="text-lg font-semibold text-gray-700">
+                  Tuition Fees
+                </p>
+                <div class="flex flex-row justify-between">
+                  <span>{{ item.payment_type }}</span>
+                  <span>₱{{ item.amount.toFixed(2) }}</span>
+                </div>
+              </div>
             </template>
           </li>
           <li v-if="!props.formData.transaction_items.some((item: { payment_type: string; }) => item.payment_type !== 'Downpayment' && item.payment_type !== 'Fullpayment' && item.payment_type !== '1st Quarter' && item.payment_type !== '2nd Quarter' && item.payment_type !== '3rd Quarter' && item.payment_type !== '4th Quarter')" class="text-sm italic text-gray-500">
@@ -43,7 +47,7 @@ const props = defineProps<{
       </div>
 
       <div class="space-y-3">
-        <p class="text-lg font-semibold text-gray-700">
+        <p class="text-lg font-semibold   dark:text-gray-700">
           Additional Fees
         </p>
         <ul class="space-y-2">
