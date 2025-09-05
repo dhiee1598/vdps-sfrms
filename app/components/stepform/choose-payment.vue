@@ -60,7 +60,14 @@ function togglePaymentOption(option: string) {
   }
 
   selectedPaymentOption.value = option;
-  inputAmount.value = existing ? existing.amount : 0;
+
+  if (option === 'Full Payment') {
+    inputAmount.value = datas.value.overall_balance;
+    console.warn('iyo full payment', inputAmount.value, datas.value.overall_balance);
+  }
+  else {
+    inputAmount.value = existing ? existing.amount : 0;
+  }
 }
 
 function toggleSundry(sundry: { sundry_name: string; sundry_amount: string }) {
@@ -211,6 +218,7 @@ onMounted(() => {
         type="number"
         class="input w-full"
         placeholder="Enter amount"
+        :readonly="selectedPaymentOption === 'Full Payment'"
       >
     </div>
     <div class="text-right">
