@@ -2,7 +2,8 @@
 import { computed, ref } from 'vue';
 
 const { data: assessment } = await useFetch('/api/private/assessment');
-console.warn(assessment);
+const { data: allSundries } = await useFetch('/api/private/sundries');
+console.warn(allSundries.value);
 // --- Computed: all students from API ---
 const allStudents = computed(() =>
   (assessment.value?.data ?? []).map((s: any) => ({
@@ -43,13 +44,36 @@ const totalPaid = computed(() =>
 );
 
 const outstandingBalance = computed(() => {
-  return Math.max(Number(studentAssessment.value?.total_amount_due ?? 0) - totalPaid.value, 0);
+  const totalDue = Number(studentAssessment.value?.total_amount_due ?? 0);
+
+  // ✅ sum only "paid" payments
+  const paidAmount = (studentAssessment.value?.payments ?? [])
+    .filter((payment: { status: string }) => payment.status === 'paid')
+    .reduce((sum: number, p: { amount: any }) => sum + Number(p.amount ?? 0), 0);
+
+  return Math.max(totalDue - paidAmount, 0);
+});
+
+const quarterAmount = computed(() => {
+  const totalDue = Number(studentAssessment.value?.total_amount_due ?? 0) || 0;
+
+  // ✅ sum only "paid" payments
+  const paidAmount = (studentAssessment.value?.payments ?? [])
+    .filter((payment: {
+      payment_type: string;
+      status: string;
+    }) => payment.status === 'paid' && payment.payment_type === 'Downpayment')
+    .reduce((sum: number, p: { amount: any }) => sum + Number(p.amount ?? 0), 0);
+
+  console.warn('the total', totalDue, 'the paid', paidAmount);
+
+  return Math.max(totalDue - paidAmount, 0);
 });
 
 // ✅ Step 3: Quarters
-const quarterAmount = computed(() =>
-  studentAssessment.value ? Number(studentAssessment.value.total_amount_due) / 4 : 0,
-);
+// const quarterAmount = computed(() =>
+//   studentAssessment.value ? Number(studentAssessment.value.total_amount_due ) / 4 : 0,
+// );
 type Quarter = {
   name: string;
   amount: number;
@@ -62,7 +86,7 @@ const quarters = computed<Quarter[]>(() => {
   const payments = studentAssessment.value?.payments ?? [];
   const quarterNames = ['1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter'];
 
-  const baseAmount = quarterAmount.value;
+  const baseAmount = quarterAmount.value / 4;
   let carryOver = 0;
 
   const result: Quarter[] = [];
@@ -97,12 +121,7 @@ const quarters = computed<Quarter[]>(() => {
 });
 
 // ✅ Step 4: Sundry (from API fees)
-const sundries = computed(() => [
-  { id: 1, name: 'Mock Sundry 1', amount: 100 },
-  { id: 2, name: 'Mock Sundry 2', amount: 200 },
-  { id: 3, name: 'Mock Sundry 3', amount: 300 },
-  { id: 4, name: 'Mock Sundry 4', amount: 400 },
-]);
+const sundries = computed(() => allSundries.value?.map((s: any) => ({ ...s, amount: Number(s.sundry_amount), selected: false, name: s.sundry_name })) ?? []);
 
 // ✅ Reactive form data (computed so it's always up to date)
 const formData = computed(() => ({
