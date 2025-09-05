@@ -68,20 +68,20 @@ export default defineEventHandler(async (_event) => {
           enrollment: row.enrollment,
           student: row.student,
           fees: [],
-          transactions: [], // <-- transactions array
+          transactions: [],
           totalPaid: 0,
-          balance: a.total_amount_due || 0, // initialize balance if needed
+          balance: a.total_amount_due || 0,
         };
       }
 
-      // Add fees
       if (row.fee?.id) {
-        acc[a.id].fees.push(row.fee);
+        const alreadyExists = acc[a.id].fees.some((f: any) => f.id === row.fee!.id);
+        if (!alreadyExists) {
+          acc[a.id].fees.push(row.fee);
+        }
       }
 
-      // Add transactions and their items
       if (row.transactions?.transaction_id) {
-      // Check if this transaction already exists
         let transaction = acc[a.id].transactions.find(
           (t: any) => t.transaction_id === row.transactions!.transaction_id,
         );
@@ -89,17 +89,20 @@ export default defineEventHandler(async (_event) => {
         if (!transaction) {
           transaction = {
             ...row.transactions,
-            items: [], // <-- each transaction has an items array
+            items: [],
           };
           acc[a.id].transactions.push(transaction);
         }
 
-        // Add transaction item
         if (row.transactions_item?.id) {
-          transaction.items.push(row.transactions_item);
+          const alreadyExists = transaction.items.some(
+            (item: any) => item.id === row.transactions_item!.id,
+          );
+          if (!alreadyExists) {
+            transaction.items.push(row.transactions_item);
+          }
         }
 
-        // Update totalPaid and balance
         if (row.transactions.status === 'paid') {
           const amt = Number(row.transactions_item?.amount) || 0;
           acc[a.id].totalPaid += amt;
