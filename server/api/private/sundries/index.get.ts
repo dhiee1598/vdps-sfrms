@@ -6,5 +6,8 @@ export default defineEventHandler(async () => {
     .select()
     .from(sundries);
 
-  return allSundries;
+  return {
+    message: 'Fetch All Sundries',
+    data: allSundries,
+  };
 });

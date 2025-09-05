@@ -30,9 +30,18 @@ const assessmentSchema = z.object({
   total_fees: z.number().positive(),
 });
 
-export { assessmentSchema, loginSchema, studentSchema };
+const sundriesSchema = z.object({
+  id: z.number().int(),
+  sundry_name: z.string(),
+  sundry_description: z.string().nullable(),
+  sundry_amount: z.string(),
+  createdAt: z.string().nullable(),
+});
+
+export { assessmentSchema, loginSchema, studentSchema, sundriesSchema };
 
 export type Login = z.infer<typeof loginSchema>;
 export type Student = z.infer<typeof studentSchema>;
 export type Assessment = z.infer<typeof assessmentSchema>;
 export type Fees = z.infer<typeof feeSchema>;
+export type Sundries = z.infer<typeof sundriesSchema>;

@@ -2,22 +2,29 @@
 import studentComputation from '~/utilities/student-computation';
 
 const { data: assessment } = await useFetch('/api/private/assessment');
+const { data: sundries } = await useFetch('/api/private/sundries');
 
 const step = ref(1);
-const isLoading = ref(false);
 const selectedStudent = ref();
 const studentdata = ref();
+const formData = ref({
+  assessment_id: '',
+  student_id: '',
+  total_amount: '',
+  transaction_items: [],
+});
 
 function handleStepClick() {
-  if (step.value === 2 || !selectedStudent.value)
-    return;
-
   if (step.value < 4)
     step.value++;
+
+  console.warn(formData.value);
 }
 
 watch(selectedStudent, (newVal) => {
   studentdata.value = studentComputation(newVal);
+  formData.value.assessment_id = studentdata.value.selected_students.id;
+  formData.value.student_id = studentdata.value.selected_students.student_id;
 });
 </script>
 
@@ -47,13 +54,12 @@ watch(selectedStudent, (newVal) => {
         />
       </div>
 
-      <div v-if="step === 2" class="text-center w-full text-lg font-medium">
-        <div v-if="isLoading">
-          <span class="loading loading-ring loading-xl" />
-        </div>
-        <div v-else class="w-full">
-          <StepformChoosePayment v-model:datas="studentdata" />
-        </div>
+      <div v-if="step === 2" class="w-full text-center">
+        <StepformChoosePayment
+          v-model:datas="studentdata"
+          v-model:form-data="formData"
+          :sundries="sundries?.data"
+        />
       </div>
 
       <div v-if="step === 3" class="text-center text-lg font-medium">
