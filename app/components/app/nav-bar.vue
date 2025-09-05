@@ -16,10 +16,10 @@ async function logout() {
         width="56"
       />
       <div class="ml-2">
-        <div class="text-xl font-bold">
+        <div class="text-xs font-bold md:text-xl">
           Student Financial Record Management System
         </div>
-        <div class="font-light text-sm">
+        <div class="font-light text-xs md:text-sm">
           Virgen Del Pilar School Rodriguez, Inc.
         </div>
       </div>
