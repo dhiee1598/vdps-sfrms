@@ -175,8 +175,8 @@ watch(searchQuery, () => {
         <th>First Name</th>
         <th>Middle Name</th>
         <th>Last Name</th>
-        <th>Address</th>
-        <th>Contact</th>
+        <th>Strand</th>
+        <th>Grade Level</th>
         <th>Status</th>
         <th class="text-center">
           Action
@@ -201,8 +201,8 @@ watch(searchQuery, () => {
         <td>{{ item?.first_name }}</td>
         <td>{{ item?.middle_name }}</td>
         <td>{{ item?.last_name }}</td>
-        <td>{{ item?.address }}</td>
-        <td>{{ item?.contact_number }}</td>
+        <td>{{ item?.strand_name }}</td>
+        <td>{{ item?.grade_name }}</td>
         <td>{{ item.enroll_status }}</td>
         <td class="flex gap-2 justify-center items-center">
           <button class="btn btn-sm btn-success">
@@ -264,7 +264,7 @@ watch(searchQuery, () => {
               label="fullName"
               track-by="id"
               placeholder="Search by id, first name, last name or full name"
-              max-height="150"
+              :max-height="150"
               open-direction="below"
             >
               <template #noResult>

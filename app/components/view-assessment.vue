@@ -35,7 +35,7 @@ const balance = computed(() => {
 </script>
 
 <template>
-  <div v-if="localStudentAssessment" class="p-6 rounded-lg shadow-xl">
+  <div v-if="localStudentAssessment">
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-2xl font-bold">
         Student Assessment
@@ -100,7 +100,7 @@ const balance = computed(() => {
         <h4 class="p-3 font-medium">
           Fees Breakdown
         </h4>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto overflow-y-auto max-h-[180px]">
           <table class="table w-full text-sm">
             <thead>
               <tr>
@@ -133,7 +133,7 @@ const balance = computed(() => {
         <h4 class="p-3 font-medium">
           Payments History
         </h4>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto overflow-y-auto max-h-[180px]">
           <table class="table w-full text-sm">
             <thead>
               <tr>
