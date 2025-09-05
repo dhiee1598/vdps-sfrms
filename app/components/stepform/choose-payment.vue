@@ -26,6 +26,15 @@ const totalPayment = computed(() => {
   }, 0);
 });
 
+// Keep localFormData total_amount in sync
+watch(totalPayment, (newTotal) => {
+  localFormData.value.total_amount = newTotal;
+});
+
+// watch(selectedPaymentOption, (newVal) => {
+//   localFormData.value.selected_payment_option = newVal;
+// });
+
 watch(datas, (newVal) => {
   emit('update:datas', newVal);
 });
@@ -46,7 +55,7 @@ function togglePaymentOption(option: string) {
   if (!existing) {
     formData.value.transaction_items.push({
       payment_type: option,
-      amount: 0,
+      amount: 0.00,
     });
   }
 

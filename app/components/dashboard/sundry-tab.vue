@@ -99,7 +99,7 @@ function openEditModal(item: any) {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="sundry in sundries" :key="sundry.id">
+        <tr v-for="sundry in sundries?.data" :key="sundry.id">
           <td>{{ sundry.id }}</td>
           <td>{{ sundry.sundry_name }}</td>
           <td>{{ sundry.sundry_amount }}</td>

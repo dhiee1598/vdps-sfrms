@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { StepformChoosePayment, StepformReviewPayment } from '#components';
+
 import studentComputation from '~/utilities/student-computation';
 
 const { data: assessment } = await useFetch('/api/private/assessment');
@@ -14,11 +16,34 @@ const formData = ref({
   transaction_items: [],
 });
 
-function handleStepClick() {
-  if (step.value < 4)
+async function handleStepClick() {
+  if (step.value < 4) {
+    console.warn('were passing data', formData.value);
     step.value++;
+    if (step.value === 3) {
+      formData.value.transaction_items = formData.value.transaction_items.filter(
+        (item: any) => item.amount > 0,
+      );
+    }
+  }
+  else {
+    console.warn('were passing data', formData.value);
 
-  console.warn(formData.value);
+    // Step 4 reached — submit the form
+    try {
+      const response = await $fetch('/api/private/transactions', {
+        method: 'POST',
+        body: formData.value,
+      });
+      console.warn(formData.value);
+      console.warn('Payment submitted successfully:', response);
+      // Optionally reset or navigate
+      step.value++;
+    }
+    catch (error) {
+      console.error('Failed to submit payment:', error);
+    }
+  }
 }
 
 watch(selectedStudent, (newVal) => {
@@ -62,12 +87,12 @@ watch(selectedStudent, (newVal) => {
         />
       </div>
 
-      <div v-if="step === 3" class="text-center text-lg font-medium">
-        THIS IS STEP 3
+      <div v-if="step === 3" class="w-full">
+        <StepformReviewPayment v-model:datas="studentdata" :form-data="formData" />
       </div>
 
       <div v-if="step === 4" class="text-center text-lg font-medium">
-        THIS IS STEP 4
+        Click Submit and proceed to Cashier. Thank you for using our services.
       </div>
 
       <div class="w-full items-center flex justify-center gap-3">
