@@ -118,12 +118,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 bg-base-100 border-base-300  rounded-box border p-4 mx-auto">
+  <div class="flex flex-col gap-4 mx-auto">
     <fieldset class="fieldset">
       <legend class="fieldset-legend text-lg">
         Choose Payment Option:
       </legend>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm py-2">
+      <div class="grid grid-cols-2 gap-4 text-sm py-2">
         <div v-for="(paymentOption, index) in datas.available_payment_option" :key="index">
           <label class="label">
             <input
@@ -139,8 +139,8 @@ onMounted(() => {
         </div>
       </div>
     </fieldset>
-    <div class="flex flex-row w-full gap-4">
-      <div class="border rounded-lg overflow-hidden border-accent-content w-1/2">
+    <div class="flex flex-col md:flex-row w-full gap-4 justify-center">
+      <div class="border rounded-lg w-full overflow-hidden border-accent-content">
         <h4 class="p-3 font-medium">
           Tuition & Fees Summary
         </h4>
@@ -172,7 +172,7 @@ onMounted(() => {
           </table>
         </div>
       </div>
-      <div class="border rounded-lg overflow-hidden border-accent-content w-1/2">
+      <div class="border rounded-lg w-full overflow-hidden border-accent-content">
         <h4 class="p-3 font-medium">
           Additionals
         </h4>

@@ -109,23 +109,23 @@ watch(selectedStudent, (newVal) => {
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col items-center justify-start p-4">
+  <div class="min-h-screen flex flex-col items-center text-center justify-start p-4">
     <ul class="steps w-full max-w-3xl mb-8 justify-between">
-      <li class="step" :class="[step >= 1 && 'step-primary']">
+      <li class="step text-sm md:text-md" :class="[step >= 1 && 'step-primary']">
         Search Student
       </li>
-      <li class="step" :class="[step >= 2 && 'step-primary']">
+      <li class="step text-sm md:text-md" :class="[step >= 2 && 'step-primary']">
         Choose Payment Items
       </li>
-      <li class="step" :class="[step >= 3 && 'step-primary']">
+      <li class="step text-sm md:text-md" :class="[step >= 3 && 'step-primary']">
         Review & Confirm
       </li>
-      <li class="step" :class="[step >= 4 && 'step-primary']">
+      <li class="step text-sm md:text-md" :class="[step >= 4 && 'step-primary']">
         Proceed to Cashier
       </li>
     </ul>
 
-    <div class="w-full max-w-3xl my-auto p-8 rounded-lg shadow-md flex flex-col gap-6 items-center">
+    <div class="w-full max-w-3xl my-auto p-2 md:p-8 rounded-lg shadow-md flex flex-col gap-6 items-center">
       <div v-if="step === 1" class="w-full">
         <StepformSelectStudent
           :selected-student="selectedStudent"
@@ -134,7 +134,7 @@ watch(selectedStudent, (newVal) => {
         />
       </div>
 
-      <div v-if="step === 2" class="w-full text-center">
+      <div v-if="step === 2" class="w-full">
         <StepformChoosePayment
           v-model:datas="studentdata"
           v-model:form-data="formData"
@@ -149,8 +149,8 @@ watch(selectedStudent, (newVal) => {
         />
       </div>
 
-      <div v-if="step === 4" class="text-center text-lg font-medium">
-        <div v-if="isSubmitting" class="w-full flex justify-center">
+      <div v-if="step === 4" class="w-full">
+        <div v-if="isSubmitting" class="flex justify-center">
           <div class="flex flex-col items-center justify-center p-6 w-full max-w-sm">
             <span class="loading loading-spinner loading-xl" />
             <p class="text-xl font-semibold py-4 label">
@@ -159,8 +159,8 @@ watch(selectedStudent, (newVal) => {
           </div>
         </div>
         <div v-else class="flex justify-center">
-          <div class="w-full max-w-md p-6 text-center">
-            <div class="flex justify-center mb-4">
+          <div class="p-2 text-center">
+            <div class="mb-4">
               <Icon
                 name="solar:check-circle-linear"
                 size="65"
@@ -170,7 +170,7 @@ watch(selectedStudent, (newVal) => {
             <h2 class="text-xl font-bold mb-2">
               Payment Submitted
             </h2>
-            <p class="mb-6 mt-5 text-sm label">
+            <p class="mb-6 mt-5 text-sm">
               Please proceed to the cashier to complete the transaction. <br>
               Thank you for your payment.
             </p>
@@ -181,10 +181,10 @@ watch(selectedStudent, (newVal) => {
         </div>
       </div>
 
-      <div v-if="step !== 4" class="w-full items-center flex justify-center gap-3">
+      <div v-if="step !== 4" class="w-full flex-col items-center flex justify-center gap-2">
         <button
           v-if="step > 1"
-          class="btn w-full sm:w-1/3 mt-4"
+          class="btn w-full mt-4 lg:w-md"
           @click="
             step--;
             if (step === 1) {
@@ -192,13 +192,14 @@ watch(selectedStudent, (newVal) => {
               studentdata = null;
               formData.assessment_id = '';
               formData.student_id = '';
+              formData.transaction_items = [];
             }
           "
         >
           Back
         </button>
         <button
-          class="btn btn-accent w-full sm:w-1/3 mt-4"
+          class="btn btn-accent w-full lg:w-md"
           :disabled="(step === 1 && formData.student_id === '')
             || (step === 2 && formData.total_amount === 0)"
           @click="handleStepClick"
