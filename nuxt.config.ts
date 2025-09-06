@@ -14,6 +14,11 @@ export default defineNuxtConfig({
     '@nuxtjs/google-fonts',
     'nuxt-auth-utils',
   ],
+  nitro: {
+    experimental: {
+      websocket: true,
+    },
+  },
   plugins: ['~/plugins/vue-multiselect.ts'],
   eslint: {
     config: {
