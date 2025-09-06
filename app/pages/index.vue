@@ -73,7 +73,7 @@ watch(selectedStudent, (newVal) => {
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col items-center justify-start bg-gray-800 p-8">
+  <div class="min-h-screen flex flex-col items-center justify-start p-4">
     <ul class="steps w-full max-w-3xl mb-8 justify-between">
       <li class="step" :class="[step >= 1 && 'step-primary']">
         Search Student
