@@ -27,7 +27,7 @@ const allStudents = computed(() =>
 
 <template>
   <div class="w-full flex flex-col justify-center items-center">
-    <div class="text-3xl py-4 font-thin">
+    <div class="text-3xl py-4">
       Student Payment Kiosk System
     </div>
     <NuxtImg
@@ -49,7 +49,7 @@ const allStudents = computed(() =>
         label="name"
         track-by="id"
         placeholder="Search by name..."
-        class="w-full"
+        class="w-full border rounded-sm"
       />
     </div>
   </div>
