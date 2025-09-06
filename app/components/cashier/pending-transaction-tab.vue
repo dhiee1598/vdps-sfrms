@@ -258,7 +258,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
         <div class="flex items-center justify-between border-b border-base-300 pb-3">
           <h3 class="text-xl font-semibold flex items-center gap-2">
             <Icon
-              name="mdi:file-document-outline"
+              name="solar:document-add-linear"
               size="22"
               class="text-primary"
             />
