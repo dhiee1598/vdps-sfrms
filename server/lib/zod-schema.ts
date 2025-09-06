@@ -1,4 +1,7 @@
-import { z } from 'zod';
+import { date, z } from 'zod';
+import { id } from 'zod/v4/locales';
+
+import { gradeLevel } from '../db/schema/grade-level-schema';
 
 const loginSchema = z.object({
   email: z.email(),
@@ -38,10 +41,27 @@ const sundriesSchema = z.object({
   createdAt: z.string().nullable(),
 });
 
-export { assessmentSchema, loginSchema, studentSchema, sundriesSchema };
+const enrolledStudentSchema = z.object({
+  id: z.number().int(),
+  student_id: z.string(),
+  first_name: z.string(),
+  middle_name: z.string().nullable(),
+  last_name: z.string(),
+  address: z.string(),
+  contact_number: z.string(),
+  grade_level: z.string(),
+  strand_name: z.string(),
+  academic_year: z.string(),
+  semester: z.string(),
+  date_enrolled: z.date().nullable(),
+  createdAt: z.date().nullable(),
+});
+
+export { assessmentSchema, enrolledStudentSchema, loginSchema, studentSchema, sundriesSchema };
 
 export type Login = z.infer<typeof loginSchema>;
 export type Student = z.infer<typeof studentSchema>;
 export type Assessment = z.infer<typeof assessmentSchema>;
 export type Fees = z.infer<typeof feeSchema>;
 export type Sundries = z.infer<typeof sundriesSchema>;
+export type EnrolledStudent = z.infer<typeof enrolledStudentSchema>;
