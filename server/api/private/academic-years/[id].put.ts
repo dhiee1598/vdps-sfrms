@@ -13,16 +13,20 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event);
-  await db.update(academicYears).set({ status: false }).execute();
+  let result;
+  if (body.academic_year) {
+    result = await db
+      .update(academicYears)
+      .set({
+        academic_year: body.academic_year,
+      })
+      .where(eq(academicYears.id, id))
+      .execute();
+  }
+  else {
+    await db.update(academicYears).set({ status: false }).execute();
+    result = await db.update(academicYears).set({ status: true }).where(eq(academicYears.id, id)).execute();
+  }
 
-  const result = await db
-    .update(academicYears)
-    .set({
-      academic_year: body.academic_year,
-      status: body.status,
-    })
-    .where(eq(academicYears.id, id))
-    .execute();
-
-  return { success: true, data: result };
+  return { success: true, data: result, message: 'Academic year updated successfully' };
 });
