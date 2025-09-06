@@ -15,6 +15,10 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
     socket.on('newPayment', () => {
       socket.join('newPayment');
     });
+
+    socket.on('newStudentAssessment', () => {
+      socket.join('newStudentAssessment');
+    });
   });
 
   nitroApp.hooks.hook('request', (event) => {

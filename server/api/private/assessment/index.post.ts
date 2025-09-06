@@ -55,6 +55,8 @@ export default defineEventHandler(async (event) => {
     return newAssessment;
   });
 
+  event.context.io.emit('newStudentAssessment', 'A new student assessment has been inserted.');
+
   return {
     success: true,
     message: 'Student successfully assessed',
