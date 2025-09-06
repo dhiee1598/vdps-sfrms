@@ -12,13 +12,13 @@ const studentdata = ref();
 const formData = ref({
   assessment_id: '',
   student_id: '',
-  total_amount: '',
+  total_amount: 0,
   transaction_items: [],
 });
 
 const isSubmitting = ref(false);
+
 async function handleStepClick() {
-  console.warn('were passing data', formData.value);
   if (step.value < 4) {
     step.value++;
     if (step.value === 3) {
@@ -26,46 +26,57 @@ async function handleStepClick() {
         (item: any) => item.amount > 0,
       );
     }
-  }
-  else {
-    console.warn('were passing data', formData.value);
-    isSubmitting.value = true;
-    // Step 4 reached — submit the form
-    try {
-      const response = await $fetch('/api/private/transactions', {
-        method: 'POST',
-        body: formData.value,
-      });
-      console.warn(formData.value);
-      console.warn('Payment submitted successfully:', response);
-      // Optionally reset or navigate
-      step.value++;
+
+    if (step.value === 4) {
+      isSubmitting.value = true;
+
+      try {
+        const { success } = await $fetch('/api/private/transactions', {
+          method: 'POST',
+          body: formData.value,
+        });
+
+        if (success) {
+          isSubmitting.value = false;
+          setTimeout(() => {
+            step.value = 1;
+            selectedStudent.value = null;
+            studentdata.value = null;
+            formData.value = {
+              assessment_id: '',
+              student_id: '',
+              total_amount: 0,
+              transaction_items: [],
+            };
+          }, 3000);
+        }
+        else {
+          isSubmitting.value = false;
+          step.value--;
+        }
+      }
+      catch (error) {
+        console.error('Failed to submit payment:', error);
+        isSubmitting.value = false;
+      }
     }
-    catch (error) {
-      console.error('Failed to submit payment:', error);
-    }
-    step.value = 1;
-    formData.value = {
-      assessment_id: '',
-      student_id: '',
-      total_amount: '',
-      transaction_items: [],
-    };
   }
 }
 
 watch(selectedStudent, (newVal) => {
-  studentdata.value = studentComputation(newVal);
-  formData.value.assessment_id = studentdata.value.selected_students.id;
-  formData.value.student_id = studentdata.value.selected_students.student_id;
+  if (newVal) {
+    studentdata.value = studentComputation(newVal);
+    formData.value.assessment_id = studentdata.value.selected_students.id;
+    formData.value.student_id = studentdata.value.selected_students.student_id;
+  }
 });
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col items-center justify-start bg-gray-800 p-8">
+  <div class="min-h-screen flex flex-col items-center justify-start p-4">
     <ul class="steps w-full max-w-3xl mb-8 justify-between">
       <li class="step" :class="[step >= 1 && 'step-primary']">
-        Student Search
+        Search Student
       </li>
       <li class="step" :class="[step >= 2 && 'step-primary']">
         Choose Payment Items
@@ -96,32 +107,67 @@ watch(selectedStudent, (newVal) => {
       </div>
 
       <div v-if="step === 3" class="w-full">
-        <StepformReviewPayment v-model:datas="studentdata" :form-data="formData" />
+        <StepformReviewPayment
+          v-model:datas="studentdata"
+          :form-data="formData"
+        />
       </div>
 
       <div v-if="step === 4" class="text-center text-lg font-medium">
-        Click Submit and proceed to Cashier. Thank you for using our services.
+        <div v-if="isSubmitting" class="w-full flex justify-center">
+          <div class="flex flex-col items-center justify-center p-6 w-full max-w-sm">
+            <span class="loading loading-spinner loading-xl" />
+            <p class="text-xl font-semibold py-4 label">
+              Processing Payment...
+            </p>
+          </div>
+        </div>
+        <div v-else class="flex justify-center">
+          <div class="w-full max-w-md p-6 text-center">
+            <div class="flex justify-center mb-4">
+              <Icon
+                name="solar:check-circle-linear"
+                size="65"
+                class="text-green-500"
+              />
+            </div>
+            <h2 class="text-xl font-bold mb-2">
+              Payment Submitted
+            </h2>
+            <p class="mb-6 mt-5 text-sm label">
+              Please proceed to the cashier to complete the transaction. <br>
+              Thank you for your payment.
+            </p>
+            <div class="animate-pulse text-sm label">
+              Redirecting back in 3 seconds...
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="w-full items-center flex justify-center gap-3">
+      <div v-if="step !== 4" class="w-full items-center flex justify-center gap-3">
         <button
           v-if="step > 1"
           class="btn w-full sm:w-1/3 mt-4"
-          @click="step--"
+          @click="
+            step--;
+            if (step === 1) {
+              selectedStudent = null;
+              studentdata = null;
+              formData.assessment_id = '';
+              formData.student_id = '';
+            }
+          "
         >
           Back
         </button>
         <button
           class="btn btn-accent w-full sm:w-1/3 mt-4"
-          :disabled="isSubmitting && step === 4"
+          :disabled="(step === 1 && formData.student_id === '')
+            || (step === 2 && formData.total_amount === 0)"
           @click="handleStepClick"
         >
-          <span v-if="step === 4">
-            {{ isSubmitting ? 'Submitting...' : 'Submit' }}
-          </span>
-          <span v-else>
-            Next
-          </span>
+          {{ step === 3 ? 'Confirm' : 'Next' }}
         </button>
       </div>
     </div>
