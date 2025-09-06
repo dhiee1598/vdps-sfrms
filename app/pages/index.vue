@@ -1,10 +1,6 @@
 <script setup lang="ts">
-import { StepformChoosePayment, StepformReviewPayment } from '#components';
-
-import studentComputation from '~/utilities/student-computation';
-
-const { data: assessment } = await useFetch('/api/private/assessment');
-const { data: sundries } = await useFetch('/api/private/sundries');
+const { data: assessment, refresh: refreshAssessment } = await useFetch('/api/private/assessment');
+const { data: sundries, refresh: refreshSundries } = await useFetch('/api/private/sundries');
 
 const step = ref(1);
 const selectedStudent = ref();
@@ -38,6 +34,8 @@ async function handleStepClick() {
 
         if (success) {
           isSubmitting.value = false;
+          await refreshAssessment();
+          await refreshSundries();
           setTimeout(() => {
             step.value = 1;
             selectedStudent.value = null;
