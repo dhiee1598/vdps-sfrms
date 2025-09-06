@@ -111,16 +111,16 @@ watch(selectedStudent, (newVal) => {
 <template>
   <div class="min-h-screen flex flex-col items-center text-center justify-start p-4">
     <ul class="steps w-full max-w-3xl mb-8 justify-between">
-      <li class="step text-sm md:text-md" :class="[step >= 1 && 'step-primary']">
+      <li class="step text-sm md:text-md" :class="[step >= 1 && 'step-accent font-semibold']">
         Search Student
       </li>
-      <li class="step text-sm md:text-md" :class="[step >= 2 && 'step-primary']">
+      <li class="step text-sm md:text-md" :class="[step >= 2 && 'step-accent font-semibold']">
         Choose Payment Items
       </li>
-      <li class="step text-sm md:text-md" :class="[step >= 3 && 'step-primary']">
+      <li class="step text-sm md:text-md" :class="[step >= 3 && 'step-accent font-semibold']">
         Review & Confirm
       </li>
-      <li class="step text-sm md:text-md" :class="[step >= 4 && 'step-primary']">
+      <li class="step text-sm md:text-md" :class="[step >= 4 && 'step-accent font-semibold']">
         Proceed to Cashier
       </li>
     </ul>
@@ -184,7 +184,7 @@ watch(selectedStudent, (newVal) => {
       <div v-if="step !== 4" class="w-full flex-col items-center flex justify-center gap-2">
         <button
           v-if="step > 1"
-          class="btn w-full mt-4 lg:w-md"
+          class="btn w-full max-w-md mt-4"
           @click="
             step--;
             if (step === 1) {
@@ -199,7 +199,7 @@ watch(selectedStudent, (newVal) => {
           Back
         </button>
         <button
-          class="btn btn-accent w-full lg:w-md"
+          class="btn btn-accent w-full max-w-md"
           :disabled="(step === 1 && formData.student_id === '')
             || (step === 2 && formData.total_amount === 0)"
           @click="handleStepClick"
