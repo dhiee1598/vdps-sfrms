@@ -370,7 +370,7 @@ async function handleSubmit() {
       <!-- Transaction Details -->
       <div class="mb-4 text-sm">
         <p><span class="font-medium">Transaction ID:</span> {{ selectedItem?.transaction.transaction_id }}</p>
-        <p><span class="font-medium">Status:</span> <span class="text-green-600 font-semibold">PAID</span></p>
+        <p><span class="font-medium">Status:</span> <span class="text-green-600 font-semibold">paid</span></p>
         <p><span class="font-medium">Total Amount:</span> ₱ {{ Number(selectedItem?.transaction.total_amount).toFixed(2) }}</p>
       </div>
 

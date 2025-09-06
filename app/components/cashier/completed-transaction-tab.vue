@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useVueToPrint } from 'vue-to-print';
+
 const { data: transactions } = await useFetch('/api/private/transactions');
 
 const isOpen = ref(false);
@@ -56,6 +58,16 @@ function openModal(item: any) {
   isOpen.value = true;
   selectedItem.value = item;
 }
+
+const componentRef = ref(); // ref for printable content
+const { handlePrint } = useVueToPrint({
+  content: () => componentRef.value, // must be a function that returns element
+  documentTitle: 'Transaction-Receipt',
+  onAfterPrint: () => {
+    isOpen.value = false;
+    selectedItem.value = null;
+  },
+});
 </script>
 
 <template>
@@ -281,8 +293,94 @@ function openModal(item: any) {
           <button class="btn btn-outline" @click="isOpen = false">
             Close
           </button>
+
+          <button class="btn btn-primary" @click="handlePrint">
+            Print Receipt
+          </button>
         </div>
       </div>
     </dialog>
+
+    <!-- ✅ PRINTABLE RECEIPT -->
+    <div ref="componentRef" class="print-area mx-auto my-6 max-w-md bg-white text-black p-6 rounded-lg shadow-md block md:hidden lg:hidden">
+      <!-- School Header -->
+      <div class="text-center border-b pb-4 mb-4">
+        <h2 class="text-lg font-bold">
+          Virgen Del Pilar School Rodriguez, Inc.
+        </h2>
+        <p class="text-sm">
+          ADDRESS
+        </p>
+        <p class="text-sm">
+          Official Receipt
+        </p>
+      </div>
+
+      <!-- Student Information -->
+      <div class="mb-4 text-sm">
+        <p><span class="font-medium">Student ID:</span> {{ selectedItem?.student.id }}</p>
+        <p><span class="font-medium">Name:</span> {{ selectedItem?.student.first_name }} {{ selectedItem?.student.middle_name }} {{ selectedItem?.student.last_name }}</p>
+        <p><span class="font-medium">Address:</span> {{ selectedItem?.student.address }}</p>
+      </div>
+
+      <!-- Enrollment Information -->
+      <div class="mb-4 text-sm">
+        <p><span class="font-medium">Grade Level:</span> {{ selectedItem?.grade_level.grade_level_name }}</p>
+        <p><span class="font-medium">Strand:</span> {{ selectedItem?.strand.strand_name }}</p>
+        <p><span class="font-medium">Semester:</span> {{ selectedItem?.semester.semester }}</p>
+        <p><span class="font-medium">Academic Year:</span> {{ selectedItem?.academic_year.academic_year }}</p>
+      </div>
+
+      <!-- Transaction Details -->
+      <div class="mb-4 text-sm">
+        <p><span class="font-medium">Transaction ID:</span> {{ selectedItem?.transaction.transaction_id }}</p>
+        <p><span class="font-medium">Status:</span> <span class="text-green-600 font-semibold">{{ selectedItem?.transaction.status }}</span></p>
+        <p><span class="font-medium">Total Amount:</span> ₱ {{ Number(selectedItem?.transaction.total_amount).toFixed(2) }}</p>
+      </div>
+
+      <!-- Payment Breakdown -->
+      <div class="mb-4">
+        <h3 class="font-semibold text-sm mb-2">
+          Payment Breakdown
+        </h3>
+        <table class="w-full text-sm border-t border-b">
+          <thead>
+            <tr class="text-left">
+              <th class="py-1">
+                Payment Type
+              </th>
+              <th class="py-1 text-right">
+                Amount
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in selectedItem?.transaction_items" :key="item.id">
+              <td class="py-1">
+                {{ item.item_type }}
+              </td>
+              <td class="py-1 text-right">
+                ₱ {{ Number(item.amount).toFixed(2) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <div class="mt-6 text-sm">
+        <p><span class="font-medium">Date:</span> {{ new Date(selectedItem?.transaction.date_paid).toLocaleDateString() }}</p>
+        <div class="mt-8 flex justify-between">
+          <div>
+            ______________________ <br>
+            <span class="text-xs">Cashier</span>
+          </div>
+          <div>
+            ______________________ <br>
+            <span class="text-xs">Student</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
