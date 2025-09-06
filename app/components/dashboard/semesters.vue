@@ -112,6 +112,7 @@ async function toggleStatus(id: number, newStatus: boolean) {
             <input
               type="checkbox"
               class="toggle toggle-success"
+              :disabled="item.status"
               :checked="item.status"
               @change="toggleStatus(item.id, !item.status)"
             >
