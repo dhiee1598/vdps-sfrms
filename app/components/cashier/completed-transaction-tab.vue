@@ -79,13 +79,6 @@ const { handlePrint } = useVueToPrint({
       </h2>
 
       <div class="flex flex-col md:flex-row gap-2">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search by Transaction ID or Student Name..."
-          class="input input-bordered w-72"
-        >
-
         <select v-model="selectedGrade" class="select select-bordered w-44">
           <option value="">
             All Grades
@@ -111,6 +104,12 @@ const { handlePrint } = useVueToPrint({
             {{ strand }}
           </option>
         </select>
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search by Transaction ID or Student Name..."
+          class="input input-bordered w-96"
+        >
       </div>
     </div>
 
@@ -244,7 +243,7 @@ const { handlePrint } = useVueToPrint({
               Status:
             </dt>
             <dd>
-              <span class="badge badge-warning badge-sm">
+              <span class="badge badge-success badge-sm">
                 {{ selectedItem?.transaction.status }}
               </span>
             </dd>

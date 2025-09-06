@@ -26,12 +26,23 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const acadsYear = await db.select().from(academicYears);
+  let isNew;
+  if (acadsYear.length <= 0) {
+    isNew = true;
+  }
+  else {
+    isNew = false;
+  }
+
   const [createdAcademicYear] = await db.insert(academicYears).values({
     academic_year,
+    status: isNew,
   }).$returningId();
 
   return {
     success: true,
+    message: 'Academic Year Created Successfully',
     data: createdAcademicYear,
   };
 });

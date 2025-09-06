@@ -178,7 +178,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
           v-model="searchQuery"
           type="text"
           placeholder="Search by Transaction ID or Student Name..."
-          class="input input-bordered w-72"
+          class="input input-bordered w-96"
         >
       </div>
     </div>
