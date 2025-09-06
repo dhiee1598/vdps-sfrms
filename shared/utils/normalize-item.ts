@@ -1,4 +1,4 @@
-export default function normalizeItemType(itemType: string): string | null {
+export default function normalizeItem(itemType: string): string | null {
   const type = itemType.toLowerCase();
 
   if (type.includes('down'))
