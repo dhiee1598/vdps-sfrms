@@ -7,7 +7,7 @@ import { strands } from '~~/server/db/schema/strands-schema';
 import { students } from '~~/server/db/schema/student-schema';
 import { transaction_items } from '~~/server/db/schema/transaction-items-schema';
 import { transactions } from '~~/server/db/schema/transaction-schema';
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 
 export default defineEventHandler(async () => {
   const rows = await db
@@ -43,7 +43,8 @@ export default defineEventHandler(async () => {
     .leftJoin(
       strands,
       eq(enrollments.strand_id, strands.id),
-    );
+    )
+    .orderBy(desc(transactions.createdAt));
 
   // ✅ Group by transaction_id
   const grouped = rows.reduce((acc: any[], row) => {
