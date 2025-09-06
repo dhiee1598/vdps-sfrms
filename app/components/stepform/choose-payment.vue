@@ -87,6 +87,13 @@ function toggleSundry(sundry: { sundry_name: string; sundry_amount: string }) {
 }
 
 watch(inputAmount, (newAmount) => {
+  const maxAllowed = datas.value.overall_balance;
+
+  if (newAmount > maxAllowed) {
+    inputAmount.value = maxAllowed;
+    return;
+  }
+
   if (!selectedPaymentOption.value)
     return;
 
