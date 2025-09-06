@@ -22,11 +22,11 @@ const additionalItems = computed(() =>
 
 <template>
   <div class="flex flex-col items-center">
-    <h2 class="text-4xl font-extrabold mb-8 mt-4">
+    <h2 class="text-2xl md:text-3xl font-bold mb-8 mt-4">
       Review Your Payment
     </h2>
 
-    <div class="rounded-2xl shadow-xl p-8 w-full max-w-lg space-y-6 border border-gray-200 bg-stone-200">
+    <div class="rounded-2xl shadow-xl p-8 w-full text-left max-w-lg space-y-6 border border-gray-200 bg-stone-200">
       <div class="bg-stone-200 py-2">
         <p class="text-sm text-gray-600">
           Student ID: <span class="font-medium text-gray-800">{{ props.formData.student_id }}</span>
@@ -87,10 +87,10 @@ const additionalItems = computed(() =>
 
       <div class="pt-4 border-t-2 border-gray-300 space-y-4">
         <div class="flex justify-between items-end">
-          <p class="text-2xl font-bold text-gray-800">
+          <p class="text-lg font-bold text-gray-800">
             Total Amount:
           </p>
-          <p class="text-4xl font-extrabold text-green-600">
+          <p class="text-xl font-extrabold text-green-600">
             ₱ {{ props.formData.total_amount.toFixed(2) }}
           </p>
         </div>

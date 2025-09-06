@@ -8,7 +8,6 @@ import { semesters } from '~~/server/db/schema/semester-schema';
 import { students, studentSelectSchema } from '~~/server/db/schema/student-schema';
 import { transaction_items } from '~~/server/db/schema/transaction-items-schema';
 import { transactions } from '~~/server/db/schema/transaction-schema';
-import normalizeItemType from '~~/server/utils/normalize-item';
 import { and, eq } from 'drizzle-orm';
 import z from 'zod';
 
@@ -105,7 +104,7 @@ export default defineEventHandler(async (_event) => {
         }
 
         if (row.transactions.status === 'paid') {
-          const normalized = normalizeItemType(row.transactions_item?.item_type || '');
+          const normalized = normalizeItem(row.transactions_item?.item_type || '');
 
           if (normalized) {
             const amt = Number(row.transactions_item?.amount) || 0;
