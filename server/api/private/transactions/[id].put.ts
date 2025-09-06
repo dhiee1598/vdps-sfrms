@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event);
 
-  const result = await db
+  await db
     .update(transactions)
     .set({
       status: body.status,
@@ -22,5 +22,5 @@ export default defineEventHandler(async (event) => {
     .where(eq(transactions.transaction_id, id))
     .execute();
 
-  return { success: true, result, message: 'Transaction updated successfully' };
+  return { success: true, message: 'Transaction updated successfully' };
 });
