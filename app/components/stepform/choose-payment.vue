@@ -62,7 +62,6 @@ function togglePaymentOption(option: string) {
 
   if (option === 'Full Payment') {
     inputAmount.value = datas.value.overall_balance;
-    console.warn('iyo full payment', inputAmount.value, datas.value.overall_balance);
   }
   else {
     inputAmount.value = existing ? existing.amount : 0;

@@ -42,5 +42,7 @@ export default defineEventHandler(async (event) => {
     }
   });
 
+  event.context.io.emit('newPayment', 'A new payment has been inserted.');
+
   return { success: true, data: result };
 });

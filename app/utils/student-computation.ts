@@ -22,13 +22,14 @@ export default function studentComputation(newVal: any) {
 
   transactionItems.forEach((item: any) => {
     const amount = Number(item.amount);
-    payments.totalPaid += amount;
 
     if (item.normalizedType === 'Downpayment') {
       payments.downpayment += amount;
+      payments.totalPaid += amount;
     }
     else if (item.normalizedType in payments.perQuarterPaid) {
       payments.perQuarterPaid[item.normalizedType] += amount;
+      payments.totalPaid += amount;
     }
   });
 
@@ -68,13 +69,6 @@ export default function studentComputation(newVal: any) {
     }
     availableOptions.push('Full Payment');
   }
-
-  console.warn('Selected student:', newVal);
-  console.warn('Total downpayment:', payments.downpayment);
-  console.warn('Total paid:', payments.totalPaid);
-  console.warn('Overall balance:', balance);
-  console.warn('Remaining per quarter:', remainingPerQuarter);
-  console.warn('Available payment options:', availableOptions);
 
   return {
     selected_students: newVal,

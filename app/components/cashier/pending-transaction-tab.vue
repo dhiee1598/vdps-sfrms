@@ -4,8 +4,12 @@ import type { FetchError } from 'ofetch';
 import { ref } from 'vue';
 import { useVueToPrint } from 'vue-to-print';
 
+import { socket } from '../socket';
+
 const { data: transactions, refresh } = await useFetch('/api/private/transactions');
 
+const isConnected = ref(false);
+const transport = ref('N/A');
 const isOpen = ref(false);
 const selectedItem = ref();
 const searchQuery = ref('');
@@ -13,12 +17,31 @@ const selectedGrade = ref('');
 const selectedStrand = ref('');
 const isSubmitting = ref(false);
 const showPrintModal = ref(false);
+const componentRef = ref();
 const { isMessage, isError, responseMessage, showMessage } = useNotification();
 
 const currentPage = ref(1);
-const itemsPerPage = 10; // adjust as needed
+const itemsPerPage = 10;
 
-// Extract unique grade levels & strands for dropdown filters
+function onConnect() {
+  isConnected.value = true;
+  transport.value = socket.io.engine.transport.name;
+
+  socket.io.engine.on('upgrade', (rawTransport) => {
+    transport.value = rawTransport.name;
+  });
+}
+
+function onDisconnect() {
+  isConnected.value = false;
+  transport.value = 'N/A';
+}
+
+onBeforeUnmount(() => {
+  socket.off('connect', onConnect);
+  socket.off('disconnect', onDisconnect);
+});
+
 const gradeLevels = computed(() => {
   const set = new Set(transactions.value?.data.map(t => t.grade_level.grade_level_name));
   return Array.from(set);
@@ -28,7 +51,6 @@ const strands = computed(() => {
   return Array.from(set);
 });
 
-// Filtering logic
 const filteredTransactions = computed(() => {
   return transactions.value?.data
     .filter(t => t.transaction.status === 'pending')
@@ -44,20 +66,13 @@ const filteredTransactions = computed(() => {
     .filter(t => !selectedStrand.value || t.strand.strand_name === selectedStrand.value);
 });
 
-// Paginated results
 const paginatedTransactions = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage;
   return filteredTransactions.value?.slice(start, start + itemsPerPage) || [];
 });
 
-// Total pages
 const totalPages = computed(() => {
   return Math.ceil((filteredTransactions.value?.length || 0) / itemsPerPage);
-});
-
-// Reset page when filters/search change
-watch([searchQuery, selectedGrade, selectedStrand], () => {
-  currentPage.value = 1;
 });
 
 function openModal(item: any) {
@@ -66,20 +81,31 @@ function openModal(item: any) {
   console.warn(item);
 }
 
-const componentRef = ref(); // ref for printable content
 const { handlePrint } = useVueToPrint({
-  content: () => componentRef.value, // must be a function that returns element
+  content: () => componentRef.value,
   documentTitle: 'Transaction-Receipt',
   onAfterPrint: () => {
     showPrintModal.value = false;
     selectedItem.value = null;
   },
 });
-async function handleSubmit() {
-  if (!selectedItem.value) {
-    console.warn('⚠️ No transaction selected');
-    return;
+onMounted(() => {
+  if (socket.connected) {
+    onConnect();
   }
+
+  socket.on('connect', onConnect);
+  socket.on('disconnect', onDisconnect);
+
+  socket.on('newPayment', async (payment) => {
+    console.warn('New payment received:', payment);
+    await refresh();
+  });
+});
+
+async function handleSubmit() {
+  if (!selectedItem.value)
+    return;
 
   isSubmitting.value = true;
   try {
@@ -106,6 +132,10 @@ async function handleSubmit() {
     isSubmitting.value = false;
   }
 }
+
+watch([searchQuery, selectedGrade, selectedStrand], () => {
+  currentPage.value = 1;
+});
 </script>
 
 <template>
