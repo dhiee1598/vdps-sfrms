@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { socket } from '~/components/socket';
+
 const { data: assessment, refresh: refreshAssessment } = await useFetch('/api/private/assessment');
 const { data: sundries, refresh: refreshSundries } = await useFetch('/api/private/sundries');
-
 const step = ref(1);
 const selectedStudent = ref();
 const studentdata = ref();
@@ -11,6 +12,8 @@ const formData = ref({
   total_amount: 0,
   transaction_items: [],
 });
+const isConnected = ref(false);
+const transport = ref('N/A');
 
 const isSubmitting = ref(false);
 
@@ -60,6 +63,41 @@ async function handleStepClick() {
     }
   }
 }
+
+function onConnect() {
+  isConnected.value = true;
+  transport.value = socket.io.engine.transport.name;
+
+  socket.io.engine.on('upgrade', (rawTransport: any) => {
+    transport.value = rawTransport.name;
+  });
+}
+
+function onDisconnect() {
+  isConnected.value = false;
+  transport.value = 'N/A';
+}
+
+onBeforeUnmount(() => {
+  socket.off('connect', onConnect);
+  socket.off('disconnect', onDisconnect);
+});
+
+onMounted(() => {
+  if (socket.connected) {
+    onConnect();
+  }
+
+  socket.on('connect', onConnect);
+  socket.on('disconnect', onDisconnect);
+
+  socket.on('newStudentAssessment', async (student: any) => {
+    console.warn('New student assessment received:', student);
+
+    await refreshAssessment();
+    await refreshSundries();
+  });
+});
 
 watch(selectedStudent, (newVal) => {
   if (newVal) {
