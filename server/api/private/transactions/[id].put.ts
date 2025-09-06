@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
     .update(transactions)
     .set({
       status: body.status,
+      date_paid: new Date(),
     })
     .where(eq(transactions.transaction_id, id))
     .execute();
