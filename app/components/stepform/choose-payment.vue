@@ -26,7 +26,6 @@ const totalPayment = computed(() => {
   }, 0);
 });
 
-// Keep localFormData total_amount in sync
 watch(totalPayment, (newTotal) => {
   localFormData.value.total_amount = newTotal;
 });
@@ -45,16 +44,16 @@ watch(props.formData, (newVal) => {
 
 function togglePaymentOption(option: string) {
   formData.value.transaction_items = formData.value.transaction_items.filter(
-    (i: any) => !datas.value.available_payment_option.includes(i.payment_type) || i.payment_type === option,
+    (i: any) => !datas.value.available_payment_option.includes(i.item_type) || i.item_type === option,
   );
 
   const existing = formData.value.transaction_items.find(
-    (i: any) => i.payment_type === option,
+    (i: any) => i.item_type === option,
   );
 
   if (!existing) {
     formData.value.transaction_items.push({
-      payment_type: option,
+      item_type: option,
       amount: 0.00,
     });
   }
@@ -73,7 +72,7 @@ function togglePaymentOption(option: string) {
 function toggleSundry(sundry: { sundry_name: string; sundry_amount: string }) {
   const items = formData.value.transaction_items;
   const existingIndex = items.findIndex(
-    (item: any) => item.payment_type === sundry.sundry_name,
+    (item: any) => item.item_type === sundry.sundry_name,
   );
 
   if (existingIndex !== -1) {
@@ -81,7 +80,7 @@ function toggleSundry(sundry: { sundry_name: string; sundry_amount: string }) {
   }
   else {
     items.push({
-      payment_type: sundry.sundry_name,
+      item_type: sundry.sundry_name,
       amount: Number.parseFloat(sundry.sundry_amount) || 0,
     });
   }
@@ -92,7 +91,7 @@ watch(inputAmount, (newAmount) => {
     return;
 
   const item = formData.value.transaction_items.find(
-    (i: any) => i.payment_type === selectedPaymentOption.value,
+    (i: any) => i.item_type === selectedPaymentOption.value,
   );
 
   if (item) {
@@ -101,13 +100,12 @@ watch(inputAmount, (newAmount) => {
 });
 
 onMounted(() => {
-  // restore payment option (Downpayment / Fullpayment)
   const existingPayment = formData.value.transaction_items.find((i: any) =>
-    datas.value.available_payment_option.includes(i.payment_type),
+    datas.value.available_payment_option.includes(i.item_type),
   );
 
   if (existingPayment) {
-    selectedPaymentOption.value = existingPayment.payment_type;
+    selectedPaymentOption.value = existingPayment.item_type;
     inputAmount.value = existingPayment.amount;
   }
 });
@@ -195,7 +193,7 @@ onMounted(() => {
                     <input
                       type="checkbox"
                       class="checkbox"
-                      :checked="formData.transaction_items.some((i:any) => i.payment_type === sundry.sundry_name)"
+                      :checked="formData.transaction_items.some((i:any) => i.item_type === sundry.sundry_name)"
                       @change="toggleSundry(sundry)"
                     >
                   </label>

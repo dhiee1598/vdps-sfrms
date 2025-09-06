@@ -26,14 +26,31 @@ const allStudents = computed(() =>
 </script>
 
 <template>
-  <Multiselect
-    v-model="selected"
-    :options="allStudents"
-    :searchable="true"
-    label="name"
-    track-by="id"
-    placeholder="Search by name..."
-    :max-height="200"
-    class="w-full"
-  />
+  <div class="w-full flex flex-col justify-center items-center">
+    <div class="text-3xl py-4 font-thin">
+      Student Payment Kiosk System
+    </div>
+    <NuxtImg
+      src="/vdps-logo.png"
+      alt="Logo"
+      height="200"
+      width="200"
+      class="mb-6"
+    />
+
+    <div class="form-control w-full max-w-md mx-auto">
+      <label class="label">
+        <span class="label-text">Search by Student Name</span>
+      </label>
+      <Multiselect
+        v-model="selected"
+        :options="allStudents"
+        :searchable="true"
+        label="name"
+        track-by="id"
+        placeholder="Search by name..."
+        class="w-full"
+      />
+    </div>
+  </div>
 </template>
