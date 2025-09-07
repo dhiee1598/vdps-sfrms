@@ -1,6 +1,8 @@
 import db from '~~/server/db';
+import { assessments } from '~~/server/db/schema/asesssment-schema';
 import { transaction_items, transactionItemInsertSchema } from '~~/server/db/schema/transaction-items-schema';
 import { transactions, transactionsInsertSchema } from '~~/server/db/schema/transaction-schema';
+import { eq, sql } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import z from 'zod';
 
@@ -40,6 +42,15 @@ export default defineEventHandler(async (event) => {
         })),
       );
     }
+
+    // 3. Update total_paid in assessments
+    await tx.update(assessments)
+      .set({
+        total_paid: sql`${assessments.total_paid} + ${body.data.total_amount.toFixed(2)}`,
+      })
+      .where(eq(assessments.id, body.data.assessment_id));
+
+    return newTransaction;
   });
 
   event.context.io.emit('newPayment', 'A new payment has been inserted.');
