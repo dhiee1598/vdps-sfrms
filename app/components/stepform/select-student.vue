@@ -38,9 +38,9 @@ const allStudents = computed(() =>
       class="mb-6"
     />
 
-    <div class="form-control w-full max-w-md mx-auto">
+    <div class="form-control w-full max-w-md mx-auto text-left">
       <label class="label">
-        <span class="label-text">Search by Student Name</span>
+        <span class="label-text">Search by Student Name:</span>
       </label>
       <Multiselect
         v-model="selected"
