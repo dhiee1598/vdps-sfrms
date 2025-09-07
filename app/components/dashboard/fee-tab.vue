@@ -125,8 +125,12 @@ function resetForm() {
             <td>{{ item.fee_description }}</td>
             <td>{{ item.fee_amount }}</td>
             <td>
-              <button class="btn btn-sm btn-info" @click="openEditModal(item)">
-                Update <Icon name="solar:smartphone-update-broken" size="16" />
+              <button
+                class="btn btn-sm btn-info tooltip"
+                data-tip="Update"
+                @click="openEditModal(item)"
+              >
+                <Icon name="solar:smartphone-update-broken" size="16" />
               </button>
             </td>
           </tr>

@@ -102,8 +102,12 @@ function openEditModal(gradeLevel: any) {
           <th>{{ item.id }}</th>
           <td>{{ item.grade_level_name }}</td>
           <td>
-            <button class="btn btn-info btn-sm" @click="openEditModal(item)">
-              Update <Icon name="solar:smartphone-update-broken" size="16" />
+            <button
+              class="btn btn-info btn-sm tooltip"
+              data-tip="Update"
+              @click="openEditModal(item)"
+            >
+              <Icon name="solar:smartphone-update-broken" size="16" />
             </button>
           </td>
         </tr>

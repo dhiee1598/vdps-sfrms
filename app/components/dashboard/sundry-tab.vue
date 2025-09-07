@@ -112,8 +112,12 @@ function openEditModal(item: any) {
           <td>{{ sundry.sundry_amount }}</td>
 
           <td>
-            <button class="btn btn-sm btn-info" @click="openEditModal(sundry)">
-              Update <Icon name="solar:smartphone-update-broken" size="16" />
+            <button
+              class="btn btn-sm btn-info tooltip"
+              data-tip="Update"
+              @click="openEditModal(sundry)"
+            >
+              <Icon name="solar:smartphone-update-broken" size="16" />
             </button>
           </td>
         </tr>
