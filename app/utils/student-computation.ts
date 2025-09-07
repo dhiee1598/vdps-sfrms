@@ -21,54 +21,80 @@ export default function studentComputation(newVal: any) {
   };
 
   transactionItems.forEach((item: any) => {
-    const amount = Number(item.amount);
+    if (item.normalizedType) {
+      const amount = Number(item.amount) || 0;
+      payments.totalPaid += amount;
 
-    if (item.normalizedType === 'Downpayment') {
-      payments.downpayment += amount;
-      payments.totalPaid += amount;
-    }
-    else if (item.normalizedType in payments.perQuarterPaid) {
-      payments.perQuarterPaid[item.normalizedType] += amount;
-      payments.totalPaid += amount;
+      if (item.normalizedType === 'Downpayment') {
+        payments.downpayment += amount;
+      }
+      else if (item.normalizedType in payments.perQuarterPaid) {
+        payments.perQuarterPaid[item.normalizedType] += amount;
+      }
     }
   });
 
   const totalAmountDue = Number(newVal.total_amount_due);
   const balance = totalAmountDue - payments.totalPaid;
+
   const perQuarterAmount = (totalAmountDue - payments.downpayment) / 4;
 
   const quarters = ['1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter'];
-  const remainingPerQuarter: any = {};
+  const remainingPerQuarter: Record<string, number> = {};
   let carryOver = 0;
 
-  for (const q of quarters) {
-    const paid = payments.perQuarterPaid[q] + carryOver;
+  const hasFullPayment = transactionItems.some(
+    (item: any) => item.normalizedType === 'Full Payment',
+  );
 
-    if (paid >= perQuarterAmount) {
-      remainingPerQuarter[q] = 0;
-      carryOver = paid - perQuarterAmount;
-    }
-    else {
-      remainingPerQuarter[q] = perQuarterAmount - paid;
-      carryOver = 0;
-    }
-  }
-
-  const availableOptions = [];
-  const hasDownpayment = payments.downpayment > 0;
-
-  if (!hasDownpayment) {
-    availableOptions.push('Downpayment', 'Full Payment');
+  if (hasFullPayment) {
+    quarters.forEach(q => remainingPerQuarter[q] = 0);
   }
   else {
     for (const q of quarters) {
-      if (remainingPerQuarter[q] > 0) {
+      const paid = payments.perQuarterPaid[q] + carryOver;
+
+      if (paid >= perQuarterAmount) {
+        remainingPerQuarter[q] = 0;
+        carryOver = paid - perQuarterAmount;
+      }
+      else {
+        remainingPerQuarter[q] = perQuarterAmount - paid;
+        carryOver = 0;
+      }
+    }
+  }
+
+  const availableOptions: string[] = [];
+  const hasDownpayment = payments.downpayment > 0;
+
+  if (!hasDownpayment) {
+    if (!hasFullPayment) {
+      availableOptions.push('Downpayment', 'Full Payment');
+    }
+  }
+  else {
+    let allQuartersPaid = true;
+
+    for (const q of quarters) {
+      if ((remainingPerQuarter[q] || 0) > 0) {
         availableOptions.push(q);
+        allQuartersPaid = false;
         break;
       }
     }
-    availableOptions.push('Full Payment');
+
+    if (!allQuartersPaid) {
+      availableOptions.push('Full Payment');
+    }
   }
+
+  // console.warn('Selected Student:', newVal);
+  // console.warn('Downpayment:', payments.downpayment);
+  // console.warn('Total Paid:', payments.totalPaid);
+  // console.warn('Overall Balance:', balance);
+  // console.warn('Remaining per Quarter:', remainingPerQuarter);
+  // console.warn('Available Payment Option', availableOptions);
 
   return {
     selected_students: newVal,

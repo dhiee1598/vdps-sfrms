@@ -90,6 +90,7 @@ watch(inputAmount, (newAmount) => {
 
   if (newAmount > maxAllowed) {
     inputAmount.value = maxAllowed;
+    selectedPaymentOption.value = 'Full Payment';
     return;
   }
 
