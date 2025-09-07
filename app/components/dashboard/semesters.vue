@@ -127,7 +127,7 @@ async function toggleStatus(id: number, newStatus: boolean) {
           </td>
           <td>
             <button class="btn btn-info btn-sm" @click="openEditModal(item)">
-              <Icon name="solar:smartphone-update-broken" size="24" />
+              Update <Icon name="solar:smartphone-update-broken" size="16" />
             </button>
           </td>
         </tr>

@@ -4,7 +4,7 @@ export default function studentComputation(newVal: any) {
   }
 
   const transactionItems = newVal.transactions
-    ? newVal.transactions.flatMap((t: any) =>
+    ? newVal.transactions.filter((t: any) => t.status === 'paid').flatMap((t: any) =>
         t.items.map((i: any) => ({ ...i, normalizedType: normalizeItem(i.item_type) })),
       )
     : [];

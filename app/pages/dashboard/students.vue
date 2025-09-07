@@ -188,8 +188,12 @@ watch(searchQuery, () => {
           <td>{{ student.address }}</td>
           <td>{{ student.contact_number }}</td>
           <td>
-            <button class="btn btn-success btn-sm" @click="updateStudent(student)">
-              <Icon name="solar:eye-linear" size="24" />
+            <button
+              class="btn btn-info btn-sm tooltip"
+              data-tip="Update"
+              @click="updateStudent(student)"
+            >
+              <Icon name="solar:smartphone-update-broken" size="16" />
             </button>
           </td>
         </tr>

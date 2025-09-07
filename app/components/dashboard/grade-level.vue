@@ -73,7 +73,7 @@ function openEditModal(gradeLevel: any) {
       <p class="text-3xl">
         List of Grade Level
       </p>
-      <button class="btn btn-primary" @click="openCreateModal">
+      <button class="btn btn-accent" @click="openCreateModal">
         <Icon name="solar:add-circle-linear" size="24" /> Add Grade Level
       </button>
     </div>
@@ -102,8 +102,8 @@ function openEditModal(gradeLevel: any) {
           <th>{{ item.id }}</th>
           <td>{{ item.grade_level_name }}</td>
           <td>
-            <button class="btn btn-primary btn-sm" @click="openEditModal(item)">
-              update
+            <button class="btn btn-info btn-sm" @click="openEditModal(item)">
+              Update <Icon name="solar:smartphone-update-broken" size="16" />
             </button>
           </td>
         </tr>

@@ -79,7 +79,7 @@ function openEditModal(item: any) {
       <p class="text-3xl">
         List of Sundries
       </p>
-      <button class="btn btn-primary" @click="openCreateModal">
+      <button class="btn btn-accent" @click="openCreateModal">
         <Icon name="solar:add-circle-linear" size="24" />Add Sundry
       </button>
     </div>
@@ -112,8 +112,8 @@ function openEditModal(item: any) {
           <td>{{ sundry.sundry_amount }}</td>
 
           <td>
-            <button class="btn btn-sm btn-primary" @click="openEditModal(sundry)">
-              Edit
+            <button class="btn btn-sm btn-info" @click="openEditModal(sundry)">
+              Update <Icon name="solar:smartphone-update-broken" size="16" />
             </button>
           </td>
         </tr>

@@ -176,8 +176,12 @@ async function handleFormSubmit() {
           <td>{{ item?.totalPaid }}</td>
           <td>{{ item?.balance }}</td>
           <td class="flex gap-2 justify-center items-center">
-            <button class="btn btn-sm btn-success" @click="openViewStudentAssessment(item)">
-              <Icon name="solar:eye-linear" size="24" />
+            <button
+              class="btn btn-sm btn-success tooltip"
+              data-tip="View"
+              @click="openViewStudentAssessment(item)"
+            >
+              <Icon name="solar:eye-linear" size="16" />
             </button>
           </td>
         </tr>
