@@ -6,7 +6,7 @@ const isEditing = ref(false);
 const showFormModal = ref(false);
 const isSubmitting = ref(false);
 const currentPage = ref(1);
-const pageSize = 5;
+const pageSize = 10;
 const maxVisiblePages = 4;
 const searchQuery = ref('');
 
