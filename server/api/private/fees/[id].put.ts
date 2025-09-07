@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event);
 
   const result = await db.update(fees)
-    .set({ fee_name: body.fee_name })
+    .set({ fee_name: body.fee_name, fee_amount: body.fee_amount, fee_description: body.fee_description })
     .where(eq(fees.id, id))
     .execute();
 

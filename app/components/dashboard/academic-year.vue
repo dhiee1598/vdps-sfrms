@@ -167,12 +167,12 @@ async function toggleStatus(id: number, newStatus: boolean) {
             </fieldset>
 
             <div class="flex flex-row justify-end gap-2">
-              <button type="submit" class="btn btn-primary">
+              <button type="submit" class="btn btn-accent">
                 {{ isEditing ? 'Update' : 'Create' }}
               </button>
               <button
                 type="button"
-                class="btn btn-warning"
+                class="btn"
                 @click="showModal = false"
               >
                 Close
