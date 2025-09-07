@@ -77,11 +77,14 @@ function openEditModal(academicYear: any) {
 }
 
 async function toggleStatus(id: number, newStatus: boolean) {
+  let response;
   try {
-    await $fetch(`/api/private/academic-years/${id}`, {
+    response = await $fetch(`/api/private/academic-years/${id}`, {
       method: 'PUT',
       body: { status: newStatus },
     });
+
+    showMessage(response.message, false);
     refresh(); // re-fetch the list
   }
   catch (err) {

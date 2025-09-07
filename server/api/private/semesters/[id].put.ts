@@ -13,6 +13,15 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event);
+  const [existingSemester] = await db.select().from(semesters).where(eq(semesters.semester, body.semester));
+
+  if (existingSemester) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Conflict',
+      message: 'A Semester with this name already exists.',
+    });
+  }
   let result;
   if (body.semester) {
     result = await db

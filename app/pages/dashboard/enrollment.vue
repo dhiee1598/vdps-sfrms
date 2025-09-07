@@ -300,6 +300,11 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
             </button>
           </td>
         </tr>
+        <tr v-if="paginatedStudents.length === 0">
+          <td colspan="8" class="text-center text-gray-500 py-4">
+            No Students found
+          </td>
+        </tr>
       </tbody>
     </table>
     <div class="flex justify-center mt-4 space-x-2">

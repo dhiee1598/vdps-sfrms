@@ -12,6 +12,14 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const [existingAcademicYear] = await db.select().from(academicYears).where(eq(academicYears.academic_year, academicYears.academic_year));
+  if (existingAcademicYear) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Conflict',
+      message: 'An academic year with this name already exists.',
+    });
+  }
   const body = await readBody(event);
   let result;
   if (body.academic_year) {
