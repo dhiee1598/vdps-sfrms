@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import type { FetchError } from 'ofetch';
+
 import { ref } from 'vue';
 
 // auto-fetch year levels
 const { data: semesters, pending, error, refresh } = await useFetch('/api/private/semesters');
+const { isMessage, isError, responseMessage, showMessage } = useNotification();
 
 const showModal = ref(false);
 const isEditing = ref(false);
@@ -13,22 +16,23 @@ const formData = ref({
 });
 
 async function handleClick() {
+  let response;
   try {
     if (isEditing.value && editingId.value) {
       // UPDATE
-      await $fetch(`/api/private/semesters/${editingId.value}`, {
+      response = await $fetch(`/api/private/semesters/${editingId.value}`, {
         method: 'PUT',
         body: formData.value,
       });
     }
     else {
       // CREATE
-      await $fetch('/api/private/semesters', {
+      response = await $fetch('/api/private/semesters', {
         method: 'POST',
         body: formData.value,
       });
     }
-
+    showMessage(response.message, false);
     // reset
     showModal.value = false;
     isEditing.value = false;
@@ -39,7 +43,8 @@ async function handleClick() {
     await refresh();
   }
   catch (err) {
-    console.error(err);
+    const error = err as FetchError;
+    showMessage(error.data.message || 'An unexpected error occurred.', true);
   }
 }
 
@@ -58,15 +63,18 @@ function openEditModal(semester: any) {
 }
 
 async function toggleStatus(id: number, newStatus: boolean) {
+  let response;
   try {
-    await $fetch(`/api/private/semesters/${id}`, {
+    response = await $fetch(`/api/private/semesters/${id}`, {
       method: 'PUT',
       body: { status: newStatus },
     });
+    showMessage(response.message, false);
     refresh(); // re-fetch the list
   }
   catch (err) {
-    console.error(err);
+    const error = err as FetchError;
+    showMessage(error.data.message || 'An unexpected error occurred.', true);
   }
 }
 </script>
@@ -164,4 +172,9 @@ async function toggleStatus(id: number, newStatus: boolean) {
       </div>
     </dialog>
   </div>
+  <ToastNotification
+    :is-message="isMessage"
+    :is-error="isError"
+    :response-message="responseMessage"
+  />
 </template>
