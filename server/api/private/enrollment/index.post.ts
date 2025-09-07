@@ -45,6 +45,6 @@ export default defineEventHandler(async (event) => {
   return {
     success: true,
     data: enrolledStudent,
-    message: 'Student Enrolled created successfully.',
+    message: 'Student Enrolled Successfully.',
   };
 });

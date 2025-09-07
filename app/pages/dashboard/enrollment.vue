@@ -12,6 +12,8 @@ const pageSize = 10;
 const maxVisiblePages = 4;
 const searchQuery = ref('');
 const showViewModal = ref(false);
+const selectedGrade = ref('');
+const selectedStrand = ref('');
 
 const enrolledStudentData = ref<EnrolledStudent | null>({
   id: 0,
@@ -43,6 +45,19 @@ const { data: gradeLevels } = await useFetch('/api/private/grade-level');
 const { data: strands } = await useFetch('/api/private/strands');
 const { data: academicYears } = await useFetch('/api/private/academic-years?activeYear=true');
 
+// Extract unique grade levels & strands for dropdown filters
+const filteredGradeLevels = computed(() => {
+  const set = new Set(enrolledStudents.value?.data.map(t => t.grade_level));
+  return Array.from(set);
+});
+
+const filteredStrands = computed(() => {
+  const set = new Set(enrolledStudents.value?.data.map(t => t.strand_name));
+  return Array.from(set);
+});
+
+console.warn('filetered strands', filteredStrands.value);
+console.warn('selected grade', selectedStrand.value);
 function openViewModal(item: any) {
   enrolledStudentData.value = {
     ...item,
@@ -64,18 +79,36 @@ const studentsData = computed(() =>
 const filteredStudents = computed(() => {
   if (!enrolledStudents.value?.data)
     return [];
-  if (!searchQuery.value)
-    return enrolledStudents.value.data;
 
-  return enrolledStudents.value.data.filter((s) => {
-    const stu = s;
-    if (!stu)
-      return false; // in case leftJoin gave null
+  let result = enrolledStudents.value.data;
 
-    return `${stu.first_name ?? ''} ${stu.middle_name ?? ''} ${stu.last_name ?? ''} ${stu.address ?? ''} ${stu.contact_number ?? ''}`
-      .toLowerCase()
-      .includes(searchQuery.value.toLowerCase());
-  });
+  // search
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    result = result.filter((t) => {
+      const fullName = `${t.first_name} ${t.middle_name ?? ''} ${t.last_name}`.toLowerCase();
+      return (
+        t.student_id?.toLowerCase().includes(query)
+        || fullName.includes(query)
+      );
+    });
+  }
+
+  // grade filter
+  if (selectedGrade.value) {
+    result = result.filter(
+      t => (t.grade_level ?? '').toLowerCase().trim() === selectedGrade.value.toLowerCase().trim(),
+    );
+  }
+
+  // strand filter
+  if (selectedStrand.value) {
+    result = result.filter(
+      t => (t.strand_name ?? '').toLowerCase().trim() === selectedStrand.value.toLowerCase().trim(),
+    );
+  }
+
+  return result;
 });
 
 const paginatedStudents = computed(() => {
@@ -178,7 +211,7 @@ async function handleSave() {
   }
 }
 
-watch(searchQuery, () => {
+watch([searchQuery, selectedGrade, selectedStrand], () => {
   currentPage.value = 1;
 });
 </script>
@@ -190,6 +223,30 @@ watch(searchQuery, () => {
         List of Enrolled Students
       </p>
       <div class="flex space-x-2">
+        <select v-model="selectedGrade" class="select select-bordered w-44">
+          <option value="">
+            All Grades
+          </option>
+          <option
+            v-for="(grade, index) in filteredGradeLevels"
+            :key="index"
+            :value="grade"
+          >
+            {{ grade }}
+          </option>
+        </select>
+        <select v-model="selectedStrand" class="select select-bordered w-44">
+          <option value="">
+            All Strands
+          </option>
+          <option
+            v-for="(strand, index) in filteredStrands"
+            :key="index"
+            :value="strand"
+          >
+            {{ strand }}
+          </option>
+        </select>
         <input
           v-model="searchQuery"
           type="text"
@@ -205,9 +262,8 @@ watch(searchQuery, () => {
       <thead>
         <tr>
           <th>ID</th>
-          <th>First Name</th>
-          <th>Middle Name</th>
-          <th>Last Name</th>
+          <th>Full Name</th>
+          <th>Academic Year</th>
           <th>Strand</th>
           <th>Grade Level</th>
           <th>Status</th>
@@ -230,12 +286,13 @@ watch(searchQuery, () => {
           </td>
         </tr>
         <tr v-for="item in paginatedStudents" :key="item.id">
-          <td>{{ item?.id }}</td>
-          <td>{{ item?.first_name }}</td>
-          <td>{{ item?.middle_name }}</td>
-          <td>{{ item?.last_name }}</td>
+          <td>{{ item?.student_id }}</td>
+          <td>{{ item?.first_name }} {{ item?.middle_name }} {{ item?.last_name }}</td>
+          <td>{{ item?.academic_year }}</td>
           <td>{{ item?.strand_name }}</td>
-          <td>{{ item?.grade_level }}</td>
+          <td class="capitalize">
+            {{ item?.grade_level }}
+          </td>
           <td>{{ item.enroll_status }}</td>
           <td class="flex gap-2 justify-center items-center">
             <button class="btn btn-sm btn-success" @click="openViewModal(item)">
