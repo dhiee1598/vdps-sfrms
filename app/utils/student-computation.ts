@@ -67,25 +67,46 @@ export default function studentComputation(newVal: any) {
 
   const availableOptions: string[] = [];
   const hasDownpayment = payments.downpayment > 0;
+  const hasPendingTransaction = newVal.transactions?.some((t: any) => {
+    return t.status === 'pending' && t.items?.some((item: any) => {
+      return ['Downpayment', '1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter'].includes(item.item_type);
+    });
+  }) ?? false;
 
-  if (!hasDownpayment) {
+  console.warn('hasPendingTransaction', hasPendingTransaction);
+
+  if (!hasPendingTransaction) {
+    if (!hasDownpayment) {
+      availableOptions.push('Downpayment');
+    }
+    else {
+      let allQuartersPaid = true;
+
+      for (const q of quarters) {
+        if ((remainingPerQuarter[q] || 0) > 0) {
+          availableOptions.push(q);
+          allQuartersPaid = false;
+          break;
+        }
+      }
+
+      if (!allQuartersPaid) {
+        availableOptions.push('Full Payment');
+      }
+    }
+  }
+  else if (!hasDownpayment) {
     if (!hasFullPayment) {
       availableOptions.push('Downpayment', 'Full Payment');
     }
   }
   else {
-    let allQuartersPaid = true;
-
     for (const q of quarters) {
       if ((remainingPerQuarter[q] || 0) > 0) {
         availableOptions.push(q);
-        allQuartersPaid = false;
+
         break;
       }
-    }
-
-    if (!allQuartersPaid) {
-      availableOptions.push('Full Payment');
     }
   }
 
@@ -103,5 +124,6 @@ export default function studentComputation(newVal: any) {
     overall_balance: balance,
     remaining_per_quarter: remainingPerQuarter,
     available_payment_option: availableOptions,
+    hasPendingTransaction,
   };
 }
