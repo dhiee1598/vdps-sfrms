@@ -75,7 +75,7 @@ function openEditModal(strand: any) {
       <p class="text-3xl">
         List of Strands
       </p>
-      <button class="btn btn-primary" @click="openCreateModal">
+      <button class="btn btn-accent" @click="openCreateModal">
         <Icon name="solar:add-circle-linear" size="24" />Add Strand
       </button>
     </div>
@@ -107,8 +107,8 @@ function openEditModal(strand: any) {
           <td>{{ strand.strand_name }}</td>
           <td>{{ strand.strand_description }}</td>
           <td>
-            <button class="btn btn-primary btn-sm" @click="openEditModal(strand)">
-              update
+            <button class="btn btn-info btn-sm" @click="openEditModal(strand)">
+              Update <Icon name="solar:smartphone-update-broken" size="16" />
             </button>
           </td>
         </tr>

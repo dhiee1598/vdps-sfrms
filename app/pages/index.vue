@@ -100,6 +100,7 @@ onMounted(() => {
 });
 
 watch(selectedStudent, (newVal) => {
+  console.warn(newVal, 'newVal');
   if (newVal) {
     studentdata.value = studentComputation(newVal);
     formData.value.assessment_id = studentdata.value.selected_students.id;

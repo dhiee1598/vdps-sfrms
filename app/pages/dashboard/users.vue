@@ -38,8 +38,8 @@ async function handleClick() {
       <p class="text-3xl">
         List of Users
       </p>
-      <button class="btn btn-primary" @click="showModal = true">
-        Create New User
+      <button class="btn btn-accent" @click="showModal = true">
+        <Icon name="solar:add-circle-linear" size="24" /> New User
       </button>
     </div>
 
@@ -79,8 +79,8 @@ async function handleClick() {
             }}
           </td>
           <td>
-            <button class="btn btn-primary">
-              View
+            <button class="btn btn-info tooltip" data-tip="view">
+              view  <Icon name="solar:eye-linear" size="16" />
             </button>
           </td>
         </tr>

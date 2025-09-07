@@ -78,7 +78,7 @@ function resetForm() {
       <h2 class="text-3xl">
         List of Fees
       </h2>
-      <button class="btn btn-primary" @click="openNewModal">
+      <button class="btn btn-accent" @click="openNewModal">
         <Icon name="solar:add-circle-linear" size="24" />New Fee
       </button>
     </div>
@@ -125,8 +125,8 @@ function resetForm() {
             <td>{{ item.fee_description }}</td>
             <td>{{ item.fee_amount }}</td>
             <td>
-              <button class="btn btn-sm btn-primary" @click="openEditModal(item)">
-                Edit
+              <button class="btn btn-sm btn-info" @click="openEditModal(item)">
+                Update <Icon name="solar:smartphone-update-broken" size="16" />
               </button>
             </td>
           </tr>
