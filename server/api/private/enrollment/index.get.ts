@@ -22,15 +22,15 @@ export default defineEventHandler(async (event) => {
     conditions.push(eq(enrollments.academic_year_id, activeYear.id));
   }
 
-  // Active Semester
-  const [activeSemester] = await db
-    .select()
-    .from(semesters)
-    .where(eq(semesters.status, true));
+  // // Active Semester
+  // const [activeSemester] = await db
+  //   .select()
+  //   .from(semesters)
+  //   .where(eq(semesters.status, true));
 
-  if (activeSemester) {
-    conditions.push(eq(enrollments.semester_id, activeSemester.id));
-  }
+  // if (activeSemester) {
+  //   conditions.push(eq(enrollments.semester_id, activeSemester.id));
+  // }
 
   if (query.withoutAssessment) {
     conditions.push(isNull(assessments.id));

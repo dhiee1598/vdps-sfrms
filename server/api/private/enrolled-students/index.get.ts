@@ -5,9 +5,21 @@ import { gradeLevel } from '~~/server/db/schema/grade-level-schema';
 import { semesters } from '~~/server/db/schema/semester-schema';
 import { strands } from '~~/server/db/schema/strands-schema';
 import { students } from '~~/server/db/schema/student-schema';
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 
 export default defineEventHandler(async () => {
+  const conditions = [];
+
+  // Active Year
+  const [activeYear] = await db
+    .select()
+    .from(academicYears)
+    .where(eq(academicYears.status, true));
+
+  if (activeYear) {
+    conditions.push(eq(enrollments.academic_year_id, activeYear.id));
+  }
+
   const enrolledStudents = await db
     .select({
       id: enrollments.id,
@@ -31,7 +43,8 @@ export default defineEventHandler(async () => {
     .leftJoin(strands, eq(strands.id, enrollments.strand_id))
     .leftJoin(semesters, eq(semesters.id, enrollments.semester_id))
     .leftJoin(academicYears, eq(academicYears.id, enrollments.academic_year_id))
-    .orderBy(asc(enrollments.createdAt));
+    .orderBy(asc(enrollments.createdAt))
+    .where(and(...conditions)); ;
 
   return {
     success: true,

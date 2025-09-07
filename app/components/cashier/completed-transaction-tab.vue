@@ -138,8 +138,12 @@ const { handlePrint } = useVueToPrint({
             <td>{{ item.transaction.status }}</td>
             <td>₱ {{ Number(item.transaction.total_amount).toFixed(2) }}</td>
             <td>
-              <button class="btn btn-sm btn-primary" @click="openModal(item)">
-                View
+              <button
+                class="btn btn-sm btn-success tooltip"
+                data-tip="View"
+                @click="openModal(item)"
+              >
+                <Icon name="solar:eye-linear" size="16" />
               </button>
             </td>
           </tr>
@@ -191,13 +195,9 @@ const { handlePrint } = useVueToPrint({
             <Icon
               name="solar:document-add-linear"
               size="22"
-              class="text-primary"
             />
             Transaction Summary
           </h3>
-          <button class="btn btn-sm btn-ghost" @click="isOpen = false">
-            ✕
-          </button>
         </div>
 
         <!-- Student & Enrollment Details -->
@@ -251,7 +251,7 @@ const { handlePrint } = useVueToPrint({
             <dt class="font-medium">
               Total Amount:
             </dt>
-            <dd class="text-primary font-semibold">
+            <dd class="text-success font-semibold">
               ₱ {{ Number(selectedItem?.transaction.total_amount).toFixed(2) }}
             </dd>
           </dl>
