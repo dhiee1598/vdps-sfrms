@@ -10,10 +10,20 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event);
 
+  const [existingFee] = await db.select().from(fees).where(eq(fees.fee_name, body.fee_name));
+
+  if (existingFee) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Conflict',
+      message: 'A fee with this name already exists.',
+    });
+  }
+
   const result = await db.update(fees)
     .set({ fee_name: body.fee_name, fee_amount: body.fee_amount, fee_description: body.fee_description })
     .where(eq(fees.id, id))
     .execute();
 
-  return { success: true, data: result };
+  return { success: true, data: result, message: 'Fee updated successfully' };
 });

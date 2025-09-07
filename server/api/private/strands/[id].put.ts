@@ -9,11 +9,19 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event);
+  const [existingStrand] = await db.select().from(strands).where(eq(strands.strand_name, body.strand_name));
 
+  if (existingStrand) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Conflict',
+      message: 'A Strand with this name already exists.',
+    });
+  }
   const result = await db.update(strands)
     .set({ strand_name: body.strand_name, strand_description: body.strand_description })
     .where(eq(strands.id, id))
     .execute();
 
-  return { success: true, data: result };
+  return { success: true, data: result, message: 'Strand updated successfully' };
 });
