@@ -34,5 +34,6 @@ export default defineEventHandler(async (event) => {
   return {
     success: true,
     data: createdSundry,
+    message: 'Sundry created successfully.',
   };
 });

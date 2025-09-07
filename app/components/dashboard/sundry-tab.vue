@@ -1,8 +1,11 @@
 <!-- components/dashboard/SundryTab.vue -->
 <script setup lang="ts">
+import type { FetchError } from 'ofetch';
+
 import { ref } from 'vue';
 
 const { data: sundries, pending, error, refresh } = await useFetch('/api/private/sundries');
+const { isMessage, isError, responseMessage, showMessage } = useNotification();
 const showModal = ref(false);
 const isEditing = ref(false);
 const editingId = ref<number | null>(null);
@@ -14,22 +17,24 @@ const formData = ref({
 });
 
 async function handleClick() {
-  console.warn(formData.value);
+  let response;
   try {
     if (isEditing.value && editingId.value) {
       // UPDATE
-      await $fetch(`/api/private/sundries/${editingId.value}`, {
+      response = await $fetch(`/api/private/sundries/${editingId.value}`, {
         method: 'PUT',
         body: formData.value,
       });
     }
     else {
       // CREATE
-      await $fetch('/api/private/sundries', {
+      response = await $fetch('/api/private/sundries', {
         method: 'POST',
         body: formData.value,
       });
     }
+
+    showMessage(response.message, false);
 
     // reset + reload
     showModal.value = false;
@@ -41,7 +46,9 @@ async function handleClick() {
     await refresh();
   }
   catch (err) {
-    console.error(err);
+    const error = err as FetchError;
+
+    showMessage(error.data.message || 'An unexpected error occurred.', true);
   }
 }
 
@@ -145,7 +152,6 @@ function openEditModal(item: any) {
                 type="text"
                 class="input w-full"
                 placeholder="Type here"
-                required
               >
             </fieldset>
 
@@ -155,7 +161,8 @@ function openEditModal(item: any) {
               </legend>
               <input
                 v-model="formData.sundry_amount"
-                type="text"
+                type="number"
+                step="0.01"
                 class="input w-full"
                 placeholder="Type here"
                 required
@@ -180,4 +187,9 @@ function openEditModal(item: any) {
     </dialog>
     <!-- END MODAL -->
   </div>
+  <ToastNotification
+    :is-message="isMessage"
+    :is-error="isError"
+    :response-message="responseMessage"
+  />
 </template>

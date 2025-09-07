@@ -1,6 +1,10 @@
 <!-- components/dashboard/SundryTab.vue -->
 <script setup lang="ts">
+import type { FetchError } from 'ofetch';
+
 const { data: fees, pending, error, refresh } = await useFetch('/api/private/fees');
+
+const { isMessage, isError, responseMessage, showMessage } = useNotification();
 
 const showModal = ref(false);
 const isEditing = ref(false);
@@ -13,21 +17,24 @@ const formData = ref({
 });
 
 async function handleClick() {
+  let response;
   try {
     if (isEditing.value && editingId.value) {
       // UPDATE
-      await $fetch(`/api/private/fees/${editingId.value}`, {
+      response = await $fetch(`/api/private/fees/${editingId.value}`, {
         method: 'PUT',
         body: formData.value,
       });
     }
     else {
       // CREATE
-      await $fetch('/api/private/fees', {
+      response = await $fetch('/api/private/fees', {
         method: 'POST',
         body: formData.value,
       });
     }
+
+    showMessage(response.message, false);
 
     // refresh Nuxt data
     await refresh();
@@ -36,7 +43,8 @@ async function handleClick() {
     resetForm();
   }
   catch (err) {
-    console.error(err);
+    const error = err as FetchError;
+    showMessage(error.data.message || 'An unexpected error occurred.', true);
   }
 }
 
@@ -159,7 +167,6 @@ function resetForm() {
               type="text"
               class="input w-full"
               placeholder="Type here"
-              required
             >
           </fieldset>
 
@@ -170,6 +177,7 @@ function resetForm() {
             <input
               v-model="formData.fee_amount"
               type="number"
+              step="0.01"
               class="input w-full"
               placeholder="Type here"
               required
@@ -192,4 +200,9 @@ function resetForm() {
       </div>
     </dialog>
   </div>
+  <ToastNotification
+    :is-message="isMessage"
+    :is-error="isError"
+    :response-message="responseMessage"
+  />
 </template>

@@ -29,6 +29,24 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const [existingSundry] = await db.select().from(sundries).where(eq(sundries.sundry_name, body.sundry_name));
+
+  if (existingSundry) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Conflict',
+      message: 'A sundry with this name already exists.',
+    });
+  }
+
+  if (!(Number(body.sundry_amount)) || Number(body.sundry_amount) <= 0) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Bad Request',
+      message: 'Amount must be a positive number.',
+    });
+  }
+
   // ✅ 3. Run update query
   const result = await db
     .update(sundries)
@@ -43,7 +61,7 @@ export default defineEventHandler(async (event) => {
   // ✅ 4. Return response
   return {
     success: true,
-    message: `Sundry with ID ${id} updated successfully.`,
+    message: `Sundry updated successfully.`,
     data: result,
   };
 });

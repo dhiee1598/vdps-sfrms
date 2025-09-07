@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { FetchError } from 'ofetch';
+
 import { ref } from 'vue';
 
 // auto-fetch year levels
@@ -8,26 +10,31 @@ const showModal = ref(false);
 const isEditing = ref(false);
 const editingId = ref<number | null>(null);
 
+const { isMessage, isError, responseMessage, showMessage } = useNotification();
+
 const formData = ref({
   grade_level_name: '',
 });
 
 async function handleClick() {
+  let response;
   try {
     if (isEditing.value && editingId.value) {
       // UPDATE
-      await $fetch(`/api/private/grade-level/${editingId.value}`, {
+      response = await $fetch(`/api/private/grade-level/${editingId.value}`, {
         method: 'PUT',
         body: formData.value,
       });
     }
     else {
       // CREATE
-      await $fetch('/api/private/grade-level', {
+      response = await $fetch('/api/private/grade-level', {
         method: 'POST',
         body: formData.value,
       });
     }
+
+    showMessage(response.message, false);
 
     // reset
     showModal.value = false;
@@ -39,7 +46,9 @@ async function handleClick() {
     await refresh();
   }
   catch (err) {
-    console.error(err);
+    const error = err as FetchError;
+
+    showMessage(error.data.message || 'An unexpected error occurred.', true);
   }
 }
 
@@ -139,4 +148,9 @@ function openEditModal(gradeLevel: any) {
       </div>
     </dialog>
   </div>
+  <ToastNotification
+    :is-message="isMessage"
+    :is-error="isError"
+    :response-message="responseMessage"
+  />
 </template>
