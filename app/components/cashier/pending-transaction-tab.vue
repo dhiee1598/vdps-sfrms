@@ -114,7 +114,7 @@ async function handleSubmit() {
     if (selectedItem.value) {
       response = await $fetch(`/api/private/transactions/${selectedItem.value.transaction.transaction_id}`, {
         method: 'PUT',
-        body: { status: 'paid' },
+        body: { status: 'paid', student_id: selectedItem.value.student.id },
       });
       isOpen.value = false;
       showPrintModal.value = true;
