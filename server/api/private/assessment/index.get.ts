@@ -50,12 +50,12 @@ export default defineEventHandler(async (_event) => {
       transactions_item: transaction_items,
     })
     .from(assessments)
-    .leftJoin(enrollments, eq(enrollments.id, assessments.enrollment_id))
-    .leftJoin(students, eq(students.id, assessments.student_id))
-    .leftJoin(assessmentFees, eq(assessmentFees.assessment_id, assessments.id))
-    .leftJoin(fees, eq(fees.id, assessmentFees.fee_id))
-    .leftJoin(transactions, eq(transactions.assessment_id, assessments.id))
-    .leftJoin(transaction_items, eq(transaction_items.transaction_id, transactions.transaction_id))
+    .leftJoin(students, eq(assessments.student_id, students.id))
+    .leftJoin(enrollments, eq(assessments.enrollment_id, enrollments.id))
+    .leftJoin(assessmentFees, eq(assessments.id, assessmentFees.assessment_id))
+    .leftJoin(fees, eq(assessmentFees.id, fees.id))
+    .leftJoin(transactions, eq(assessments.id, transactions.assessment_id))
+    .leftJoin(transaction_items, eq(transactions.transaction_id, transaction_items.transaction_id))
     .where(and(...conditions));
 
   const grouped = Object.values(
