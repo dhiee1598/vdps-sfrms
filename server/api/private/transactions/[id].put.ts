@@ -89,7 +89,23 @@ export default defineEventHandler(async (event) => {
     {},
   );
 
-  for (const [id, { transaction }] of Object.entries(results)) {
+  for (const [assessmentId, { transaction }] of Object.entries(results)) {
+    const txToUpdate = transaction.find(
+      t => String(t.transaction_id) === String(id),
+    );
+
+    if (!txToUpdate)
+      continue;
+
+    const tuitionItems = ['Downpayment', '1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter'];
+    const hasTuitionItem = txToUpdate.transaction_item?.some(i =>
+      tuitionItems.includes(i.item_type),
+    );
+
+    if (!hasTuitionItem) {
+      continue;
+    }
+
     const fullPaymentTx = transaction.find(
       t =>
         t.status === 'paid'
@@ -97,7 +113,7 @@ export default defineEventHandler(async (event) => {
     );
 
     if (fullPaymentTx) {
-      results[Number(id)].transaction = [fullPaymentTx];
+      results[Number(assessmentId)].transaction = [fullPaymentTx];
 
       throw createError({
         statusCode: 409,

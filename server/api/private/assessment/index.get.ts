@@ -99,18 +99,18 @@ export default defineEventHandler(async (_event) => {
           const alreadyExists = transaction.items.some(
             (item: any) => item.id === row.transactions_item!.id,
           );
+
           if (!alreadyExists) {
             transaction.items.push(row.transactions_item);
-          }
-        }
 
-        if (row.transactions.status === 'paid') {
-          const normalized = normalizeItem(row.transactions_item?.item_type || '');
-
-          if (normalized) {
-            const amt = Number(row.transactions_item?.amount) || 0;
-            acc[a.id].totalPaid += amt;
-            acc[a.id].balance -= amt;
+            if (row.transactions.status === 'paid') {
+              const normalized = normalizeItem(row.transactions_item?.item_type || '');
+              if (normalized) {
+                const amt = Number(row.transactions_item?.amount) || 0;
+                acc[a.id].totalPaid += amt;
+                acc[a.id].balance -= amt;
+              }
+            }
           }
         }
       }
