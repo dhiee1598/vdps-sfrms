@@ -92,13 +92,13 @@ watch(() => props.student, (newVal) => {
       <div class="flex flex-row justify-end gap-2 pt-2">
         <button
           type="submit"
-          class="btn btn-primary"
+          class="btn btn-accent"
         >
           {{ isEditing ? 'Update' : 'Add' }}
         </button>
         <button
           type="button"
-          class="btn btn-warning"
+          class="btn"
           @click="emit('showModal')"
         >
           Close
