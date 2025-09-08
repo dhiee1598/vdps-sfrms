@@ -2,7 +2,7 @@ import db from '~~/server/db';
 import { assessments } from '~~/server/db/schema/asesssment-schema';
 import { assessmentFees } from '~~/server/db/schema/assessment-fees-schema';
 import { assessmentSchema } from '~~/server/lib/zod-schema';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, assessmentSchema.safeParse);
