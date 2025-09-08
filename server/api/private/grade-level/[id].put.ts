@@ -1,14 +1,14 @@
 import db from '~~/server/db';
-import { gradeLevel } from '~~/server/db/schema/grade-level-schema';
-import { eq } from 'drizzle-orm';
+import { gradeLevel, gradeLevelInsertSchema } from '~~/server/db/schema/grade-level-schema';
+import { and, eq, ne } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const id = Number(event.context.params?.id);
-  const body = await readBody(event);
+  const body = await readValidatedBody(event, gradeLevelInsertSchema.safeParse);
+
   if (!id) {
     throw createError({ statusCode: 400, statusMessage: 'ID is required', message: 'ID is required' });
   }
-  const [existingGradeLevel] = await db.select().from(gradeLevel).where(eq(gradeLevel.grade_level_name, gradeLevel.grade_level_name));
 
   if (!body.success) {
     throw createError({
@@ -17,7 +17,10 @@ export default defineEventHandler(async (event) => {
       message: 'Minimum of 3 and maximum of 50 characters allowed',
     });
   }
-  else if (existingGradeLevel) {
+
+  const [existingGradeLevel] = await db.select().from(gradeLevel).where(and(eq(gradeLevel.grade_level_name, body.data.grade_level_name), ne(gradeLevel.id, id)));
+
+  if (existingGradeLevel) {
     throw createError({
       statusCode: 409,
       statusMessage: 'Conflict',
@@ -26,7 +29,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const result = await db.update(gradeLevel)
-    .set({ grade_level_name: body.grade_level_name })
+    .set({ grade_level_name: body.data.grade_level_name })
     .where(eq(gradeLevel.id, id))
     .execute();
 

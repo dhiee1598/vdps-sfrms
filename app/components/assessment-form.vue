@@ -13,7 +13,7 @@ const emit = defineEmits<{
 }>();
 
 const { data: fees } = useFetch('/api/private/fees');
-const { data: students, refresh } = useFetch('/api/private/enrollment');
+const { data: students, refresh } = useFetch('/api/private/enrollment?withoutAssessment=true');
 
 const formData = computed({
   get: () => props.assessment,

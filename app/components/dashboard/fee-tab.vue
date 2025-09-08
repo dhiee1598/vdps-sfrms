@@ -75,7 +75,7 @@ function resetForm() {
 <template>
   <div class="p-10 w-full">
     <div class="flex flex-row justify-between my-4">
-      <h2 class="text-3xl">
+      <h2 class="text-2xl">
         List of Fees
       </h2>
       <button class="btn btn-accent" @click="openNewModal">
@@ -189,12 +189,12 @@ function resetForm() {
           </fieldset>
 
           <div class="flex flex-row justify-end gap-2">
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" class="btn btn-accent">
               {{ isEditing ? 'Update' : 'Create' }}
             </button>
             <button
               type="button"
-              class="btn btn-warning"
+              class="btn"
               @click="resetForm"
             >
               Close

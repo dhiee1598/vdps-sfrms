@@ -28,6 +28,12 @@
           </li>
 
           <li>
+            <NuxtLink to="/dashboard/transaction-logs" class="font-medium">
+              <Icon name="solar:book-2-broken" size="25" /> Transaction Logs
+            </NuxtLink>
+          </li>
+
+          <li>
             <NuxtLink to="/dashboard/students" class="font-medium">
               <Icon name="solar:users-group-rounded-line-duotone" size="25" /> Students
             </NuxtLink>
