@@ -1,6 +1,6 @@
 import db from '~~/server/db';
 import { fees } from '~~/server/db/schema/fees-schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const id = Number(event.context.params?.id);
@@ -9,9 +9,20 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event);
+  console.warn(body.fee_name, body.fee_amount, body.fee_description);
 
-  const [existingFee] = await db.select().from(fees).where(eq(fees.fee_name, body.fee_name));
+  const [existingFee] = await db
+    .select()
+    .from(fees)
+    .where(and(eq(fees.fee_name, body.fee_name), ne(fees.id, id)));
 
+  if (existingFee) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Conflict',
+      message: 'A fee with this name already exists.',
+    });
+  }
   if (existingFee) {
     throw createError({
       statusCode: 409,
