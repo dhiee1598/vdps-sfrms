@@ -20,6 +20,16 @@ export default defineEventHandler(async () => {
     conditions.push(eq(enrollments.academic_year_id, activeYear.id));
   }
 
+  // // Active Semester
+  const [activeSemester] = await db
+    .select()
+    .from(semesters)
+    .where(eq(semesters.status, true));
+
+  if (activeSemester) {
+    conditions.push(eq(enrollments.semester_id, activeSemester.id));
+  }
+
   const enrolledStudents = await db
     .select({
       id: enrollments.id,
