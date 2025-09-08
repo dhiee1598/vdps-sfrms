@@ -86,7 +86,7 @@ const balance = computed(() => {
         </div>
         <div class=" p-3 rounded-md border border-accent-content">
           <span class="block font-normal label">Total Paid</span>
-          <span class="text-xl text-blue-500">₱ {{ totalPaid.toFixed(2) }}</span>
+          <span class="text-xl text-blue-500">₱ {{ parseFloat(localStudentAssessment.total_paid).toFixed(2) }}</span>
         </div>
         <div class="p-3 rounded-md border border-accent-content">
           <span class="block  font-normal label">Balance</span>

@@ -33,22 +33,41 @@ export default defineEventHandler(async (event) => {
       total_amount: body.data.total_amount.toFixed(2),
     }).$returningId();
 
+    let academicPaymentTotal = 0;
+
     if (body.data.transaction_items.length > 0) {
       await tx.insert(transaction_items).values(
-        body.data.transaction_items.map(item => ({
-          transaction_id: newTransaction.transaction_id ?? newTransaction.transaction_id,
-          item_type: item.item_type,
-          amount: item.amount.toFixed(2),
-        })),
+        body.data.transaction_items.map((item) => {
+          const validTypes = [
+            'Downpayment',
+            '1st Quarter',
+            '2nd Quarter',
+            '3rd Quarter',
+            '4th Quarter',
+            'Fullpayment',
+          ];
+
+          if (validTypes.includes(item.item_type)) {
+            academicPaymentTotal += Number(item.amount);
+          }
+
+          return {
+            transaction_id: newTransaction.transaction_id ?? transactionId,
+            item_type: item.item_type,
+            amount: item.amount.toFixed(2),
+          };
+        }),
       );
     }
 
-    // 3. Update total_paid in assessments
-    await tx.update(assessments)
-      .set({
-        total_paid: sql`${assessments.total_paid} + ${body.data.total_amount.toFixed(2)}`,
-      })
-      .where(eq(assessments.id, body.data.assessment_id));
+    // Update total_paid in assessments only if relevant
+    if (academicPaymentTotal > 0) {
+      await tx.update(assessments)
+        .set({
+          total_paid: sql`${assessments.total_paid} + ${academicPaymentTotal.toFixed(2)}`,
+        })
+        .where(eq(assessments.id, body.data.assessment_id));
+    }
 
     return newTransaction;
   });
