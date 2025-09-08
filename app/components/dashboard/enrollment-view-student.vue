@@ -8,7 +8,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'showModal'): void;
 }>();
-console.warn(props.student, 'enrolled student');
 </script>
 
 <template>
