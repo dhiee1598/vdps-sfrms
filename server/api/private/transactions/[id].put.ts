@@ -46,58 +46,68 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event);
 
   // First Get The Assessment and all transactions
-  const rows = await db.select({
-    assessment: assessments,
-    transaction: transactions,
-    enroll: enrollments,
-    transaction_item: transaction_items,
-  })
+  const rows = await db
+    .select({
+      assessment: assessments,
+      transaction: transactions,
+      enroll: enrollments,
+      transaction_item: transaction_items,
+    })
     .from(assessments)
     .leftJoin(enrollments, eq(enrollments.id, assessments.enrollment_id))
     .leftJoin(transactions, eq(transactions.assessment_id, assessments.id))
     .leftJoin(transaction_items, eq(transaction_items.transaction_id, transactions.transaction_id))
     .where(and(...conditions, eq(assessments.student_id, body.student_id)));
 
-  const results = rows.reduce<Record<number, { assessment: Assessment; transaction: (Transactions & { transaction_item: TransactionItems[] })[] }>>(
-    (acc, row) => {
-      const assessment = row.assessment;
-      const transaction = row.transaction;
-      const item = row.transaction_item;
+  const results = rows.reduce<
+    Record<
+      number,
+      { assessment: Assessment; transaction: (Transactions & { transaction_item: TransactionItems[] })[] }
+    >
+  >((acc, row) => {
+    const assessment = row.assessment;
+    const transaction = row.transaction;
+    const item = row.transaction_item;
 
-      if (!acc[assessment.id]) {
-        acc[assessment.id] = { assessment, transaction: [] };
-      }
+    if (!acc[assessment.id]) {
+      acc[assessment.id] = { assessment, transaction: [] };
+    }
 
-      if (!transaction)
-        return acc;
-
-      let existingTx = acc[assessment.id].transaction.find(
-        t => t.transaction_id === transaction.transaction_id,
-      );
-
-      if (!existingTx) {
-        existingTx = { ...transaction, transaction_item: [] };
-        acc[assessment.id].transaction.push(existingTx);
-      }
-
-      if (item) {
-        existingTx.transaction_item.push(item);
-      }
-
+    if (!transaction)
       return acc;
-    },
-    {},
-  );
+
+    let existingTx = acc[assessment.id].transaction.find(
+      t => t.transaction_id === transaction.transaction_id,
+    );
+
+    if (!existingTx) {
+      existingTx = { ...transaction, transaction_item: [] };
+      acc[assessment.id].transaction.push(existingTx);
+    }
+
+    if (item) {
+      existingTx.transaction_item.push(item);
+    }
+
+    return acc;
+  }, {});
+
+  let targetAssessmentId: number | null = null;
 
   for (const [assessmentId, { transaction }] of Object.entries(results)) {
-    const txToUpdate = transaction.find(
-      t => String(t.transaction_id) === String(id),
-    );
+    const txToUpdate = transaction.find(t => String(t.transaction_id) === String(id));
 
     if (!txToUpdate)
       continue;
 
-    const tuitionItems = ['Downpayment', '1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter'];
+    const tuitionItems = [
+      'Downpayment',
+      '1st Quarter',
+      '2nd Quarter',
+      '3rd Quarter',
+      '4th Quarter',
+      'Full Payment',
+    ];
     const hasTuitionItem = txToUpdate.transaction_item?.some(i =>
       tuitionItems.includes(i.item_type),
     );
@@ -113,16 +123,25 @@ export default defineEventHandler(async (event) => {
     );
 
     if (fullPaymentTx) {
-      results[Number(assessmentId)].transaction = [fullPaymentTx];
-
       throw createError({
         statusCode: 409,
         statusMessage: 'Conflict',
         message: 'This assessment is already fully paid.',
       });
     }
+
+    targetAssessmentId = Number(assessmentId);
   }
 
+  if (!targetAssessmentId) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'Not Found',
+      message: 'No matching assessment found for this transaction.',
+    });
+  }
+
+  // Update transaction first
   await db
     .update(transactions)
     .set({
@@ -132,5 +151,41 @@ export default defineEventHandler(async (event) => {
     .where(eq(transactions.transaction_id, id))
     .execute();
 
-  return { success: true, message: 'Transaction updated successfully' };
+  // Recompute total_paid for the assessment
+  const paidRows = await db
+    .select({
+      transaction: transactions,
+      transaction_item: transaction_items,
+    })
+    .from(transactions)
+    .leftJoin(
+      transaction_items,
+      eq(transaction_items.transaction_id, transactions.transaction_id),
+    )
+    .where(and(eq(transactions.assessment_id, targetAssessmentId), eq(transactions.status, 'paid')));
+
+  const tuitionItems = [
+    'Downpayment',
+    '1st Quarter',
+    '2nd Quarter',
+    '3rd Quarter',
+    '4th Quarter',
+    'Full Payment',
+  ];
+
+  const totalPaid = paidRows
+    .map(r => r.transaction_item)
+    .filter((i): i is TransactionItems => !!i && tuitionItems.includes(i.item_type))
+    .reduce((sum, i) => sum + Number(i.amount ?? 0), 0);
+
+  // Update the assessment record
+  await db
+    .update(assessments)
+    .set({
+      total_paid: String(totalPaid),
+    })
+    .where(eq(assessments.id, targetAssessmentId))
+    .execute();
+
+  return { success: true, message: 'Transaction & assessment updated successfully' };
 });

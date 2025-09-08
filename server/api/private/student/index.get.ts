@@ -19,16 +19,16 @@ export default defineEventHandler(async (event) => {
     .limit(1))[0]?.year;
 
   // // 2. get active semester
-  // const activeSemester = (await db
-  //   .select({ semester: semesters })
-  //   .from(semesters)
-  //   .where(eq(semesters.status, true))
-  //   .orderBy(semesters.id)
-  //   .limit(1))[0]?.semester;
+  const activeSemester = (await db
+    .select({ semester: semesters })
+    .from(semesters)
+    .where(eq(semesters.status, true))
+    .orderBy(semesters.id)
+    .limit(1))[0]?.semester;
 
-  // if (!activeYear || !activeSemester) {
-  //   return { message: 'No active academic year/semester found', data: [] };
-  // }
+  if (!activeYear || !activeSemester) {
+    return { message: 'No active academic year/semester found', data: [] };
+  }
 
   if (enrolled) {
     // 🔹 Students NOT enrolled in the current active year/semester
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
         and(
           eq(enrollments.student_id, students.id),
           eq(enrollments.academic_year_id, activeYear.id),
-          // eq(enrollments.semester_id, activeSemester.id),
+          eq(enrollments.semester_id, activeSemester.id),
         ),
       )
       .where(isNull(enrollments.student_id));
