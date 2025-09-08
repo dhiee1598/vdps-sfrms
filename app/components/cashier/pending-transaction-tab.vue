@@ -141,7 +141,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
 <template>
   <div class="p-2 w-full">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between my-4 gap-3">
-      <h2 class="text-3xl">
+      <h2 class="text-2xl">
         Pending Transactions
       </h2>
 
