@@ -37,8 +37,7 @@ function closeModal() {
 }
 
 // fetch students from backend
-// const { data: students } = await useFetch('/api/private/enrollment');
-const { data: enrolledStudents, pending, error, refresh: refreshEnroll } = await useFetch('/api/private/enrolled-students', { lazy: true });
+const { data: enrolledStudents, pending, error, refresh: refreshEnroll } = await useFetch('/api/private/enrollment', { lazy: true });
 const { data: allStudents, refresh: refreshStudent } = await useFetch('/api/private/student?enrolled=true');
 const { data: semesters } = await useFetch('/api/private/semesters?activeSemester=true');
 const { data: gradeLevels } = await useFetch('/api/private/grade-level');
@@ -56,8 +55,6 @@ const filteredStrands = computed(() => {
   return Array.from(set);
 });
 
-console.warn('filetered strands', filteredStrands.value);
-console.warn('selected grade', selectedStrand.value);
 function openViewModal(item: any) {
   enrolledStudentData.value = {
     ...item,
