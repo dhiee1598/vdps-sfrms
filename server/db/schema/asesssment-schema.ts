@@ -29,13 +29,14 @@ export const assessments = mysqlTable('assessments', {
   enrollment_id: int('enrollment_id').notNull(),
   student_id: varchar('student_id', { length: 255 }).notNull(),
   total_amount_due: decimal('total_amount_due', { precision: 10, scale: 2 }).notNull(),
+  total_paid: decimal('total_paid', { precision: 10, scale: 2 }).default('0.00').notNull(),
   createdAt: timestamp().defaultNow(),
 });
 
 // ✅ Pass table directly, override only specific columns
 export const assessmentInsertSchema = createInsertSchema(assessments, {
-  total_amount_due: () =>
-    z.coerce.number().transform(v => Number(v.toFixed(2))), // handle decimal correctly
+  total_amount_due: () => z.coerce.number().transform(v => Number(v.toFixed(2))),
+  total_paid: () => z.coerce.number().transform(v => Number(v.toFixed(2))),
 }).omit({
   id: true,
   createdAt: true,

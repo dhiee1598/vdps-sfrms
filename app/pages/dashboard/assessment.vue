@@ -173,7 +173,7 @@ async function handleFormSubmit() {
           <td>{{ item?.student.middle_name }}</td>
           <td>{{ item?.student.last_name }}</td>
           <td>{{ item?.total_amount_due }}</td>
-          <td>{{ item?.totalPaid }}</td>
+          <td>{{ item?.total_paid }}</td>
           <td>{{ item?.balance }}</td>
           <td class="flex gap-2 justify-center items-center">
             <button
