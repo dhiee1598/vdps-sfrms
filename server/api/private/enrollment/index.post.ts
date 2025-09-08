@@ -24,6 +24,7 @@ export default defineEventHandler(async (event) => {
       eq(enrollments.strand_id, strand_id),
       eq(enrollments.grade_level_id, grade_level_id),
       eq(enrollments.academic_year_id, academic_year_id),
+      eq(enrollments.semester_id, semester_id),
     ));
 
   if (existingEnrollStudent) {
