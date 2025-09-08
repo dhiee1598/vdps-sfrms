@@ -97,7 +97,7 @@ onMounted(() => {
   socket.on('connect', onConnect);
   socket.on('disconnect', onDisconnect);
 
-  socket.on('newPayment', async (payment) => {
+  socket.on('newStudentAssessment', async (payment) => {
     console.warn('New payment received:', payment);
     await refresh();
   });

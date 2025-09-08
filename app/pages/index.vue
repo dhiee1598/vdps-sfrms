@@ -93,14 +93,13 @@ onMounted(() => {
 
   socket.on('newStudentAssessment', async (student: any) => {
     console.warn('New student assessment received:', student);
-
+    console.warn('REFRESH');
     await refreshAssessment();
     await refreshSundries();
   });
 });
 
 watch(selectedStudent, (newVal) => {
-  console.warn(newVal, 'newVal');
   if (newVal) {
     studentdata.value = studentComputation(newVal);
     formData.value.assessment_id = studentdata.value.selected_students.id;
