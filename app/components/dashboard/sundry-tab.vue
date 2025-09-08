@@ -76,7 +76,7 @@ function openEditModal(item: any) {
 <template>
   <div class="p-10 w-full">
     <div class="flex flex-row justify-between my-4">
-      <p class="text-3xl">
+      <p class="text-2xl">
         List of Sundries
       </p>
       <button class="btn btn-accent" @click="openCreateModal">
@@ -174,12 +174,12 @@ function openEditModal(item: any) {
             </fieldset>
 
             <div class="flex flex-row justify-end gap-2">
-              <button type="submit" class="btn btn-primary">
+              <button type="submit" class="btn btn-accent">
                 {{ isEditing ? 'Update' : 'Create' }}
               </button>
               <button
                 type="button"
-                class="btn btn-warning"
+                class="btn"
                 @click="showModal = false"
               >
                 Close

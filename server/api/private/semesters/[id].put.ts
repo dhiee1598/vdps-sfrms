@@ -1,6 +1,6 @@
 import db from '~~/server/db';
 import { semesters } from '~~/server/db/schema/semester-schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const id = Number(event.context.params?.id);
@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event);
-  const [existingSemester] = await db.select().from(semesters).where(eq(semesters.semester, body.semester));
+  const [existingSemester] = await db.select().from(semesters).where(and(eq(semesters.semester, body.semester), ne(semesters.id, id)));
 
   if (existingSemester) {
     throw createError({

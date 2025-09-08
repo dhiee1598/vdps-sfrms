@@ -1,6 +1,6 @@
 import db from '~~/server/db';
 import { sundries } from '~~/server/db/schema/sundry-schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 import { readBody } from 'h3';
 
 export default defineEventHandler(async (event) => {
@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const [existingSundry] = await db.select().from(sundries).where(eq(sundries.sundry_name, body.sundry_name));
+  const [existingSundry] = await db.select().from(sundries).where(and(eq(sundries.sundry_name, body.sundry_name), ne(sundries.id, id)));
 
   if (existingSundry) {
     throw createError({

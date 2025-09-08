@@ -1,14 +1,16 @@
 import db from '~~/server/db';
 import { academicYears } from '~~/server/db/schema/academic-years-schema';
+import { assessments } from '~~/server/db/schema/asesssment-schema';
 import { enrollments } from '~~/server/db/schema/enrollment-schema';
 import { gradeLevel } from '~~/server/db/schema/grade-level-schema';
 import { semesters } from '~~/server/db/schema/semester-schema';
 import { strands } from '~~/server/db/schema/strands-schema';
 import { students } from '~~/server/db/schema/student-schema';
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, isNull } from 'drizzle-orm';
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
   const conditions = [];
+  const query = getQuery(event);
 
   // ✅ Get Active Year
   const [activeYear] = await db
@@ -27,6 +29,10 @@ export default defineEventHandler(async () => {
 
   if (activeSemester) {
     conditions.push(eq(enrollments.semester_id, activeSemester.id));
+  }
+
+  if (query.withoutAssessment) {
+    conditions.push(isNull(assessments.id));
   }
 
   const enrolledStudents = await db
@@ -48,6 +54,7 @@ export default defineEventHandler(async () => {
     })
     .from(enrollments)
     .leftJoin(students, eq(students.id, enrollments.student_id))
+    .leftJoin(assessments, eq(assessments.enrollment_id, enrollments.id))
     .leftJoin(gradeLevel, eq(gradeLevel.id, enrollments.grade_level_id))
     .leftJoin(strands, eq(strands.id, enrollments.strand_id))
     .leftJoin(semesters, eq(semesters.id, enrollments.semester_id))
