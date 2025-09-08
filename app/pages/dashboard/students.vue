@@ -6,7 +6,7 @@ const isEditing = ref(false);
 const showFormModal = ref(false);
 const isSubmitting = ref(false);
 const currentPage = ref(1);
-const pageSize = 10;
+const pageSize = 7;
 const maxVisiblePages = 4;
 const searchQuery = ref('');
 
@@ -135,7 +135,7 @@ watch(searchQuery, () => {
 <template>
   <div class="w-full p-10">
     <div class="flex flex-row justify-between my-4 items-center">
-      <p class="text-3xl">
+      <p class="text-2xl">
         List of Students
       </p>
       <div class="flex space-x-2">

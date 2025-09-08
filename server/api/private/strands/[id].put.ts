@@ -1,6 +1,6 @@
 import db from '~~/server/db';
 import { strands } from '~~/server/db/schema/strands-schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const id = Number(event.context.params?.id);
@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event);
-  const [existingStrand] = await db.select().from(strands).where(eq(strands.strand_name, body.strand_name));
+  const [existingStrand] = await db.select().from(strands).where(and(eq(strands.strand_name, body.strand_name), ne(strands.id, id)));
 
   if (existingStrand) {
     throw createError({

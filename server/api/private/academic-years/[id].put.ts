@@ -1,6 +1,6 @@
 import db from '~~/server/db';
 import { academicYears } from '~~/server/db/schema/academic-years-schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const id = Number(event.context.params?.id);
@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event);
 
-  const [existingAcademicYear] = await db.select().from(academicYears).where(eq(academicYears.academic_year, body.academic_year));
+  const [existingAcademicYear] = await db.select().from(academicYears).where(and(eq(academicYears.academic_year, body.academic_year), ne(academicYears.id, id)));
   if (existingAcademicYear) {
     throw createError({
       statusCode: 409,

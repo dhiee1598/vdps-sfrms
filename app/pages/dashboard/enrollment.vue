@@ -216,7 +216,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
 <template>
   <div class="w-full p-10">
     <div class="flex flex-row justify-between my-4 items-center">
-      <p class="text-3xl">
+      <p class="text-2xl">
         List of Enrolled Students
       </p>
       <div class="flex space-x-2">
