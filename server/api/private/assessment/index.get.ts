@@ -4,7 +4,9 @@ import { assessments, assessmentSelectSchema } from '~~/server/db/schema/asesssm
 import { assessmentFees } from '~~/server/db/schema/assessment-fees-schema';
 import { enrollments, enrollmentSelectSchema } from '~~/server/db/schema/enrollment-schema';
 import { fees } from '~~/server/db/schema/fees-schema';
+import { gradeLevel } from '~~/server/db/schema/grade-level-schema';
 import { semesters } from '~~/server/db/schema/semester-schema';
+import { strands } from '~~/server/db/schema/strands-schema';
 import { students, studentSelectSchema } from '~~/server/db/schema/student-schema';
 import { transaction_items } from '~~/server/db/schema/transaction-items-schema';
 import { transactions } from '~~/server/db/schema/transaction-schema';
@@ -18,26 +20,32 @@ export const studentEnrolledAssessment = z.object({
 });
 
 export default defineEventHandler(async (_event) => {
+  const query = getQuery(_event);
   const conditions = [];
 
-  // Active Year
-  const [activeYear] = await db
-    .select()
-    .from(academicYears)
-    .where(eq(academicYears.status, true));
-
-  if (activeYear) {
-    conditions.push(eq(enrollments.academic_year_id, activeYear.id));
+  if (query.allAssessments === 'true') {
+    //
   }
+  else {
+    // Active Year
+    const [activeYear] = await db
+      .select()
+      .from(academicYears)
+      .where(eq(academicYears.status, true));
 
-  // Active Semester
-  const [activeSemester] = await db
-    .select()
-    .from(semesters)
-    .where(eq(semesters.status, true));
+    if (activeYear) {
+      conditions.push(eq(enrollments.academic_year_id, activeYear.id));
+    }
 
-  if (activeSemester) {
-    conditions.push(eq(enrollments.semester_id, activeSemester.id));
+    // Active Semester
+    const [activeSemester] = await db
+      .select()
+      .from(semesters)
+      .where(eq(semesters.status, true));
+
+    if (activeSemester) {
+      conditions.push(eq(enrollments.semester_id, activeSemester.id));
+    }
   }
 
   const rows = await db
@@ -49,6 +57,10 @@ export default defineEventHandler(async (_event) => {
       fee: fees,
       transactions,
       transactions_item: transaction_items,
+      academicYears: academicYears.academic_year,
+      semesters: semesters.semester,
+      strand: strands.strand_name,
+      grade_level: gradeLevel.grade_level_name,
     })
     .from(assessments)
     .leftJoin(students, eq(students.id, assessments.student_id))
@@ -57,6 +69,10 @@ export default defineEventHandler(async (_event) => {
     .leftJoin(fees, eq(fees.id, assessmentFees.fee_id))
     .leftJoin(transactions, eq(transactions.assessment_id, assessments.id))
     .leftJoin(transaction_items, eq(transaction_items.transaction_id, transactions.transaction_id))
+    .leftJoin(academicYears, eq(academicYears.id, enrollments.academic_year_id))
+    .leftJoin(semesters, eq(semesters.id, enrollments.semester_id))
+    .leftJoin(strands, eq(strands.id, enrollments.strand_id))
+    .leftJoin(gradeLevel, eq(gradeLevel.id, enrollments.grade_level_id))
     .where(and(...conditions));
 
   const grouped = Object.values(
@@ -73,6 +89,10 @@ export default defineEventHandler(async (_event) => {
           transaction_items: [],
           totalPaid: 0,
           balance: a.total_amount_due || 0,
+          academic_year: row.academicYears,
+          semester: row.semesters,
+          strand: row.strand,
+          grade_level: row.grade_level,
         };
       }
 

@@ -9,9 +9,17 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event);
+  console.warn(body.fee_name, body.fee_amount, body.fee_description);
 
   const [existingFee] = await db.select().from(fees).where(and(eq(fees.fee_name, body.fee_name), ne(fees.id, id)));
 
+  if (existingFee) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Conflict',
+      message: 'A fee with this name already exists.',
+    });
+  }
   if (existingFee) {
     throw createError({
       statusCode: 409,
