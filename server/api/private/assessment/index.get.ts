@@ -70,6 +70,7 @@ export default defineEventHandler(async (_event) => {
           student: row.student,
           fees: [],
           transactions: [],
+          transaction_items: [],
           totalPaid: 0,
           balance: a.total_amount_due || 0,
         };

@@ -65,7 +65,13 @@ export default defineEventHandler(async () => {
     }
 
     if (item) {
-      existing.transaction_items.push(item);
+      const alreadyExists = existing.transaction_items.some(
+        (t: any) => t.id === item.id,
+      );
+
+      if (!alreadyExists) {
+        existing.transaction_items.push(item);
+      }
     }
 
     return acc;

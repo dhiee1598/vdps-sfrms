@@ -381,6 +381,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
                 track-by="strand_name"
                 placeholder=""
                 open-direction="below"
+                :max-height="150"
               >
                 <template #option="{ option }">
                   {{ option.strand_name }}
@@ -401,6 +402,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
                 track-by="grade_level_name"
                 placeholder=""
                 open-direction="below"
+                :max-height="150"
               >
                 <template #option="{ option }">
                   {{ option.grade_level_name }}
