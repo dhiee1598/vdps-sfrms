@@ -187,6 +187,7 @@ const { handlePrint } = useVueToPrint({
         Next
       </button>
     </div>
+
     <dialog :open="isOpen" class="modal">
       <div class="modal-box w-11/12 max-w-5xl bg-base-200 text-base-content rounded-xl shadow-xl">
         <!-- Header -->

@@ -208,7 +208,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
             <td>₱ {{ Number(item.transaction.total_amount).toFixed(2) }}</td>
             <td>
               <button
-                class="btn btn-sm btn-success tooltip"
+                class="btn btn-sm btn-success tooltip tooltip-success"
                 data-tip="View"
                 @click="openModal(item)"
               >

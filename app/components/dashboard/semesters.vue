@@ -127,7 +127,7 @@ async function toggleStatus(id: number, newStatus: boolean) {
           </td>
           <td>
             <button
-              class="btn btn-info btn-sm tooltip"
+              class="btn btn-info btn-sm tooltip tooltip-info"
               data-tip="Update"
               @click="openEditModal(item)"
             >

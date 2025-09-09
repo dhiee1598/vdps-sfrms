@@ -293,7 +293,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
           <td>{{ item.enroll_status }}</td>
           <td class="flex gap-2 justify-center items-center">
             <button
-              class="btn btn-sm btn-success tooltip"
+              class="btn btn-sm btn-success tooltip tooltip-success"
               data-tip="View"
               @click="openViewModal(item)"
             >

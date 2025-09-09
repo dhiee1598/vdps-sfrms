@@ -2,13 +2,20 @@
 const props = defineProps<{
   transactions: any;
 }>();
-
+const selectedTx = ref();
 const selectedStatus = ref(''); // "" = All
 const sortOrder = ref('latest'); // default = latest
 const searchQuery = ref('');
 
 const currentPage = ref(1);
 const pageSize = ref(8); // items per page
+
+const isOpen = ref(false);
+
+function openModal(tx: any) {
+  selectedTx.value = tx;
+  isOpen.value = true;
+}
 
 const statuses = computed(() => {
   const set = new Set(
@@ -156,8 +163,9 @@ function goToPage(page: number) {
 
           <td>
             <button
-              class="btn btn-sm btn-success tooltip"
+              class="btn btn-sm btn-success tooltip-success tooltip"
               data-tip="View"
+              @click="openModal(item)"
             >
               <Icon name="solar:eye-linear" size="16" />
             </button>
@@ -199,5 +207,119 @@ function goToPage(page: number) {
     >
       Next
     </button>
+
+    <!-- dialog for transaction details -->
+    <dialog :open="isOpen" class="modal">
+      <div class="modal-box w-11/12 max-w-5xl bg-base-200 text-base-content rounded-xl shadow-xl">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-base-300 pb-3">
+          <h3 class="text-xl font-semibold flex items-center gap-2">
+            <Icon
+              name="solar:document-add-linear"
+              size="22"
+            />
+            Transaction Summary
+          </h3>
+        </div>
+
+        <!-- Student & Enrollment Details -->
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-base-300 p-4 rounded-lg">
+            <p class="text-sm text-gray-400 mb-2">
+              Student Information
+            </p>
+            <ul class="text-sm space-y-1">
+              <li><span class="font-medium">ID:</span> {{ selectedTx?.student.id }}</li>
+              <li><span class="font-medium">Name:</span> {{ selectedTx?.student.first_name }} {{ selectedTx?.student.middle_name }} {{ selectedTx?.student.last_name }}</li>
+              <li><span class="font-medium">Address:</span> {{ selectedTx?.student.address }}</li>
+            </ul>
+          </div>
+
+          <div class="bg-base-300 p-4 rounded-lg">
+            <p class="text-sm text-gray-400 mb-2">
+              Enrollment Information
+            </p>
+            <ul class="text-sm space-y-1">
+              <li><span class="font-medium">Grade Level:</span> {{ selectedTx?.grade_level.grade_level_name }}</li>
+              <li><span class="font-medium">Strand:</span> {{ selectedTx?.strand.strand_name }}</li>
+              <li><span class="font-medium">Semester:</span> {{ selectedTx?.semester.semester }}</li>
+              <li><span class="font-medium">Academic Year:</span> {{ selectedTx?.academic_year.academic_year }}</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Transaction Details -->
+        <div class="mt-6 bg-base-300 p-4 rounded-lg">
+          <p class="text-sm text-gray-400 mb-2">
+            Transaction Details
+          </p>
+          <dl class="grid grid-cols-1 md:grid-cols-2 gap-y-2 text-sm">
+            <dt class="font-medium">
+              Transaction ID:
+            </dt>
+            <dd class="truncate">
+              {{ selectedTx?.transaction.transaction_id }}
+            </dd>
+
+            <dt class="font-medium">
+              Status:
+            </dt>
+            <dd>
+              <span class="badge badge-success badge-sm">
+                {{ selectedTx?.transaction.status }}
+              </span>
+            </dd>
+
+            <dt class="font-medium">
+              Total Amount:
+            </dt>
+            <dd class="text-success font-semibold">
+              ₱ {{ Number(selectedTx?.transaction.total_amount).toFixed(2) }}
+            </dd>
+          </dl>
+        </div>
+
+        <!-- Transaction Items Table -->
+        <div class="mt-6">
+          <p class="text-sm text-gray-400 mb-2">
+            Payment Breakdown
+          </p>
+          <div class="overflow-x-auto">
+            <table class="table w-full table-sm">
+              <thead>
+                <tr>
+                  <th>Payment Type</th>
+                  <th class="text-right">
+                    Amount
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="item in selectedTx?.transaction_items"
+                  :key="item.id"
+                >
+                  <td>{{ item.item_type }}</td>
+                  <td class="text-right">
+                    ₱ {{ Number(item.amount).toFixed(2) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-action flex justify-end gap-3 mt-6">
+          <button class="btn btn-outline" @click="isOpen = false">
+            Close
+          </button>
+          <!--
+          <button class="btn btn-primary" @click="handlePrint">
+            Print Receipt
+          </button> -->
+        </div>
+      </div>
+    </dialog>
   </div>
 </template>
