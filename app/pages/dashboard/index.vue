@@ -6,7 +6,7 @@ const { data: activeSemester } = await useFetch('/api/private/semesters?activeSe
 </script>
 
 <template>
-  <div class="p-10 container">
+  <div class="p-10 container flex flex-col flex-wrap">
     <div class="flex flex-col gap-4">
       <p class="text-4xl font-bold">
         Admin Dashboard
@@ -16,7 +16,7 @@ const { data: activeSemester } = await useFetch('/api/private/semesters?activeSe
       </p>
     </div>
 
-    <div class="grid grid-cols-3 gap-4 my-4 w-full">
+    <div class="flex flex-row gap-4 my-4 w-full">
       <div class="card w-full card-md shadow-sm bg-green-100 text-green-800">
         <div class="card-body">
           <h2 class="card-title">
