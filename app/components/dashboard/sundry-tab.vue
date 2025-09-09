@@ -113,7 +113,7 @@ function openEditModal(item: any) {
 
           <td>
             <button
-              class="btn btn-sm btn-info tooltip"
+              class="btn btn-sm btn-info tooltip-info tooltip"
               data-tip="Update"
               @click="openEditModal(sundry)"
             >

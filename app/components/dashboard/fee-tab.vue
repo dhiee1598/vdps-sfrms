@@ -126,7 +126,7 @@ function resetForm() {
             <td>{{ item.fee_amount }}</td>
             <td>
               <button
-                class="btn btn-sm btn-info tooltip"
+                class="btn btn-sm btn-info tooltip tooltip-info"
                 data-tip="Update"
                 @click="openEditModal(item)"
               >

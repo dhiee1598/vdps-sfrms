@@ -103,7 +103,7 @@ function openEditModal(gradeLevel: any) {
           <td>{{ item.grade_level_name }}</td>
           <td>
             <button
-              class="btn btn-info btn-sm tooltip"
+              class="btn btn-info btn-sm tooltip tooltip-info"
               data-tip="Update"
               @click="openEditModal(item)"
             >

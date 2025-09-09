@@ -108,7 +108,7 @@ function openEditModal(strand: any) {
           <td>{{ strand.strand_description }}</td>
           <td>
             <button
-              class="btn btn-info btn-sm tooltip"
+              class="btn btn-info btn-sm tooltip-info tooltip"
               data-tip="Update"
               @click="openEditModal(strand)"
             >

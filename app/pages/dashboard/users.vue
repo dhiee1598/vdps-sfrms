@@ -64,10 +64,16 @@ async function handleClick() {
       </thead>
       <tbody>
         <tr v-for="user in users" :key="user.id">
-          <th>{{ user.id }}</th>
-          <td>{{ user.name }}</td>
-          <td>{{ user.email }}</td>
-          <td>
+          <th class="w-1/8">
+            {{ user.id }}
+          </th>
+          <td class="w-1/3">
+            {{ user.name }}
+          </td>
+          <td class="w-1/3">
+            {{ user.email }}
+          </td>
+          <td class="w-full">
             {{
               user.createdAt
                 ? new Intl.DateTimeFormat('en-US', {
@@ -79,8 +85,8 @@ async function handleClick() {
             }}
           </td>
           <td>
-            <button class="btn btn-info tooltip" data-tip="view">
-              view  <Icon name="solar:eye-linear" size="16" />
+            <button class="btn btn-success tooltip tooltip-success" data-tip="view">
+              <Icon name="solar:eye-linear" size="16" />
             </button>
           </td>
         </tr>

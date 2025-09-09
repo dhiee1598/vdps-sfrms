@@ -1,3 +1,24 @@
+<script setup lang="ts">
+useHead({
+  title: 'Cashier Dashboard',
+});
+
+const { data: transactions } = await useFetch('/api/private/transactions');
+console.warn(transactions.value, 'transactions');
+const pendingTx = computed(() => {
+  return transactions.value?.data.filter(t => t.transaction.status === 'pending');
+});
+
+const today = new Date().toISOString().split('T')[0];
+const completedTx = computed(() => {
+  return transactions.value?.data.filter(t => t.transaction.status === 'paid' && t.transaction.date_paid.split('T')[0] === today);
+});
+
+const totalCollectedToday = computed(() => {
+  return transactions.value?.data.filter(t => t.transaction.status === 'paid' && t.transaction.date_paid.split('T')[0] === today).reduce((acc, t) => acc + t.transaction.total_amount, 0);
+});
+</script>
+
 <template>
   <div class="p-10 container">
     <div class="flex flex-col gap-4">
@@ -16,8 +37,8 @@
             Today's Collection
           </h2>
           <p class="text-5xl font-bold">
-            P0.00
-          </p><p>+0 transactions completed</p>
+            P{{ Number(totalCollectedToday).toFixed(2) }}
+          </p><p>+{{ completedTx.length }} transactions completed</p>
         </div>
       </div>
 
@@ -27,7 +48,7 @@
             Pending Slips
           </h2>
           <p class="text-5xl font-bold">
-            0
+            {{ pendingTx?.length }}
           </p><p>awaiting payment processing</p>
         </div>
       </div>
@@ -38,7 +59,7 @@
             Completed Today
           </h2>
           <p class="text-5xl font-bold">
-            0
+            {{ completedTx?.length }}
           </p><p>Successfully processed payments</p>
         </div>
       </div>
