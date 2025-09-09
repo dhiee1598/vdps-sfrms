@@ -38,7 +38,7 @@ const totalCollectedToday = computed(() => {
           </h2>
           <p class="text-5xl font-bold">
             P{{ Number(totalCollectedToday).toFixed(2) }}
-          </p><p>+{{ completedTx.length }} transactions completed</p>
+          </p><p>+{{ completedTx?.length }} transactions completed</p>
         </div>
       </div>
 
