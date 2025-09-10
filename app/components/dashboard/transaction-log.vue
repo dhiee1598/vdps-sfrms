@@ -10,6 +10,30 @@ const searchQuery = ref('');
 const currentPage = ref(1);
 const pageSize = ref(8); // items per page
 
+// day filter
+const filterType = ref<'all' | 'day' | 'week' | 'range'>('all');
+
+const selectedDate = ref(new Date().toISOString().split('T')[0]); // single day
+const weekStart = ref(''); // YYYY-MM-DD
+const weekEnd = ref('');
+const rangeStart = ref('');
+const rangeEnd = ref('');
+
+// Helper functions
+function isInWeek(txDate: string) {
+  if (!weekStart.value || !weekEnd.value)
+    return false;
+  const date = new Date(txDate);
+  return date >= new Date(weekStart.value) && date <= new Date(weekEnd.value);
+}
+
+function isInRange(txDate: string) {
+  if (!rangeStart.value || !rangeEnd.value)
+    return false;
+  const date = new Date(txDate);
+  return date >= new Date(rangeStart.value) && date <= new Date(rangeEnd.value);
+}
+
 const isOpen = ref(false);
 
 function openModal(tx: any) {
@@ -17,39 +41,59 @@ function openModal(tx: any) {
   isOpen.value = true;
 }
 
-const statuses = computed(() => {
-  const set = new Set(
-    props.transactions.data.map(
-      (t: { transaction: { status: string } }) => t.transaction.status,
-    ),
-  );
-  return Array.from(set);
-});
+// const statuses = computed(() => {
+//   const set = new Set(
+//     props.transactions.data.map(
+//       (t: { transaction: { status: string } }) => t.transaction.status,
+//     ),
+//   );
+//   return Array.from(set);
+// });
 
 const filteredTransactions = computed(() => {
   let items = [...props.transactions.data];
+  items = items.filter(item => item.transaction.status === 'paid');
 
+  // Status Filter
   if (selectedStatus.value) {
     items = items.filter(
       item => item.transaction.status === selectedStatus.value,
     );
   }
 
+  // Search Filter
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase();
     items = items.filter((item) => {
       const txId = String(item.transaction.transaction_id).toLowerCase();
       const studentId = String(item.student.id).toLowerCase();
       const studentName = `${item.student.first_name} ${item.student.middle_name || ''} ${item.student.last_name}`.toLowerCase();
-
-      return (
-        txId.includes(q)
-        || studentId.includes(q)
-        || studentName.includes(q)
-      );
+      return txId.includes(q) || studentId.includes(q) || studentName.includes(q);
     });
   }
 
+  // Date Filter
+  items = items.filter((item) => {
+    const txDate = item.transaction.createdAt;
+    if (!txDate)
+      return false;
+
+    if (filterType.value === 'day') {
+      return txDate.split('T')[0] === selectedDate.value;
+    }
+    else if (filterType.value === 'week') {
+      return isInWeek(txDate);
+    }
+    else if (filterType.value === 'range') {
+      return isInRange(txDate);
+    }
+    else if (filterType.value === 'all') {
+      return true; // Show all transactions
+    }
+    return true;
+  });
+
+  // Sorting
   items.sort((a, b) => {
     const dateA = new Date(a.transaction.createdAt).getTime();
     const dateB = new Date(b.transaction.createdAt).getTime();
@@ -82,6 +126,62 @@ function goToPage(page: number) {
     </h2>
 
     <div class="flex flex-col md:flex-row gap-2">
+      <div class="flex flex-col md:flex-row gap-2 ">
+        <select v-model="filterType" class="select select-bordered w-44">
+          <option value="all">
+            Show All
+          </option>
+          <option value="day">
+            Specific Day
+          </option>
+          <option value="week">
+            Week
+          </option>
+          <option value="range">
+            Custom Range
+          </option>
+        </select>
+
+        <!-- Day Picker -->
+        <div v-if="filterType === 'day'">
+          <input
+            v-model="selectedDate"
+            type="date"
+            class="input input-bordered"
+          >
+        </div>
+
+        <!-- Week Picker -->
+        <div v-if="filterType === 'week'" class="flex gap-2 items-center">
+          <input
+            v-model="weekStart"
+            type="date"
+            class="input input-bordered"
+          >
+          <span>to</span>
+          <input
+            v-model="weekEnd"
+            type="date"
+            class="input input-bordered"
+          >
+        </div>
+
+        <!-- Range Picker -->
+        <div v-if="filterType === 'range'" class="flex gap-2">
+          <input
+            v-model="rangeStart"
+            type="date"
+            class="input input-bordered"
+          >
+          <span>to</span>
+          <input
+            v-model="rangeEnd"
+            type="date"
+            class="input input-bordered"
+          >
+        </div>
+      </div>
+
       <!-- Sort -->
       <select v-model="sortOrder" class="select select-bordered w-44">
         <option value="latest">
@@ -92,7 +192,7 @@ function goToPage(page: number) {
         </option>
       </select>
 
-      <!-- Status Filter -->
+      <!-- Status Filter
       <select v-model="selectedStatus" class="select select-bordered w-44">
         <option value="">
           All
@@ -104,7 +204,7 @@ function goToPage(page: number) {
         >
           {{ status }}
         </option>
-      </select>
+      </select> -->
 
       <!-- Search -->
       <input
