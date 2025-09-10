@@ -11,13 +11,12 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
   io.bind(engine);
 
   io.on('connection', (socket) => {
-  // Join cashier dashboards
-    socket.on('newPayment', () => {
-      socket.join('newPayment');
+    socket.on('newData', () => {
+      socket.join('newData');
     });
 
-    socket.on('newStudentAssessment', () => {
-      socket.join('newStudentAssessment');
+    socket.on('newTransaction', () => {
+      socket.join('newTransaction');
     });
   });
 

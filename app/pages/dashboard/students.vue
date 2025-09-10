@@ -135,22 +135,21 @@ watch(searchQuery, () => {
 <template>
   <div class="w-full p-10">
     <div class="flex flex-row justify-between my-4 items-center">
-      <p class="text-2xl">
+      <p class="text-3xl">
         List of Students
       </p>
-      <div class="flex space-x-2">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search students..."
-          class="input input-bordered w-64"
-        >
-        <button class="btn btn-accent" @click="openAddStudentModal">
-          <Icon name="solar:add-circle-linear" size="24" /> Add Student
-        </button>
-      </div>
+      <button class="btn btn-accent" @click="openAddStudentModal">
+        <Icon name="solar:add-circle-linear" size="24" /> Add Student
+      </button>
     </div>
-
+    <div class="flex space-x-2 justify-end">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search students..."
+        class="input input-bordered w-64"
+      >
+    </div>
     <table class="table">
       <thead>
         <tr>
@@ -213,7 +212,7 @@ watch(searchQuery, () => {
         <button
           v-if="page > 0"
           class="btn btn-sm"
-          :class="{ 'btn-active': currentPage === page }"
+          :class="{ 'btn-accent': currentPage === page }"
           @click="currentPage = page"
         >
           {{ page }}

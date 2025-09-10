@@ -1,10 +1,6 @@
 <script setup lang="ts">
-useHead({
-  title: 'Cashier Dashboard',
-});
-
 const { data: transactions } = await useFetch('/api/private/transactions');
-console.warn(transactions.value, 'transactions');
+
 const pendingTx = computed(() => {
   return transactions.value?.data.filter(t => t.transaction.status === 'pending');
 });

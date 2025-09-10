@@ -40,6 +40,8 @@ export default defineEventHandler(async (event) => {
     status: isNew,
   }).$returningId();
 
+  event.context.io.emit('newData', 'A new academic year has been added.');
+
   return {
     success: true,
     message: 'Academic Year Created Successfully',

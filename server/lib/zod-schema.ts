@@ -1,7 +1,4 @@
-import { date, z } from 'zod';
-import { id } from 'zod/v4/locales';
-
-import { gradeLevel } from '../db/schema/grade-level-schema';
+import { z } from 'zod';
 
 const loginSchema = z.object({
   email: z.email(),
@@ -57,7 +54,13 @@ const enrolledStudentSchema = z.object({
   createdAt: z.date().nullable(),
 });
 
-export { assessmentSchema, enrolledStudentSchema, loginSchema, studentSchema, sundriesSchema };
+const reportDataSchema = z.object({
+  type: z.string(),
+  from_date: z.string(),
+  to_date: z.string(),
+});
+
+export { assessmentSchema, enrolledStudentSchema, loginSchema, reportDataSchema, studentSchema, sundriesSchema };
 
 export type Login = z.infer<typeof loginSchema>;
 export type Student = z.infer<typeof studentSchema>;

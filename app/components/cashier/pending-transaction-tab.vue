@@ -97,8 +97,8 @@ onMounted(() => {
   socket.on('connect', onConnect);
   socket.on('disconnect', onDisconnect);
 
-  socket.on('newStudentAssessment', async (payment) => {
-    console.warn('New payment received:', payment);
+  socket.on('newTransaction', async (message) => {
+    console.warn(message);
     await refresh();
   });
 });
@@ -141,7 +141,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
 <template>
   <div class="p-2 w-full">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between my-4 gap-3">
-      <h2 class="text-2xl">
+      <h2 class="text-3xl">
         Pending Transactions
       </h2>
 
@@ -178,7 +178,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
           v-model="searchQuery"
           type="text"
           placeholder="Search by Transaction ID or Student Name..."
-          class="input input-bordered w-96"
+          class="input input-bordered w-84"
         >
       </div>
     </div>

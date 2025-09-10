@@ -216,44 +216,46 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
 <template>
   <div class="w-full p-10">
     <div class="flex flex-row justify-between my-4 items-center">
-      <p class="text-2xl">
+      <p class="text-3xl">
         List of Enrolled Students
       </p>
-      <div class="flex space-x-2">
-        <select v-model="selectedGrade" class="select select-bordered w-44">
-          <option value="">
-            All Grades
-          </option>
-          <option
-            v-for="(grade, index) in filteredGradeLevels"
-            :key="index"
-            :value="grade"
-          >
-            {{ grade }}
-          </option>
-        </select>
-        <select v-model="selectedStrand" class="select select-bordered w-44">
-          <option value="">
-            All Strands
-          </option>
-          <option
-            v-for="(strand, index) in filteredStrands"
-            :key="index"
-            :value="strand"
-          >
-            {{ strand }}
-          </option>
-        </select>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search students..."
-          class="input input-bordered w-64"
-        >
+      <div class="flex justify-end">
         <button class="btn btn-accent" @click="openAddStudentModal">
           <Icon name="solar:add-circle-linear" size="24" /> Enroll Student
         </button>
       </div>
+    </div>
+    <div class="flex space-x-2 justify-end">
+      <select v-model="selectedGrade" class="select select-bordered w-44">
+        <option value="">
+          All Grades
+        </option>
+        <option
+          v-for="(grade, index) in filteredGradeLevels"
+          :key="index"
+          :value="grade"
+        >
+          {{ grade }}
+        </option>
+      </select>
+      <select v-model="selectedStrand" class="select select-bordered w-44">
+        <option value="">
+          All Strands
+        </option>
+        <option
+          v-for="(strand, index) in filteredStrands"
+          :key="index"
+          :value="strand"
+        >
+          {{ strand }}
+        </option>
+      </select>
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search students..."
+        class="input input-bordered w-72"
+      >
     </div>
     <table class="table">
       <thead>
@@ -321,7 +323,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
         <button
           v-if="page > 0"
           class="btn btn-sm"
-          :class="{ 'btn-active': currentPage === page }"
+          :class="{ 'btn-accent': currentPage === page }"
           @click="currentPage = page"
         >
           {{ page }}

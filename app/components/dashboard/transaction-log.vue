@@ -3,18 +3,18 @@ const props = defineProps<{
   transactions: any;
 }>();
 const selectedTx = ref();
-const selectedStatus = ref(''); // "" = All
-const sortOrder = ref('latest'); // default = latest
+const selectedStatus = ref('');
 const searchQuery = ref('');
 
 const currentPage = ref(1);
-const pageSize = ref(8); // items per page
+const pageSize = ref(8);
+const isOpen = ref(false);
+const showDownloadModal = ref(false);
 
-// day filter
 const filterType = ref<'all' | 'day' | 'week' | 'range'>('all');
 
-const selectedDate = ref(new Date().toISOString().split('T')[0]); // single day
-const weekStart = ref(''); // YYYY-MM-DD
+const selectedDate = ref(new Date().toISOString().split('T')[0]);
+const weekStart = ref('');
 const weekEnd = ref('');
 const rangeStart = ref('');
 const rangeEnd = ref('');
@@ -34,21 +34,10 @@ function isInRange(txDate: string) {
   return date >= new Date(rangeStart.value) && date <= new Date(rangeEnd.value);
 }
 
-const isOpen = ref(false);
-
 function openModal(tx: any) {
   selectedTx.value = tx;
   isOpen.value = true;
 }
-
-// const statuses = computed(() => {
-//   const set = new Set(
-//     props.transactions.data.map(
-//       (t: { transaction: { status: string } }) => t.transaction.status,
-//     ),
-//   );
-//   return Array.from(set);
-// });
 
 const filteredTransactions = computed(() => {
   let items = [...props.transactions.data];
@@ -93,13 +82,6 @@ const filteredTransactions = computed(() => {
     return true;
   });
 
-  // Sorting
-  items.sort((a, b) => {
-    const dateA = new Date(a.transaction.createdAt).getTime();
-    const dateB = new Date(b.transaction.createdAt).getTime();
-    return sortOrder.value === 'latest' ? dateB - dateA : dateA - dateB;
-  });
-
   return items;
 });
 
@@ -121,101 +103,80 @@ function goToPage(page: number) {
 
 <template>
   <div class="flex flex-col md:flex-row md:items-center md:justify-between my-4 gap-3">
-    <h2 class="text-2xl">
+    <h2 class="text-3xl">
       Transactions
     </h2>
-
-    <div class="flex flex-col md:flex-row gap-2">
-      <div class="flex flex-col md:flex-row gap-2 ">
-        <select v-model="filterType" class="select select-bordered w-44">
-          <option value="all">
-            Show All
-          </option>
-          <option value="day">
-            Specific Day
-          </option>
-          <option value="week">
-            Week
-          </option>
-          <option value="range">
-            Custom Range
-          </option>
-        </select>
-
-        <!-- Day Picker -->
-        <div v-if="filterType === 'day'">
-          <input
-            v-model="selectedDate"
-            type="date"
-            class="input input-bordered"
-          >
-        </div>
-
-        <!-- Week Picker -->
-        <div v-if="filterType === 'week'" class="flex gap-2 items-center">
-          <input
-            v-model="weekStart"
-            type="date"
-            class="input input-bordered"
-          >
-          <span>to</span>
-          <input
-            v-model="weekEnd"
-            type="date"
-            class="input input-bordered"
-          >
-        </div>
-
-        <!-- Range Picker -->
-        <div v-if="filterType === 'range'" class="flex gap-2">
-          <input
-            v-model="rangeStart"
-            type="date"
-            class="input input-bordered"
-          >
-          <span>to</span>
-          <input
-            v-model="rangeEnd"
-            type="date"
-            class="input input-bordered"
-          >
-        </div>
-      </div>
-
-      <!-- Sort -->
-      <select v-model="sortOrder" class="select select-bordered w-44">
-        <option value="latest">
-          Latest
+    <div class="flex justify-end">
+      <button class="btn btn-accent" @click="showDownloadModal = true">
+        Generate Report
+      </button>
+    </div>
+  </div>
+  <div class="flex flex-col md:flex-row gap-2 justify-end">
+    <div class="flex flex-col md:flex-row gap-2 ">
+      <select v-model="filterType" class="select select-bordered w-44">
+        <option value="all">
+          Show All
         </option>
-        <option value="oldest">
-          Oldest
+        <option value="day">
+          Specific Day
+        </option>
+        <option value="week">
+          Week
+        </option>
+        <option value="range">
+          Custom Range
         </option>
       </select>
 
-      <!-- Status Filter
-      <select v-model="selectedStatus" class="select select-bordered w-44">
-        <option value="">
-          All
-        </option>
-        <option
-          v-for="(status, index) in statuses"
-          :key="index"
-          :value="status"
+      <!-- Day Picker -->
+      <div v-if="filterType === 'day'">
+        <input
+          v-model="selectedDate"
+          type="date"
+          class="input input-bordered"
         >
-          {{ status }}
-        </option>
-      </select> -->
+      </div>
 
-      <!-- Search -->
-      <input
-        v-model="searchQuery"
-        type="text"
-        placeholder="Search by Transaction ID, Student ID, or Name..."
-        class="input input-bordered w-96"
-      >
+      <!-- Week Picker -->
+      <div v-if="filterType === 'week'" class="flex gap-2 items-center">
+        <input
+          v-model="weekStart"
+          type="date"
+          class="input input-bordered"
+        >
+        <span>to</span>
+        <input
+          v-model="weekEnd"
+          type="date"
+          class="input input-bordered"
+        >
+      </div>
+
+      <!-- Range Picker -->
+      <div v-if="filterType === 'range'" class="flex gap-2 items-center">
+        <input
+          v-model="rangeStart"
+          type="date"
+          class="input input-bordered"
+        >
+        <span>to</span>
+        <input
+          v-model="rangeEnd"
+          type="date"
+          class="input input-bordered"
+        >
+      </div>
     </div>
-  </div>
 
+    <!-- Search -->
+    <input
+      v-model="searchQuery"
+      type="text"
+      placeholder="Search by Transaction ID, Student ID, or Name..."
+      class="input input-bordered w-96"
+    >
+  </div>
   <!-- Table -->
   <div class="overflow-x-auto">
     <table class="table w-full">
@@ -294,7 +255,7 @@ function goToPage(page: number) {
       v-for="page in totalPages"
       :key="page"
       class="btn btn-sm"
-      :class="{ 'btn-primary': currentPage === page }"
+      :class="{ 'btn-accent': currentPage === page }"
       @click="goToPage(page)"
     >
       {{ page }}
@@ -414,11 +375,12 @@ function goToPage(page: number) {
           <button class="btn btn-outline" @click="isOpen = false">
             Close
           </button>
-          <!--
-          <button class="btn btn-primary" @click="handlePrint">
-            Print Receipt
-          </button> -->
         </div>
+      </div>
+    </dialog>
+    <dialog :open="showDownloadModal" class="modal">
+      <div class="modal-box">
+        <DashboardDownloadReport @show-modal="showDownloadModal = false" />
       </div>
     </dialog>
   </div>

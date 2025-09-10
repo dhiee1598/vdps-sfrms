@@ -120,22 +120,22 @@ async function handleFormSubmit() {
 <template>
   <div class="w-full p-10">
     <div class="flex flex-row justify-between my-4 items-center">
-      <p class="text-2xl">
+      <p class="text-3xl">
         List of Student Assessment
       </p>
-      <div class="flex space-x-2">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search students..."
-          class="input input-bordered w-64"
-        >
-        <button class="btn btn-accent" @click="openAddStudentAssessment">
-          <Icon name="solar:add-circle-linear" size="24" /> Assess Student
-        </button>
-      </div>
+      <button class="btn btn-accent" @click="openAddStudentAssessment">
+        <Icon name="solar:add-circle-linear" size="24" /> Assess Student
+      </button>
     </div>
 
+    <div class="flex space-x-2 justify-end">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search students..."
+        class="input input-bordered w-72"
+      >
+    </div>
     <table class="table">
       <thead>
         <tr>
@@ -185,6 +185,11 @@ async function handleFormSubmit() {
             </button>
           </td>
         </tr>
+        <tr v-if="paginatedStudents.length === 0">
+          <td colspan="8" class="text-center text-gray-500 py-4">
+            No students found
+          </td>
+        </tr>
       </tbody>
     </table>
 
@@ -201,7 +206,7 @@ async function handleFormSubmit() {
         <button
           v-if="page > 0"
           class="btn btn-sm"
-          :class="{ 'btn-active': currentPage === page }"
+          :class="{ 'btn-accent': currentPage === page }"
           @click="currentPage = page"
         >
           {{ page }}

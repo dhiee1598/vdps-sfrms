@@ -2,6 +2,9 @@
 definePageMeta({
   layout: 'cashier-layout',
 });
+useHead({
+  title: 'Cashier Dashboard',
+});
 </script>
 
 <template>

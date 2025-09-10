@@ -33,5 +33,7 @@ export default defineEventHandler(async (event) => {
     .where(eq(fees.id, id))
     .execute();
 
+  event.context.io.emit('newData', 'A new fees has been updated.');
+
   return { success: true, data: result, message: 'Fee updated successfully' };
 });

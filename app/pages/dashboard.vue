@@ -2,6 +2,9 @@
 definePageMeta({
   layout: 'dashboard-layout',
 });
+useHead({
+  title: 'Admin Dashboard',
+});
 </script>
 
 <template>

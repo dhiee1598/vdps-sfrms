@@ -70,7 +70,7 @@ function openEditModal(gradeLevel: any) {
 <template>
   <div class="w-full p-10">
     <div class="flex flex-row justify-between my-4">
-      <p class="text-2xl">
+      <p class="text-3xl">
         List of Grade Level
       </p>
       <button class="btn btn-accent" @click="openCreateModal">
