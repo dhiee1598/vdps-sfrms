@@ -194,6 +194,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
             <th>Strand</th>
             <th>Status</th>
             <th>Amount</th>
+            <th>Date Created</th>
             <th />
           </tr>
         </thead>
@@ -206,6 +207,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
             <td>{{ item.strand.strand_name }}</td>
             <td>{{ item.transaction.status }}</td>
             <td>₱ {{ Number(item.transaction.total_amount).toFixed(2) }}</td>
+            <td>{{ new Date(item.transaction.createdAt).toLocaleDateString('en-US', { timeZone: "UTC", month: 'short', day: 'numeric', year: 'numeric' }) }}</td>
             <td>
               <button
                 class="btn btn-sm btn-success tooltip tooltip-success"

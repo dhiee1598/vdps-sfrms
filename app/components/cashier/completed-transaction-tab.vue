@@ -125,6 +125,7 @@ const { handlePrint } = useVueToPrint({
             <th>Strand</th>
             <th>Status</th>
             <th>Amount</th>
+            <th>Date Paid</th>
             <th />
           </tr>
         </thead>
@@ -137,6 +138,7 @@ const { handlePrint } = useVueToPrint({
             <td>{{ item.strand.strand_name }}</td>
             <td>{{ item.transaction.status }}</td>
             <td>₱ {{ Number(item.transaction.total_amount).toFixed(2) }}</td>
+            <td>{{ new Date(item.transaction.date_paid).toLocaleDateString('en-US', { timeZone: "UTC", month: 'short', day: 'numeric', year: 'numeric' }) }}</td>
             <td>
               <button
                 class="btn btn-sm btn-success tooltip"
