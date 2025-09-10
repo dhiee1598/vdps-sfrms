@@ -58,7 +58,8 @@ export default defineEventHandler(async (event) => {
     .where(eq(sundries.id, id))
     .execute();
 
-  // ✅ 4. Return response
+  event.context.io.emit('newData', 'A new sundries has been updated.');
+
   return {
     success: true,
     message: `Sundry updated successfully.`,

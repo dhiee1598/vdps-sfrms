@@ -76,7 +76,7 @@ function openEditModal(item: any) {
 <template>
   <div class="p-10 w-full">
     <div class="flex flex-row justify-between my-4">
-      <p class="text-2xl">
+      <p class="text-3xl">
         List of Sundries
       </p>
       <button class="btn btn-accent" @click="openCreateModal">

@@ -37,5 +37,7 @@ export default defineEventHandler(async (event) => {
     result = await db.update(semesters).set({ status: true }).where(eq(semesters.id, id)).execute();
   }
 
+  event.context.io.emit('newData', 'A new semester has been updated.');
+
   return { success: true, data: result, message: 'Semester updated successfully' };
 });

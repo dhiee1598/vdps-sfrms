@@ -82,7 +82,7 @@ async function toggleStatus(id: number, newStatus: boolean) {
 <template>
   <div class="w-full p-10">
     <div class="flex flex-row justify-between my-4">
-      <p class="text-2xl">
+      <p class="text-3xl">
         List of Semesters
       </p>
       <button class="btn btn-accent" @click="openCreateModal">

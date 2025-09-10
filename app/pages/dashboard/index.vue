@@ -22,7 +22,7 @@ const { data: activeSemester } = await useFetch('/api/private/semesters?activeSe
           <h2 class="card-title">
             Total Students
           </h2>
-          <p class="text-4xl font-bold">
+          <p class="text-3xl font-bold">
             {{ students?.data.length }}
           </p>
           <p class="text-sm">
@@ -36,7 +36,7 @@ const { data: activeSemester } = await useFetch('/api/private/semesters?activeSe
           <h2 class="card-title">
             Total Enrolled Students
           </h2>
-          <p class="text-4xl font-bold">
+          <p class="text-3xl font-bold">
             {{ enrolledStudents?.count }}
           </p><p class="text-sm">
             Number of enrolled students
@@ -49,7 +49,7 @@ const { data: activeSemester } = await useFetch('/api/private/semesters?activeSe
           <h2 class="card-title">
             Academic Year
           </h2>
-          <p class="text-4xl font-bold">
+          <p class="text-3xl font-bold">
             {{ activeYear?.data[0]?.academic_year }}
           </p>
           <p class="text-sm">
@@ -62,7 +62,7 @@ const { data: activeSemester } = await useFetch('/api/private/semesters?activeSe
           <h2 class="card-title">
             Semester
           </h2>
-          <p class="text-4xl font-bold">
+          <p class="text-3xl font-bold">
             {{ activeSemester?.data[0]?.semester }}
           </p>
           <p class="text-sm">

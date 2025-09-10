@@ -20,7 +20,6 @@ const formData = ref({
 });
 
 const { data: assessments } = await useFetch('/api/private/assessment?allAssessments=true');
-console.warn(assessments.value, 'assessments');
 
 const students = computed(() => {
   const uniqueStudents = new Map();

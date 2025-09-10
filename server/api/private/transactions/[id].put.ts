@@ -187,7 +187,7 @@ export default defineEventHandler(async (event) => {
     .where(eq(assessments.id, targetAssessmentId))
     .execute();
 
-  event.context.io.emit('newStudentAssessment', 'A new payment has been inserted.');
+  event.context.io.emit('newData', 'A new transaction has been updated.');
 
   return { success: true, message: 'Transaction & assessment updated successfully' };
 });

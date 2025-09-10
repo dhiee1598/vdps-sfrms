@@ -75,7 +75,7 @@ function resetForm() {
 <template>
   <div class="p-10 w-full">
     <div class="flex flex-row justify-between my-4">
-      <h2 class="text-2xl">
+      <h2 class="text-3xl">
         List of Fees
       </h2>
       <button class="btn btn-accent" @click="openNewModal">
@@ -90,7 +90,7 @@ function resetForm() {
 
     <!-- Error -->
     <div v-else-if="error" class="alert alert-error shadow-lg">
-      <span>⚠️ Failed to load fees: {{ error.message }}</span>
+      <span>Failed to load fees: {{ error.message }}</span>
     </div>
 
     <!-- Empty -->

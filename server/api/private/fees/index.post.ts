@@ -31,6 +31,8 @@ export default defineEventHandler(async (event) => {
     fee_amount,
   }).$returningId();
 
+  event.context.io.emit('newData', 'A new fees has been added.');
+
   return {
     success: true,
     data: createdFeeType,

@@ -30,6 +30,8 @@ export default defineEventHandler(async (event) => {
     semester,
   }).$returningId();
 
+  event.context.io.emit('newData', 'A new semester has been added.');
+
   return {
     success: true,
     data: createdSemester,

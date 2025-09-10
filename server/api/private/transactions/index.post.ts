@@ -63,7 +63,8 @@ export default defineEventHandler(async (event) => {
       .execute();
   }
 
-  event.context.io.emit('newStudentAssessment', 'A new payment has been inserted.');
+  event.context.io.emit('newData', 'A new transactions has been added.');
+  event.context.io.emit('newTransaction', 'A new transactions has been added.');
 
   return { success: true, data: result, message: 'Transaction created successfully.' };
 });

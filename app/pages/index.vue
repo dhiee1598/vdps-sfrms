@@ -91,9 +91,8 @@ onMounted(() => {
   socket.on('connect', onConnect);
   socket.on('disconnect', onDisconnect);
 
-  socket.on('newStudentAssessment', async (student: any) => {
-    console.warn('New student assessment received:', student);
-    console.warn('REFRESH');
+  socket.on('newData', async (message: any) => {
+    console.warn(message);
     await refreshAssessment();
     await refreshSundries();
   });

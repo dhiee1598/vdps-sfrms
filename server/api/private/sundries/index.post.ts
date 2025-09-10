@@ -31,6 +31,8 @@ export default defineEventHandler(async (event) => {
     sundry_amount,
   }).$returningId();
 
+  event.context.io.emit('newData', 'A new sundries has been added.');
+
   return {
     success: true,
     data: createdSundry,
