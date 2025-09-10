@@ -135,7 +135,7 @@ const emit = defineEmits<{
   <div class="modal-action flex justify-between mt-6">
     <div class="flex flex-row items-center gap-2 bg-green-600 px-4 py-2 rounded-lg">
       <p class="capitalize text-white">
-        enrolled {{ props.student.date_enrolled ? new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: '2-digit' }).format(new Date(props.student.date_enrolled)) : 'N/A' }}
+        enrolled {{ props.student.date_enrolled ? new Intl.DateTimeFormat('en-US', { timeZone: "UTC", year: 'numeric', month: 'long', day: '2-digit' }).format(new Date(props.student.date_enrolled)) : 'N/A' }}
       </p>
       <Icon
         name="solar:calendar-linear"

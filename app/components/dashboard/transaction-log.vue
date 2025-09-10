@@ -215,6 +215,7 @@ function goToPage(page: number) {
           <td>
             {{
               new Date(item.transaction.createdAt).toLocaleDateString("en-US", {
+                timeZone: "UTC",
                 month: "short",
                 day: "numeric",
                 year: "numeric",
