@@ -4,6 +4,7 @@ const emit = defineEmits<{
 }>();
 
 const fileType = ref('');
+const isLoading = ref(false);
 const formData = ref({
   type: '',
   from_date: '',
@@ -11,22 +12,34 @@ const formData = ref({
 });
 
 async function downloadFile(type: string) {
-  formData.value.type = type;
+  try {
+    isLoading.value = true;
+    formData.value.type = type;
 
-  const response = await $fetch('/api/private/report', { method: 'POST', body: formData.value, responseType: 'blob' });
+    const response = await $fetch('/api/private/report', {
+      method: 'POST',
+      body: formData.value,
+      responseType: 'blob',
+    });
 
-  const url = window.URL.createObjectURL(response);
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', 'report.xlsx');
+    const blob = response as Blob;
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
 
-  // 4. Trigger the download
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+    link.setAttribute('download', type === 'excel' ? 'report.xlsx' : 'report.pdf');
 
-  // 5. Clean up the URL
-  window.URL.revokeObjectURL(url);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  }
+  catch (error) {
+    console.error('Download failed:', error);
+  }
+  finally {
+    isLoading.value = false;
+  }
 }
 </script>
 
@@ -40,6 +53,7 @@ async function downloadFile(type: string) {
       <button
         type="button"
         class="cursor-pointer"
+        :disabled="isLoading"
         @click="emit('showModal')"
       >
         <Icon name="solar:close-circle-bold" size="25" />
@@ -52,7 +66,7 @@ async function downloadFile(type: string) {
     <form @submit.prevent="downloadFile(fileType)">
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-600">From</label>
+          <label class="block text-sm font-medium">From</label>
           <input
             v-model="formData.from_date"
             type="date"
@@ -61,11 +75,12 @@ async function downloadFile(type: string) {
           >
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-600">To</label>
+          <label class="block text-sm font-medium">To</label>
           <input
             v-model="formData.to_date"
             type="date"
             class="input input-bordered w-full"
+            :min="formData.from_date"
             required
           >
         </div>
@@ -75,6 +90,7 @@ async function downloadFile(type: string) {
         <button
           type="submit"
           class="btn btn-error"
+          :disabled="isLoading"
           @click="fileType = 'pdf'"
         >
           Download PDF
@@ -82,6 +98,7 @@ async function downloadFile(type: string) {
         <button
           type="submit"
           class="btn btn-success"
+          :disabled="isLoading"
           @click="fileType = 'excel'"
         >
           Download Excel
