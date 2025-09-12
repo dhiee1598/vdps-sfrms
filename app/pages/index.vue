@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { socket } from '~/components/socket';
 
+useHead({
+  title: 'Student Portal',
+});
+
 const { data: assessment, refresh: refreshAssessment } = await useFetch('/api/private/assessment');
 const { data: sundries, refresh: refreshSundries } = await useFetch('/api/private/sundries');
 const step = ref(1);
