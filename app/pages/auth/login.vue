@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import type { FetchError } from 'ofetch';
 
+useHead({
+  title: 'Login',
+});
+
 const { isMessage, isError, responseMessage, showMessage } = useNotification();
 
 const isLoading = ref(false);
