@@ -22,5 +22,4 @@ RUN npm install --omit=dev && npm cache clean --force
 
 EXPOSE 3000
 
-# Start Nuxt in preview mode
 CMD ["npm", "run", "preview"]
