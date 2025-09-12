@@ -73,8 +73,6 @@ export default function studentComputation(newVal: any) {
     });
   }) ?? false;
 
-  console.warn('hasPendingTransaction', hasPendingTransaction);
-
   if (!hasPendingTransaction) {
     if (!hasDownpayment) {
       availableOptions.push('Downpayment', 'Full Payment');
@@ -110,12 +108,12 @@ export default function studentComputation(newVal: any) {
     }
   }
 
-  console.warn('Selected Student:', newVal);
-  console.warn('Downpayment:', payments.downpayment);
-  console.warn('Total Paid:', payments.totalPaid);
-  console.warn('Overall Balance:', balance);
-  console.warn('Remaining per Quarter:', remainingPerQuarter);
-  console.warn('Available Payment Option', availableOptions);
+  // console.warn('Selected Student:', newVal);
+  // console.warn('Downpayment:', payments.downpayment);
+  // console.warn('Total Paid:', payments.totalPaid);
+  // console.warn('Overall Balance:', balance);
+  // console.warn('Remaining per Quarter:', remainingPerQuarter);
+  // console.warn('Available Payment Option', availableOptions);
 
   return {
     selected_students: newVal,
