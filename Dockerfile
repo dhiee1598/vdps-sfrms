@@ -22,4 +22,4 @@ RUN npm install --omit=dev && npm cache clean --force
 
 EXPOSE 3000
 
-CMD ["npm", "run", "preview"]
+CMD ["node", ".output/server/index.mjs"]
