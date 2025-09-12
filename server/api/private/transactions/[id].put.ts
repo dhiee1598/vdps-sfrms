@@ -112,6 +112,8 @@ export default defineEventHandler(async (event) => {
       tuitionItems.includes(i.item_type),
     );
 
+    targetAssessmentId = Number(assessmentId);
+
     if (!hasTuitionItem) {
       continue;
     }
@@ -129,8 +131,6 @@ export default defineEventHandler(async (event) => {
         message: 'This assessment is already fully paid.',
       });
     }
-
-    targetAssessmentId = Number(assessmentId);
   }
 
   if (!targetAssessmentId) {
