@@ -1,161 +1,198 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import type { FetchError } from 'ofetch';
 
-// useFetch automatically loads users
-const { data: users, pending, error, refresh } = await useFetch('/api/private/users');
+const session = useUserSession();
 
-const showModal = ref(false);
+const { data: users, pending, refresh } = useFetch(`/api/private/users/${session.user.value?.id}`, { lazy: true });
+const { isMessage, isError, responseMessage, showMessage } = useNotification();
+
+const isEditing = ref(false);
+const isSubmitting = ref(false);
+const previewImage = ref<string | null>(null);
 
 const formData = ref({
   name: '',
   email: '',
-  password: '',
+  profile_image: '/default-profile.png',
+  old_password: '',
+  new_password: '',
 });
 
-async function handleClick() {
+const avatars = [
+  '/avatar-1.png',
+  '/avatar-2.png',
+  '/avatar-3.png',
+  '/avatar-4.png',
+  '/avatar-5.png',
+  '/avatar-6.png',
+  '/avatar-7.png',
+  '/avatar-8.png',
+  '/avatar-9.png',
+  '/avatar-10.png',
+];
+
+function openEdit() {
+  previewImage.value = null;
+  isEditing.value = true;
+  if (users.value) {
+    formData.value.name = users.value.data.name;
+    formData.value.email = users.value.data.email;
+    formData.value.profile_image = users.value.data.profile_image || '/default-profile.png';
+    formData.value.old_password = '';
+    formData.value.new_password = '';
+  }
+}
+
+function selectAvatar(avatar: string) {
+  formData.value.profile_image = avatar;
+  previewImage.value = null;
+}
+
+async function saveChanges() {
+  isSubmitting.value = true;
   try {
-    await $fetch('/api/private/users', {
-      method: 'POST',
+    const response = await $fetch(`/api/private/users/${session.user.value?.id}`, {
+      method: 'PUT',
       body: formData.value,
     });
 
-    // if successful → close modal + reset form
-    showModal.value = false;
-    formData.value = { name: '', email: '', password: '' };
-
-    // reload Nuxt data
+    isEditing.value = false;
+    showMessage(response.message, false);
     await refresh();
   }
-  catch (err) {
-    console.error(err);
+  catch (e) {
+    const error = e as FetchError;
+    showMessage(error.data.message || 'An unexpected error occurred.', true);
+  }
+  finally {
+    isSubmitting.value = false;
   }
 }
 </script>
 
 <template>
   <div class="w-full p-10">
-    <div class="flex flex-row justify-between my-4">
-      <p class="text-3xl">
-        List of Users
-      </p>
-      <button class="btn btn-accent" @click="showModal = true">
-        <Icon name="solar:add-circle-linear" size="24" /> New User
-      </button>
+    <div v-if="pending" class="flex items-center justify-center">
+      <span class="loading loading-ring loading-xl" />
+    </div>
+    <div v-else>
+      <div class="shadow-lg p-8 max-w-3xl flex flex-col sm:flex-row gap-6">
+        <div class="avatar">
+          <div class="ring-accent ring-offset-base-100 w-52 rounded-full ring-2 ring-offset-2">
+            <NuxtImg :src="users?.data.profile_image || '/default-profile.png'" />
+          </div>
+        </div>
+
+        <div class="flex flex-col justify-center flex-1">
+          <h2 class="text-2xl font-semibold">
+            {{ users?.data.name }}
+          </h2>
+          <p class="label">
+            {{ users?.data.email }}
+          </p>
+          <span class="mt-2 label text-blue-500">{{ users?.data.role }}</span>
+        </div>
+
+        <div class="top-6 right-6">
+          <button class="btn btn-accent" @click="openEdit">
+            Edit Profile
+          </button>
+        </div>
+      </div>
     </div>
 
-    <!-- Loading & error states -->
-    <div v-if="pending">
-      Loading...
-    </div>
-    <div v-else-if="error">
-      Error loading users
-    </div>
-
-    <!-- Table -->
-    <table v-else class="table">
-      <thead>
-        <tr>
-          <th />
-          <th>Name</th>
-          <th>Email</th>
-          <th>Created At</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="user in users" :key="user.id">
-          <th class="w-1/8">
-            {{ user.id }}
-          </th>
-          <td class="w-1/3">
-            {{ user.name }}
-          </td>
-          <td class="w-1/3">
-            {{ user.email }}
-          </td>
-          <td class="w-full">
-            {{
-              user.createdAt
-                ? new Intl.DateTimeFormat('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                }).format(new Date(user.createdAt))
-                : ''
-            }}
-          </td>
-          <td>
-            <button class="btn btn-success tooltip tooltip-success" data-tip="view">
-              <Icon name="solar:eye-linear" size="16" />
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- Modal -->
-    <dialog :open="showModal" class="modal">
+    <!-- Edit Modal -->
+    <dialog :open="isEditing" class="modal">
       <div class="modal-box">
-        <h3 class="text-lg font-bold">
-          Create User
-        </h3>
+        <div class="px-6 py-2 w-full max-w-lg">
+          <h2 class="text-xl font-bold">
+            Edit Profile
+          </h2>
 
-        <div class="modal-action">
-          <form class="flex flex-col gap-4 w-full" @submit.prevent="handleClick">
-            <fieldset class="fieldset">
-              <legend class="fieldset-legend">
-                User's Full Name
-              </legend>
-              <input
-                v-model="formData.name"
-                type="text"
-                class="input w-full"
-                placeholder="Type here"
-                required
+          <form @submit.prevent="saveChanges">
+            <div class="space-y-4">
+              <div class="flex flex-col items-center gap-3">
+                <NuxtImg
+                  :src="previewImage || formData.profile_image"
+                  class="w-34 rounded-full object-cover border-4"
+                />
+                <p class="text-sm text-gray-500">
+                  Choose an avatar
+                </p>
+                <div class="grid grid-cols-5 gap-3 mt-2">
+                  <NuxtImg
+                    v-for="(avatar, index) in avatars"
+                    :key="index"
+                    :src="avatar"
+                    class="w-16 h-16 rounded-full cursor-pointer border-2 hover:border-blue-500"
+                    :class="{ 'border-blue-600': formData.profile_image === avatar }"
+                    @click="selectAvatar(avatar)"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm label">Name</label>
+                <input
+                  v-model="formData.name"
+                  type="text"
+                  class="w-full px-3 py-2 input"
+                  required
+                >
+              </div>
+              <div>
+                <label class="label">Email</label>
+                <input
+                  v-model="formData.email"
+                  type="email"
+                  class="w-full px-3 py-2 input"
+                  required
+                >
+              </div>
+              <div>
+                <label class="label">Old Password</label>
+                <input
+                  v-model="formData.old_password"
+                  type="password"
+                  class="w-full px-3 py-2 input"
+                >
+              </div>
+              <div>
+                <label class="label">New Password</label>
+                <input
+                  v-model="formData.new_password"
+                  type="password"
+                  class="w-full px-3 py-2 input"
+                >
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+              <button
+                class="btn"
+                type="button"
+                :disabled="isSubmitting"
+                @click.prevent="isEditing = false"
               >
-            </fieldset>
-
-            <fieldset class="fieldset">
-              <legend class="fieldset-legend">
-                User's Email
-              </legend>
-              <input
-                v-model="formData.email"
-                type="email"
-                class="input w-full"
-                placeholder="Type here"
-                required
-              >
-            </fieldset>
-
-            <fieldset class="fieldset">
-              <legend class="fieldset-legend">
-                User's Password
-              </legend>
-              <input
-                v-model="formData.password"
-                type="password"
-                class="input w-full"
-                placeholder="Type here"
-                required
-              >
-            </fieldset>
-
-            <div class="flex flex-row justify-end gap-2">
-              <button type="submit" class="btn btn-accent">
-                Create
+                Cancel
               </button>
               <button
-                type="button"
-                class="btn"
-                @click="showModal = false"
+                type="submit"
+                class="btn btn-accent"
+                :disabled="isSubmitting"
               >
-                Close
+                Save Changes
               </button>
             </div>
           </form>
         </div>
       </div>
     </dialog>
+
+    <ToastNotification
+      :is-message="isMessage"
+      :is-error="isError"
+      :response-message="responseMessage"
+    />
   </div>
 </template>
