@@ -1,25 +1,36 @@
+# -------- BUILD STAGE --------
 FROM node:22-alpine AS build
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci
 
 COPY . .
 
 RUN npm run build
 
-FROM node:22-alpine AS production
+# -------- DEPS STAGE (production deps only) --------
+FROM node:22-alpine AS deps
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm ci --omit=dev && npm cache clean --force
+
+# -------- PRODUCTION STAGE --------
+FROM gcr.io/distroless/nodejs22-debian12 AS production
 
 WORKDIR /app
 
 COPY --from=build /app/.output ./.output
 
-COPY package*.json ./
+COPY --from=deps /app/node_modules ./node_modules
 
-RUN npm install --omit=dev && npm cache clean --force
+COPY package*.json ./
 
 EXPOSE 3000
 
-CMD ["node", ".output/server/index.mjs"]
+CMD [".output/server/index.mjs"]
