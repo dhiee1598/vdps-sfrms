@@ -13,22 +13,18 @@
     "db:seed": "tsx ./server/db/seed/"
   },
   "dependencies": {
-    "@nuxt/eslint": "^1.9.0",
     "@nuxt/icon": "^2.0.0",
     "@nuxt/image": "^1.11.0",
     "@nuxtjs/google-fonts": "^3.2.0",
-    "@tailwindcss/vite": "^4.1.12",
     "dotenv": "^17.2.1",
     "drizzle-orm": "^0.44.5",
     "drizzle-zod": "^0.8.3",
-    "eslint": "^9.34.0",
     "mysql2": "^3.14.3",
     "nuxt": "^4.0.3",
     "nuxt-auth-utils": "^0.5.23",
     "pdf-lib": "^1.17.1",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
-    "tailwindcss": "^4.1.12",
     "uuid": "^11.1.0",
     "vue": "^3.5.20",
     "vue-multiselect": "^3.3.1",
@@ -40,10 +36,14 @@
   "devDependencies": {
     "@antfu/eslint-config": "^5.2.1",
     "@iconify-json/solar": "^1.2.4",
+    "@nuxt/eslint": "^1.9.0",
+    "@tailwindcss/vite": "^4.1.12",
     "@types/xlsx": "^0.0.35",
     "daisyui": "^5.0.54",
     "drizzle-kit": "^0.31.4",
+    "eslint": "^9.34.0",
     "eslint-plugin-format": "^1.0.1",
+    "tailwindcss": "^4.1.12",
     "tsx": "^4.20.5"
   }
 }
