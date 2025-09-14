@@ -124,8 +124,10 @@ async function saveChanges() {
                     v-for="(avatar, index) in avatars"
                     :key="index"
                     :src="avatar"
-                    class="w-16 h-16 rounded-full cursor-pointer border-2 hover:border-blue-500"
+                    class="rounded-full cursor-pointer border-2 hover:border-blue-500"
                     :class="{ 'border-blue-600': formData.profile_image === avatar }"
+                    height="56"
+                    width="56"
                     @click="selectAvatar(avatar)"
                   />
                 </div>
