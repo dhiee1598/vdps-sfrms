@@ -4,6 +4,9 @@ import { enrollments, enrollmentsInsertSchema } from '~~/server/db/schema/enroll
 import { and, eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
+  // Require a user session (send back 401 if no `user` key in session)
+  await requireUserSession(event);
+
   const body = await readValidatedBody(event, enrollmentsInsertSchema.safeParse);
 
   if (!body.success) {

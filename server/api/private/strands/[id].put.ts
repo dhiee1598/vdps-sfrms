@@ -3,6 +3,9 @@ import { strands } from '~~/server/db/schema/strands-schema';
 import { and, eq, ne } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
+  // Require a user session (send back 401 if no `user` key in session)
+  await requireUserSession(event);
+
   const id = Number(event.context.params?.id);
   if (!id) {
     throw createError({ statusCode: 400, statusMessage: 'ID is required', message: 'ID is required' });

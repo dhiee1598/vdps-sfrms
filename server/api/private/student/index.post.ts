@@ -8,6 +8,9 @@ import {
 import { and, desc, eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
+  // Require a user session (send back 401 if no `user` key in session)
+  await requireUserSession(event);
+
   // 1. Validate body
   const body = await readValidatedBody(event, studentInsertSchema.safeParse);
 

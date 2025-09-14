@@ -7,6 +7,9 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import * as XLSX from 'xlsx/xlsx.mjs';
 
 export default defineEventHandler(async (event) => {
+  // Require a user session (send back 401 if no `user` key in session)
+  await requireUserSession(event);
+
   const body = await readValidatedBody(event, reportDataSchema.safeParse);
   let buffer;
 

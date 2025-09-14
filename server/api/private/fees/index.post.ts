@@ -3,6 +3,9 @@ import { fees, feesInsertSchema } from '~~/server/db/schema/fees-schema';
 import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
+  // Require a user session (send back 401 if no `user` key in session)
+  await requireUserSession(event);
+
   const body = await readValidatedBody(event, feesInsertSchema.safeParse);
 
   if (!body.success) {

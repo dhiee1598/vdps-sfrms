@@ -4,6 +4,9 @@ import { eq } from 'drizzle-orm';
 
 // A Nuxt.js server route handler for creating a new academic year.
 export default defineEventHandler(async (event) => {
+  // Require a user session (send back 401 if no `user` key in session)
+  await requireUserSession(event);
+
   const body = await readValidatedBody(event, academicYearsInsertSchema.safeParse);
 
   if (!body.success) {

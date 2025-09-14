@@ -9,7 +9,7 @@ import { transaction_items } from '~~/server/db/schema/transaction-items-schema'
 import { transactions } from '~~/server/db/schema/transaction-schema';
 import { desc, eq } from 'drizzle-orm';
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (_event) => {
   const rows = await db
     .select({
       transaction: transactions,

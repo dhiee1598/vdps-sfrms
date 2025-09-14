@@ -41,8 +41,6 @@ async function handleStepClick() {
 
         if (success) {
           isSubmitting.value = false;
-          await refreshAssessment();
-          await refreshSundries();
           setTimeout(() => {
             step.value = 1;
             selectedStudent.value = null;

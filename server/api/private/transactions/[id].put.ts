@@ -12,6 +12,9 @@ type Transactions = typeof transactions.$inferSelect;
 type TransactionItems = typeof transaction_items.$inferSelect;
 
 export default defineEventHandler(async (event) => {
+  // Require a user session (send back 401 if no `user` key in session)
+  await requireUserSession(event);
+
   const id = String(event.context.params?.id);
   if (!id) {
     throw createError({

@@ -3,6 +3,9 @@ import { gradeLevel, gradeLevelInsertSchema } from '~~/server/db/schema/grade-le
 import { and, eq, ne } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
+  // Require a user session (send back 401 if no `user` key in session)
+  await requireUserSession(event);
+
   const id = Number(event.context.params?.id);
   const body = await readValidatedBody(event, gradeLevelInsertSchema.safeParse);
 
