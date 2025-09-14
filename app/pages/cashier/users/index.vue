@@ -79,7 +79,7 @@ async function saveChanges() {
       <div class="shadow-lg p-8 max-w-3xl flex flex-col sm:flex-row gap-6">
         <div class="avatar">
           <div class="ring-accent ring-offset-base-100 w-52 rounded-full ring-2 ring-offset-2">
-            <NuxtImg :src="users?.data.profile_image || '/default-profile.png'" provider="static" />
+            <NuxtImg :src="users?.data.profile_image || '/default-profile.png'" />
           </div>
         </div>
 
@@ -113,7 +113,6 @@ async function saveChanges() {
             <div class="space-y-4">
               <div class="flex flex-col items-center gap-3">
                 <NuxtImg
-                  provider="static"
                   :src="previewImage || formData.profile_image"
                   class="w-34 rounded-full object-cover border-4"
                 />
@@ -124,7 +123,6 @@ async function saveChanges() {
                   <NuxtImg
                     v-for="(avatar, index) in avatars"
                     :key="index"
-                    provider="static"
                     :src="avatar"
                     class="w-16 h-16 rounded-full cursor-pointer border-2 hover:border-blue-500"
                     :class="{ 'border-blue-600': formData.profile_image === avatar }"

@@ -26,9 +26,6 @@ export default defineNuxtConfig({
       websocket: true,
     },
   },
-  image: {
-    provider: 'static',
-  },
   plugins: ['~/plugins/vue-multiselect.ts'],
   eslint: {
     config: {

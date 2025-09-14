@@ -14,7 +14,6 @@ async function logout() {
         alt="Profile"
         height="56"
         width="56"
-        provider="static"
       />
       <div class="ml-2">
         <div class="text-xs font-bold md:text-xl">
@@ -29,7 +28,6 @@ async function logout() {
       <div class="avatar">
         <div class="ring-accent ring-offset-base-100 w-9 rounded-full ring-2 ring-offset-2">
           <NuxtImg
-            provider="static"
             src="/default-profile.png"
             alt="Profile"
             height="36"
