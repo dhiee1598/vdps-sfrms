@@ -3,6 +3,9 @@ import { strands, strandsInsertSchema } from '~~/server/db/schema/strands-schema
 import { eq } from 'drizzle-orm';
 // A Nuxt.js server route handler for creating a new year level.
 export default defineEventHandler(async (event) => {
+  // Require a user session (send back 401 if no `user` key in session)
+  await requireUserSession(event);
+
   // Read and validate the request body against the year level insertion schema.
   // The yearLevelInsertSchema.safeParse() method ensures type-safe and
   // robust validation, returning a result object for easy error handling.

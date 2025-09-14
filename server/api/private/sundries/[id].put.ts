@@ -4,6 +4,9 @@ import { and, eq, ne } from 'drizzle-orm';
 import { readBody } from 'h3';
 
 export default defineEventHandler(async (event) => {
+  // Require a user session (send back 401 if no `user` key in session)
+  await requireUserSession(event);
+
   // ✅ 1. Parse ID from route params
   const id = Number(event.context.params?.id);
   if (!id) {

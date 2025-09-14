@@ -78,7 +78,6 @@ const totalPages = computed(() => {
 function openModal(item: any) {
   isOpen.value = true;
   selectedItem.value = item;
-  console.warn(item);
 }
 
 const { handlePrint } = useVueToPrint({

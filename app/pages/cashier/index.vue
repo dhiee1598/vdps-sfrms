@@ -11,7 +11,18 @@ const completedTx = computed(() => {
 });
 
 const totalCollectedToday = computed(() => {
-  return transactions.value?.data.filter(t => t.transaction.status === 'paid' && t.transaction.date_paid.split('T')[0] === today).reduce((acc, t) => acc + t.transaction.total_amount, 0);
+  if (!transactions.value?.data)
+    return 0;
+
+  return transactions.value.data
+    .filter((t) => {
+      const datePaid = t.transaction.date_paid?.split('T')[0];
+      return t.transaction.status === 'paid' && datePaid === today;
+    })
+    .reduce((acc, t) => {
+      const amount = Number(t.transaction.total_amount) || 0;
+      return acc + amount;
+    }, 0);
 });
 </script>
 

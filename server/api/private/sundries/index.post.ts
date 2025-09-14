@@ -3,6 +3,9 @@ import { sundries, sundryInsertSchema } from '~~/server/db/schema/sundry-schema'
 import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
+  // Require a user session (send back 401 if no `user` key in session)
+  await requireUserSession(event);
+
   const body = await readValidatedBody(event, sundryInsertSchema.safeParse);
 
   if (!body.success) {

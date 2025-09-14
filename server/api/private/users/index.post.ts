@@ -3,6 +3,9 @@ import { userInsertSchema, users } from '~~/server/db/schema/user-schema';
 import { eq } from 'drizzle-orm';
 // A Nuxt.js server route handler for creating a new user.
 export default defineEventHandler(async (event) => {
+  // Require a user session (send back 401 if no `user` key in session)
+  await requireUserSession(event);
+
   // Read and validate the request body against the user insertion schema.
   // The userInsertSchema.safeParse method provides a safe way to handle
   // validation, returning a result object that indicates success or failure.

@@ -27,7 +27,7 @@ const allStudents = computed(() =>
 
 <template>
   <div class="w-full flex flex-col justify-center items-center">
-    <div class="text-3xl py-4">
+    <div class="text-2xl md:text-4xl font-black uppercase py-10">
       Student Payment Kiosk System
     </div>
     <NuxtImg
