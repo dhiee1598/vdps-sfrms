@@ -36,6 +36,7 @@ const allStudents = computed(() =>
       height="200"
       width="200"
       class="mb-6"
+      provider="static"
     />
 
     <div class="form-control w-full max-w-md mx-auto text-left">

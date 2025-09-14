@@ -48,6 +48,7 @@ function togglePasswordVisibility() {
           src="/vdps-logo.png"
           alt="Logo"
           height="200"
+          provider="static"
           width="200"
           class="mb-6"
         />
