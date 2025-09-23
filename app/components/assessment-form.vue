@@ -14,14 +14,56 @@ const emit = defineEmits<{
 
 const { data: fees } = useFetch('/api/private/fees');
 const { data: students, refresh } = useFetch('/api/private/enrollment?withoutAssessment=true');
+const localAssessment = ref(props.assessment);
+const selectedStudents = ref();
+const selectedGrade = ref();
+const selectedSection = ref();
+console.warn('students', students.value);
+
+const filteredGrade = computed(() => {
+  if (!students.value)
+    return [];
+
+  const set = new Set(students.value.data.map(s => s.grade_level));
+  return Array.from(set);
+});
+
+const filteredSections = computed(() => {
+  if (!students.value || !selectedGrade.value)
+    return [];
+
+  const grade = selectedGrade.value.value;
+
+  const set = new Set(
+    students.value.data
+      .filter(s => s.grade_level === grade)
+      .map(s => s.section_name), // or s.section if it’s nested
+  );
+
+  return Array.from(set).map(section => ({
+    value: section,
+    label: section,
+  }));
+});
+
+const filteredStudents = computed(() => {
+  if (!students.value || !selectedGrade.value || !selectedSection.value)
+    return [];
+
+  const grade = selectedGrade.value.value;
+  const section = selectedSection.value.value;
+
+  return students.value.data.filter(
+    student =>
+      student.grade_level === grade
+      && student.section_name === section,
+  );
+});
 
 const formData = computed({
   get: () => props.assessment,
   set: value => emit('update:assessment', value),
 });
-
-const localAssessment = ref(props.assessment);
-const selectedStudents = ref();
 
 const totalAmountDue = computed(() => {
   const sum = formData.value.fees.reduce((total, fee) => {
@@ -45,10 +87,34 @@ watch(totalAmountDue, (newSum) => {
   formData.value.total_fees = Number(newSum);
 });
 
+watch(selectedGrade, (newVal) => {
+  selectedGrade.value = newVal;
+  selectedSection.value = null;
+});
+
+watch(selectedSection, (newVal) => {
+  selectedSection.value = newVal;
+});
+
 watch(selectedStudents, (newVal) => {
   formData.value.enrollment_id = newVal.enrollmentId;
   formData.value.student_id = newVal.value;
 });
+
+function handleClose() {
+  // ✅ clear form fields
+  formData.value.enrollment_id = null;
+  formData.value.student_id = '';
+  formData.value.fees = [];
+  formData.value.total_fees = 0;
+
+  // ✅ clear grade/section/student selections
+  selectedGrade.value = null;
+  selectedSection.value = null;
+  selectedStudents.value = null;
+
+  emit('showModal'); // tell parent to actually close the modal
+}
 </script>
 
 <template>
@@ -61,18 +127,45 @@ watch(selectedStudents, (newVal) => {
       <form @submit.prevent="onSubmit">
         <div class="form-control mb-6">
           <label class="label mb-1">
-            <span>Select a Student:</span>
+            <span>Select a Grade Level:</span>
           </label>
           <Multiselect
-            v-model="selectedStudents"
-            :options="(students?.data ?? []).map((s) => ({
-              value: s.student_id,
-              enrollmentId: s.id,
-              name: `${s.first_name} ${s.middle_name} ${s.last_name}`,
+            v-model="selectedGrade"
+            :options="filteredGrade.map((grade) => ({
+              value: grade,
+              label: grade,
             }))"
-            label="name"
+            label="label"
             track-by="value"
           />
+
+          <template v-if="selectedGrade">
+            <label class="label mb-1 mt-2">
+              <span>Select a Section:</span>
+            </label>
+            <Multiselect
+              v-model="selectedSection"
+              :options="filteredSections"
+              label="label"
+              track-by="value"
+            />
+          </template>
+
+          <label class="label mb-1">
+            <span>Select a Student:</span>
+          </label>
+          <template v-if="selectedGrade && selectedSection">
+            <Multiselect
+              v-model="selectedStudents"
+              :options="filteredStudents.map((s) => ({
+                value: s.student_id,
+                enrollmentId: s.id,
+                name: `${s.first_name} ${s.middle_name} ${s.last_name}`,
+              }))"
+              label="name"
+              track-by="value"
+            />
+          </template>
         </div>
 
         <fieldset class="fieldset bg-base-100 border-base-300 rounded-box w-full border p-4">
@@ -119,7 +212,7 @@ watch(selectedStudents, (newVal) => {
           <button
             type="button"
             class="btn"
-            @click="emit('showModal')"
+            @click="handleClose"
           >
             Close
           </button>

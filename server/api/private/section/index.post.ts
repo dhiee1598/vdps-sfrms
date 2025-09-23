@@ -7,37 +7,42 @@ export default defineEventHandler(async (event) => {
   // Require a user session (send back 401 if no `user` key in session)
   await requireUserSession(event);
 
-  const body = await readValidatedBody(event, sectionInsertSchema.safeParse);
+  const body = await readBody(event);
 
-  if (!body.success) {
+  // if (!body.success) {
+  //   throw createError({
+  //     statusCode: 400,
+  //     statusMessage: 'Bad Request',
+  //     message: 'Invalid data provided. Please check the required fields.',
+  //   });
+  // }
+
+  const { grade_level_id, section_names } = body;
+
+  // Ensure section_names is an array and has at least one value
+  if (!Array.isArray(section_names) || section_names.length === 0) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Bad Request',
-      message: 'Invalid data provided. Please check the required fields.',
+      message: 'Please provide an array of section names.',
     });
   }
 
-  const { section_name } = body.data;
-
-  const [existingAcademicYear] = await db.select().from(sections).where(eq(sections.section_name, section_name));
-
-  if (existingAcademicYear) {
-    throw createError({
-      statusCode: 409,
-      statusMessage: 'Conflict',
-      message: 'A section with this name already exists.',
-    });
-  }
-
-  const [createdAcademicYear] = await db.insert(sections).values({
-    section_name,
-  }).$returningId();
+  const insertedSections = await db
+    .insert(sections)
+    .values(
+      section_names.map(section_name => ({
+        grade_level_id,
+        section_name,
+      })),
+    )
+    .$returningId();
 
   event.context.io.emit('newData', 'A section has been added.');
 
   return {
     success: true,
     message: 'Section Created Successfully',
-    data: createdAcademicYear,
+    data: insertedSections,
   };
 });

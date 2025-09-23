@@ -14,6 +14,7 @@ const searchQuery = ref('');
 const showViewModal = ref(false);
 const selectedGrade = ref('');
 const selectedStrand = ref('');
+const filteredSections = ref();
 
 const enrolledStudentData = ref<EnrolledStudent | null>({
   id: 0,
@@ -43,6 +44,7 @@ const { data: semesters } = await useFetch('/api/private/semesters?activeSemeste
 const { data: gradeLevels } = await useFetch('/api/private/grade-level');
 const { data: strands } = await useFetch('/api/private/strands');
 const { data: academicYears } = await useFetch('/api/private/academic-years?activeYear=true');
+const { data: sections } = await useFetch('/api/private/section');
 
 // Extract unique grade levels & strands for dropdown filters
 const filteredGradeLevels = computed(() => {
@@ -69,7 +71,7 @@ const studentsData = computed(() =>
     middle_name: student.middle_name,
     last_name: student.last_name,
     // build one nice label for display/search
-    fullName: `${student.id} — ${student.first_name} ${student.middle_name ?? ''} ${student.last_name}`.trim(),
+    fullName: `${student.id} — ${student.last_name}, ${student.first_name} ${student.middle_name}`.trim(),
   })),
 );
 
@@ -153,17 +155,18 @@ const visiblePages = computed(() => {
 
 // reactive form state
 const formData = ref({
-  selectedStudent: null as null | { id: string; first_name: string; middle_name?: string; last_name: string },
-  selectedSemester: null as null | { id: string; semester: string },
-  selectedGradeLevel: null as null | { id: string; grade_level_name: string },
-  selectedStrand: null as null | { id: string; strand_name: string },
-  selectedAcademicYear: null as null | { id: string; academic_year: string },
+  selectedStudent: { id: '', first_name: '', middle_name: '', last_name: '' },
+  selectedSemester: { id: '', semester: '' },
+  selectedGradeLevel: { id: '', grade_level_name: '' },
+  selectedSection: { id: '', section_name: '' },
+  selectedStrand: { id: '', strand_name: '' },
+  selectedAcademicYear: { id: '', academic_year: '' },
 });
 
 function openAddStudentModal() {
   showFormModal.value = true;
   isEditing.value = false;
-  formData.value.selectedStudent = null;
+  formData.value.selectedStudent = { id: '', first_name: '', middle_name: '', last_name: '' };
 }
 
 async function handleSave() {
@@ -177,6 +180,7 @@ async function handleSave() {
     grade_level_id: formData.value.selectedGradeLevel?.id,
     strand_id: formData.value.selectedStrand?.id,
     academic_year_id: academicYears.value?.data[0]?.id,
+    section_id: formData.value.selectedSection?.id,
   };
 
   isSubmitting.value = true;
@@ -197,7 +201,14 @@ async function handleSave() {
     }
 
     showFormModal.value = false;
-    formData.value = { selectedStudent: null, selectedSemester: null, selectedGradeLevel: null, selectedStrand: null, selectedAcademicYear: null };
+    formData.value = {
+      selectedStudent: { id: '', first_name: '', middle_name: '', last_name: '' },
+      selectedSemester: { id: '', semester: '' },
+      selectedGradeLevel: { id: '', grade_level_name: '' },
+      selectedSection: { id: '', section_name: '' },
+      selectedStrand: { id: '', strand_name: '' },
+      selectedAcademicYear: { id: '', academic_year: '' },
+    };
     showMessage(response.message, false);
     await refreshEnroll();
     await refreshStudent();
@@ -210,6 +221,15 @@ async function handleSave() {
 
 watch([searchQuery, selectedGrade, selectedStrand], () => {
   currentPage.value = 1;
+});
+
+watch(() => formData.value.selectedGradeLevel?.id, (newVal) => {
+  if (newVal && sections.value) {
+    formData.value.selectedSection = { id: '', section_name: '' };
+    filteredSections.value = sections.value.data.filter((section) => {
+      return section.grade_level_id === Number(newVal);
+    });
+  }
 });
 </script>
 
@@ -265,6 +285,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
           <th>Academic Year</th>
           <th>Strand</th>
           <th>Grade Level</th>
+          <th>Section</th>
           <th>Status</th>
           <th class="text-center">
             Action
@@ -286,12 +307,13 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
         </tr>
         <tr v-for="item in paginatedStudents" :key="item.id">
           <td>{{ item?.student_id }}</td>
-          <td>{{ item?.first_name }} {{ item?.middle_name }} {{ item?.last_name }}</td>
+          <td>{{ item?.last_name }}, {{ item?.first_name }} {{ item?.middle_name }}</td>
           <td>{{ item?.academic_year }}</td>
           <td>{{ item?.strand_name }}</td>
           <td class="capitalize">
             {{ item?.grade_level }}
           </td>
+          <td>{{ item?.section_name }}</td>
           <td>{{ item.enroll_status }}</td>
           <td class="flex gap-2 justify-center items-center">
             <button
@@ -361,7 +383,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
                 :options="studentsData"
                 label="fullName"
                 track-by="id"
-                placeholder="Search by id, first name, last name or full name"
+                placeholder="Search by last name"
                 :max-height="150"
                 open-direction="below"
               >
@@ -411,6 +433,27 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
                 </template>
               </Multiselect>
             </div>
+
+            <div v-if="formData.selectedGradeLevel.id !== ''" class="label flex-col items-start">
+              Select Section:
+              <Multiselect
+                v-model="formData.selectedSection"
+                :options="filteredSections?.map((g:any) => ({ id: g.id, section_name: g.section_name })) ?? []"
+                :searchable="false"
+                label="section_name"
+                track-by="section_name"
+                placeholder=""
+                open-direction="below"
+                :max-height="150"
+              >
+                <template #option="{ option }">
+                  {{ option.section_name }}
+                </template>
+                <template #singleLabel="{ option }">
+                  {{ option.section_name }}
+                </template>
+              </Multiselect>
+            </div>
           </div>
 
           <div class="modal-action flex-col">
@@ -423,7 +466,15 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
             <button
               type="button"
               class="btn"
-              @click="showFormModal = false"
+              @click="() => {
+                formData.selectedStudent = { id: '', first_name: '', middle_name: '', last_name: '' };
+                formData.selectedSemester = { id: '', semester: '' };
+                formData.selectedGradeLevel = { id: '', grade_level_name: '' };
+                formData.selectedSection = { id: '', section_name: '' };
+                formData.selectedStrand = { id: '', strand_name: '' };
+                formData.selectedAcademicYear = { id: '', academic_year: '' };
+                showFormModal = false;
+              }"
             >
               Close
             </button>

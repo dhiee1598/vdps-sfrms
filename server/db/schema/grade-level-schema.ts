@@ -4,6 +4,7 @@ import { createInsertSchema } from 'drizzle-zod';
 const gradeLevel = mysqlTable('gradeLevel', {
   id: int('id').autoincrement().primaryKey(),
   grade_level_name: varchar({ length: 255 }).notNull(),
+
   createdAt: timestamp().defaultNow(),
 });
 

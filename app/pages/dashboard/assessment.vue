@@ -15,6 +15,8 @@ const searchQuery = ref('');
 const { isMessage, isError, responseMessage, showMessage } = useNotification();
 const { data: studentAssessments, pending, error, refresh } = useFetch('/api/private/assessment', { lazy: true });
 
+console.warn('studentAssessments', studentAssessments.value);
+
 const assessmentData = ref<Assessment>({
   enrollment_id: null,
   student_id: '',

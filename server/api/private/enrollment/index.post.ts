@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { student_id, strand_id, grade_level_id, semester_id, academic_year_id } = body.data;
+  const { student_id, strand_id, grade_level_id, semester_id, academic_year_id, section_id } = body.data;
 
   // Validate first the student if already have a record
   const [existingEnrollStudent] = await db.select()
@@ -28,6 +28,7 @@ export default defineEventHandler(async (event) => {
       eq(enrollments.grade_level_id, grade_level_id),
       eq(enrollments.academic_year_id, academic_year_id),
       eq(enrollments.semester_id, semester_id),
+      eq(enrollments.section_id, section_id),
     ));
 
   if (existingEnrollStudent) {
@@ -67,7 +68,7 @@ export default defineEventHandler(async (event) => {
     grade_level_id,
     semester_id,
     academic_year_id,
-
+    section_id,
   }).$returningId();
 
   return {

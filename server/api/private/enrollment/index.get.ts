@@ -3,6 +3,7 @@ import { academicYears } from '~~/server/db/schema/academic-years-schema';
 import { assessments } from '~~/server/db/schema/asesssment-schema';
 import { enrollments } from '~~/server/db/schema/enrollment-schema';
 import { gradeLevel } from '~~/server/db/schema/grade-level-schema';
+import { sections } from '~~/server/db/schema/section-schema';
 import { semesters } from '~~/server/db/schema/semester-schema';
 import { strands } from '~~/server/db/schema/strands-schema';
 import { students } from '~~/server/db/schema/student-schema';
@@ -51,6 +52,7 @@ export default defineEventHandler(async (event) => {
       academic_year: academicYears.academic_year,
       date_enrolled: enrollments.date_enrolled,
       createdAt: enrollments.createdAt,
+      section_name: sections.section_name,
     })
     .from(enrollments)
     .leftJoin(students, eq(students.id, enrollments.student_id))
@@ -59,7 +61,8 @@ export default defineEventHandler(async (event) => {
     .leftJoin(strands, eq(strands.id, enrollments.strand_id))
     .leftJoin(semesters, eq(semesters.id, enrollments.semester_id))
     .leftJoin(academicYears, eq(academicYears.id, enrollments.academic_year_id))
-    .orderBy(asc(enrollments.createdAt))
+    .leftJoin(sections, eq(sections.id, enrollments.section_id))
+    .orderBy(asc(students.last_name))
     .where(and(...conditions)); ;
 
   return {
