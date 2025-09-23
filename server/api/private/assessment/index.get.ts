@@ -5,6 +5,7 @@ import { assessmentFees } from '~~/server/db/schema/assessment-fees-schema';
 import { enrollments, enrollmentSelectSchema } from '~~/server/db/schema/enrollment-schema';
 import { fees } from '~~/server/db/schema/fees-schema';
 import { gradeLevel } from '~~/server/db/schema/grade-level-schema';
+import { sections } from '~~/server/db/schema/section-schema';
 import { semesters } from '~~/server/db/schema/semester-schema';
 import { strands } from '~~/server/db/schema/strands-schema';
 import { students, studentSelectSchema } from '~~/server/db/schema/student-schema';
@@ -61,6 +62,7 @@ export default defineEventHandler(async (_event) => {
       semesters: semesters.semester,
       strand: strands.strand_name,
       grade_level: gradeLevel.grade_level_name,
+      section: sections.section_name,
     })
     .from(assessments)
     .leftJoin(students, eq(students.id, assessments.student_id))
@@ -73,6 +75,7 @@ export default defineEventHandler(async (_event) => {
     .leftJoin(semesters, eq(semesters.id, enrollments.semester_id))
     .leftJoin(strands, eq(strands.id, enrollments.strand_id))
     .leftJoin(gradeLevel, eq(gradeLevel.id, enrollments.grade_level_id))
+    .leftJoin(sections, eq(sections.id, enrollments.section_id))
     .where(and(...conditions));
 
   const grouped = Object.values(
@@ -93,6 +96,7 @@ export default defineEventHandler(async (_event) => {
           semester: row.semesters,
           strand: row.strand,
           grade_level: row.grade_level,
+          section: row.section,
         };
       }
 

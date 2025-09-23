@@ -6,6 +6,7 @@ const enrollments = mysqlTable('enrollments', {
   student_id: varchar({ length: 255 }).notNull(),
   strand_id: int().notNull(),
   grade_level_id: int().notNull(),
+  section_id: int().notNull(),
   semester_id: int().notNull(),
   academic_year_id: int().notNull(),
   enroll_status: varchar('enroll_status', { length: 255 }).notNull().default('ENROLLED'),

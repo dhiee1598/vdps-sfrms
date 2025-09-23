@@ -3,7 +3,7 @@ import { academicYears } from '~~/server/db/schema/academic-years-schema';
 import { enrollments } from '~~/server/db/schema/enrollment-schema';
 import { semesters } from '~~/server/db/schema/semester-schema';
 import { students, studentSelectSchema } from '~~/server/db/schema/student-schema';
-import { and, eq, isNull, ne } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, ne } from 'drizzle-orm';
 import { getQuery } from 'h3';
 
 export default defineEventHandler(async (event) => {
@@ -43,7 +43,8 @@ export default defineEventHandler(async (event) => {
           eq(enrollments.semester_id, activeSemester.id),
         ),
       )
-      .where(isNull(enrollments.student_id));
+      .where(isNull(enrollments.student_id))
+      .orderBy(desc(students.last_name));
 
     const parsed = studentSelectSchema.array().parse(notEnrolledStudents.map(s => s.student));
 
@@ -64,7 +65,8 @@ export default defineEventHandler(async (event) => {
           eq(enrollments.student_id, students.id),
           ne(enrollments.academic_year_id, activeYear.id), // not in current year
         ),
-      );
+      )
+      .orderBy(desc(students.last_name));
 
     const parsed = studentSelectSchema.array().parse(prevEnrolled.map(s => s.student));
 
