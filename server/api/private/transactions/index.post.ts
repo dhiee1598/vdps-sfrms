@@ -3,7 +3,6 @@ import { assessments } from '~~/server/db/schema/asesssment-schema';
 import { transaction_items, transactionItemInsertSchema } from '~~/server/db/schema/transaction-items-schema';
 import { transactions, transactionsInsertSchema } from '~~/server/db/schema/transaction-schema';
 import { eq } from 'drizzle-orm';
-import { v4 as uuidv4 } from 'uuid';
 import z from 'zod';
 
 export default defineEventHandler(async (event) => {
@@ -23,11 +22,9 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const transactionId = uuidv4();
-
   const result = await db.transaction(async (tx) => {
     const [newTransaction] = await tx.insert(transactions).values({
-      transaction_id: transactionId,
+      transaction_id: body.data.transaction_id,
       assessment_id: body.data.assessment_id,
       student_id: body.data.student_id,
       total_amount: body.data.total_amount.toFixed(2),

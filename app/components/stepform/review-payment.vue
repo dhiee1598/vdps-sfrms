@@ -34,6 +34,9 @@ const additionalItems = computed(() =>
         <p class="text-sm text-gray-600">
           Student Name: <span class="font-medium text-gray-800">{{ props.datas.selected_students.name }}</span>
         </p>
+        <p class="text-sm text-gray-600">
+          Transaction ID: <span class="font-medium text-gray-800">{{ props.formData.transaction_id }}</span>
+        </p>
       </div>
       <div class="space-y-3">
         <ul>

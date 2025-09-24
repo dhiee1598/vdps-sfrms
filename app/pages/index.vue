@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { v4 as uuidv4 } from 'uuid';
+
 import { socket } from '~/components/socket';
 
 useHead({
@@ -7,10 +9,12 @@ useHead({
 
 const { data: assessment, refresh: refreshAssessment } = await useFetch('/api/private/assessment');
 const { data: sundries, refresh: refreshSundries } = await useFetch('/api/private/sundries');
+
 const step = ref(1);
 const selectedStudent = ref();
 const studentdata = ref();
 const formData = ref({
+  transaction_id: uuidv4(),
   assessment_id: '',
   student_id: '',
   total_amount: 0,
@@ -20,6 +24,33 @@ const isConnected = ref(false);
 const transport = ref('N/A');
 
 const isSubmitting = ref(false);
+
+const countdown = ref(15);
+
+function resetForm() {
+  step.value = 1;
+  selectedStudent.value = null;
+  studentdata.value = null;
+  formData.value = {
+    transaction_id: '',
+    assessment_id: '',
+    student_id: '',
+    total_amount: 0,
+    transaction_items: [],
+  };
+}
+
+function startCountdownAndReset() {
+  const interval = setInterval(() => {
+    countdown.value--;
+
+    if (countdown.value <= 0) {
+      clearInterval(interval);
+      resetForm();
+      window.location.reload();
+    }
+  }, 1000);
+}
 
 async function handleStepClick() {
   if (step.value < 4) {
@@ -41,17 +72,7 @@ async function handleStepClick() {
 
         if (success) {
           isSubmitting.value = false;
-          setTimeout(() => {
-            step.value = 1;
-            selectedStudent.value = null;
-            studentdata.value = null;
-            formData.value = {
-              assessment_id: '',
-              student_id: '',
-              total_amount: 0,
-              transaction_items: [],
-            };
-          }, 3000);
+          startCountdownAndReset();
         }
         else {
           isSubmitting.value = false;
@@ -176,7 +197,7 @@ watch(selectedStudent, (newVal) => {
               Thank you for your payment.
             </p>
             <div class="animate-pulse text-sm label">
-              Redirecting back in 3 seconds...
+              Redirecting back in {{ countdown }} {{ countdown === 1 ? 'second' : 'seconds' }}
             </div>
           </div>
         </div>
