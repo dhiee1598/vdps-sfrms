@@ -10,7 +10,8 @@
     "postinstall": "nuxt prepare",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "db:seed": "tsx ./server/db/seed/"
+    "db:seed:dev": "tsx ./server/db/seed/seed-dev.ts",
+    "db:seed:prod": "tsx ./server/db/seed/seed-prod.ts"
   },
   "dependencies": {
     "@nuxt/icon": "^2.0.0",
