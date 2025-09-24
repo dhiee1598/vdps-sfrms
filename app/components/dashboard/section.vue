@@ -17,9 +17,7 @@ const formData = ref({
   section_names: [] as string[],
 });
 
-
 async function handleClick() {
-  console.log(formData.value);
   isSubmitting.value = true;
 
   if (!formData.value.section_names || formData.value.section_names.length === 0) {
@@ -32,11 +30,17 @@ async function handleClick() {
 
     if (isEditing.value && editingId.value) {
       // UPDATE
+      const payload = {
+        grade_level_id: formData.value.grade_level_id,
+        section_name: formData.value.section_names,
+      };
+
       response = await $fetch(`/api/private/section/${editingId.value}`, {
         method: 'PUT',
-        body: formData.value,
+        body: payload,
       });
-    } else {
+    }
+    else {
       // CREATE
       response = await $fetch('/api/private/section', {
         method: 'POST',
@@ -54,37 +58,37 @@ async function handleClick() {
 
     // refresh list
     await refresh();
-  } catch (err) {
+  }
+  catch (err) {
     const error = err as FetchError;
     showMessage(error.data.message || 'An unexpected error occurred.', true);
-  } finally {
+  }
+  finally {
     isSubmitting.value = false;
   }
 }
 
-
 function openCreateModal() {
   isEditing.value = false;
   editingId.value = null;
-  formData.value = {  grade_level_id: '', section_names: [] };
+  formData.value = { grade_level_id: '', section_names: [] };
   showModal.value = true;
 }
 
-function openEditModal(academicYear: any) {
+function openEditModal(academicYear: any, section_id: number) {
   isEditing.value = true;
-  editingId.value = academicYear.id;
-  formData.value = {  grade_level_id: academicYear.grade_level_id, section_names: academicYear.section_name };
+  editingId.value = section_id;
+  formData.value = { grade_level_id: academicYear.grade_level_id, section_names: academicYear.section_name };
   showModal.value = true;
 }
 
 function addSectionName() {
-  formData.value.section_names.push("");
+  formData.value.section_names.push('');
 }
 
 function removeSectionName(index: number) {
   formData.value.section_names.splice(index, 1);
 }
-
 </script>
 
 <template>
@@ -127,7 +131,7 @@ function removeSectionName(index: number) {
             <button
               class="btn btn-info btn-sm tooltip tooltip-info"
               data-tip="Update"
-              @click="openEditModal(item)"
+              @click="openEditModal(item, item.id)"
             >
               <Icon name="solar:smartphone-update-broken" size="16" />
             </button>
@@ -144,41 +148,63 @@ function removeSectionName(index: number) {
 
         <div class="modal-action">
           <form class="flex flex-col gap-4 w-full" @submit.prevent="handleClick">
-
-            <select v-model="formData.grade_level_id" class="select select-bordered w-full">
-              <option v-for="gradeLevel in gradeLevels" :key="gradeLevel.id" :value="gradeLevel.id">
+            <select
+              v-model="formData.grade_level_id"
+              required
+              class="select select-bordered w-full"
+            >
+              <option
+                v-for="gradeLevel in gradeLevels"
+                :key="gradeLevel.id"
+                :value="gradeLevel.id"
+              >
                 {{ gradeLevel.grade_level_name }}
               </option>
             </select>
 
-<fieldset class="fieldset">
-  <legend class="fieldset-legend">Section Names</legend>
-  <div v-for="(sectionName, index) in formData.section_names" :key="index" class="flex gap-2">
-    <input
-      v-model="formData.section_names[index]"
-      type="text"
-      class="input w-full"
-      placeholder="Section Name"
-      required
-    >
-    <button
-      v-if="formData.section_names.length > 1"
-      type="button"
-      class="btn btn-sm btn-danger"
-      @click="removeSectionName(index)"
-    >
-      Remove
-    </button>
-  </div>
-  <button
-    type="button"
-    class="btn btn-sm btn-success"
-    @click="addSectionName"
-  >
-    Add Section Name
-  </button>
-</fieldset>
-
+            <fieldset class="fieldset">
+              <legend class="fieldset-legend">
+                Section Names
+              </legend>
+              <div v-if="!isEditing">
+                <div
+                  v-for="(sectionName, index) in formData.section_names"
+                  :key="index"
+                  class="flex gap-2"
+                >
+                  <input
+                    v-model="formData.section_names[index]"
+                    type="text"
+                    class="input w-full my-2"
+                    placeholder="Section Name"
+                    required
+                  >
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-danger my-3"
+                    @click="removeSectionName(index)"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-success w-full my-2"
+                  @click="addSectionName"
+                >
+                  Add Section Name
+                </button>
+              </div>
+              <div v-else>
+                <input
+                  v-model="formData.section_names"
+                  type="text"
+                  class="input w-full"
+                  placeholder="Section Name"
+                  required
+                >
+              </div>
+            </fieldset>
 
             <div class="flex flex-row justify-end gap-2">
               <button type="submit" class="btn btn-accent">

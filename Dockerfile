@@ -11,24 +11,13 @@ COPY . .
 
 RUN npm run build
 
-# -------- PRODUCTION DEPS STAGE --------
-FROM node:22-alpine AS prod-deps
-
-WORKDIR /app
-
-COPY --from=build /app/package*.json ./
-
-RUN npm ci --omit=dev && npm cache clean --force
-
 # -------- PRODUCTION STAGE --------
-FROM node:22-alpine AS production
+FROM node:22-alpine
 
 WORKDIR /app
 
-COPY --from=build /app/.output ./.output
-
-COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=build /app/.output/ ./
 
 EXPOSE 3000
 
-CMD [".output/server/index.mjs"]
+CMD ["node", "/app/server/index.mjs"]
