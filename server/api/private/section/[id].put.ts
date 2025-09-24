@@ -13,6 +13,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'ID is required', message: 'ID is required' });
   }
 
+  console.warn(body.data);
+
   if (!body.success) {
     throw createError({
       statusCode: 400,
@@ -32,7 +34,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const result = await db.update(sections)
-    .set({ section_name: body.data.section_name })
+    .set({ section_name: body.data.section_name, grade_level_id: body.data.grade_level_id })
     .where(eq(sections.id, id))
     .execute();
 
