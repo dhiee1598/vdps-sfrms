@@ -17,11 +17,12 @@ const transactions = mysqlTable('transactions', {
 });
 
 const transactionsInsertSchema = createInsertSchema(transactions).omit({
-  transaction_id: true,
+
   date_paid: true,
   createdAt: true,
 }).extend({
   // keep amount normalized to 2 decimals; DB stores DECIMAL(10,2)
+  transaction_id: z.string(),
   total_amount: z.coerce.number().transform(v => Number(v.toFixed(2))),
 });
 
