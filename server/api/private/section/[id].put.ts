@@ -13,8 +13,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'ID is required', message: 'ID is required' });
   }
 
-  console.warn(body.data);
-
   if (!body.success) {
     throw createError({
       statusCode: 400,
