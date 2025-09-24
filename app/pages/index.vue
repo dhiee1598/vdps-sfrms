@@ -14,7 +14,7 @@ const step = ref(1);
 const selectedStudent = ref();
 const studentdata = ref();
 const formData = ref({
-  transaction_id: uuidv4(),
+  transaction_id: '',
   assessment_id: '',
   student_id: '',
   total_amount: 0,
@@ -24,8 +24,6 @@ const isConnected = ref(false);
 const transport = ref('N/A');
 
 const isSubmitting = ref(false);
-
-const countdown = ref(15);
 
 function resetForm() {
   step.value = 1;
@@ -38,18 +36,6 @@ function resetForm() {
     total_amount: 0,
     transaction_items: [],
   };
-}
-
-function startCountdownAndReset() {
-  const interval = setInterval(() => {
-    countdown.value--;
-
-    if (countdown.value <= 0) {
-      clearInterval(interval);
-      resetForm();
-      window.location.reload();
-    }
-  }, 1000);
 }
 
 async function handleStepClick() {
@@ -72,11 +58,9 @@ async function handleStepClick() {
 
         if (success) {
           isSubmitting.value = false;
-          startCountdownAndReset();
-        }
-        else {
-          isSubmitting.value = false;
-          step.value--;
+          setTimeout(() => {
+            resetForm();
+          }, 5000);
         }
       }
       catch (error) {
@@ -125,6 +109,7 @@ watch(selectedStudent, (newVal) => {
   if (newVal) {
     studentdata.value = studentComputation(newVal);
     formData.value.assessment_id = studentdata.value.selected_students.id;
+    formData.value.transaction_id = uuidv4();
     formData.value.student_id = studentdata.value.selected_students.student_id;
   }
 });
@@ -197,7 +182,7 @@ watch(selectedStudent, (newVal) => {
               Thank you for your payment.
             </p>
             <div class="animate-pulse text-sm label">
-              Redirecting back in {{ countdown }} {{ countdown === 1 ? 'second' : 'seconds' }}
+              Redirecting back in 5 seconds
             </div>
           </div>
         </div>

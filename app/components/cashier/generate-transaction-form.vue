@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { FetchError } from 'ofetch';
 
+import { v4 as uuidv4 } from 'uuid';
+
 const emit = defineEmits<{
   (e: 'showModal'): void;
   (e: 'showMessage', message: string, isErrorType: boolean): void;
@@ -9,6 +11,7 @@ const emit = defineEmits<{
 const selectedStudent = ref();
 const isSubmitting = ref(false);
 const formData = ref({
+  transaction_id: '',
   assessment_id: '',
   student_id: '',
   total_amount: 0,
@@ -62,6 +65,7 @@ watch(selectedAssessment, (assessment) => {
     const balance = Number(assessment.total_amount_due) - Number(assessment.total_paid);
 
     formData.value = {
+      transaction_id: uuidv4(),
       assessment_id: assessment.id,
       student_id: selectedStudent.value.id,
       total_amount: balance,
@@ -82,9 +86,20 @@ async function handleSubmit() {
       body: formData.value,
     });
 
+    selectedStudent.value = null;
     emit('showMessage', response.message, false);
-
     emit('showModal');
+    formData.value = {
+      transaction_id: '',
+      assessment_id: '',
+      student_id: '',
+      total_amount: 0,
+      status: 'paid',
+      transaction_items: [{
+        item_type: 'Fullpayment',
+        amount: 0,
+      }],
+    };
   }
   catch (e) {
     const error = e as FetchError;
@@ -157,7 +172,13 @@ async function handleSubmit() {
       <p class="text-sm text-gray-400 mb-2">
         Transaction Details
       </p>
+
       <dl class="grid grid-cols-1 md:grid-cols-2 gap-y-2 text-sm">
+        <dt class="font-medium">
+          Transaction ID:
+        </dt> <dd>
+          {{ formData.transaction_id }}
+        </dd>
         <dt class="font-medium">
           Status:
         </dt>

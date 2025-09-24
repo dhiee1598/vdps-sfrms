@@ -306,12 +306,18 @@ const { handlePrint } = useVueToPrint({
     <!-- ✅ PRINTABLE RECEIPT -->
     <div ref="componentRef" class="print-area mx-auto my-6 max-w-md bg-white text-black p-6 rounded-lg shadow-md block md:hidden lg:hidden">
       <!-- School Header -->
-      <div class="text-center border-b pb-4 mb-4">
+      <div class="text-center border-b pb-4 mb-4 flex flex-col justify-center items-center">
+        <NuxtImg
+          src="/vdps-logo.png"
+          alt="Profile"
+          height="56"
+          width="56"
+        />
         <h2 class="text-lg font-bold">
           Virgen Del Pilar School Rodriguez, Inc.
         </h2>
         <p class="text-sm">
-          ADDRESS
+          Iloilo St, Brgy, Rodriguez, Rizal
         </p>
         <p class="text-sm">
           Official Receipt
@@ -376,10 +382,6 @@ const { handlePrint } = useVueToPrint({
           <div>
             ______________________ <br>
             <span class="text-xs">Cashier</span>
-          </div>
-          <div>
-            ______________________ <br>
-            <span class="text-xs">Student</span>
           </div>
         </div>
       </div>
