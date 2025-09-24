@@ -6,8 +6,6 @@ import { eq } from 'drizzle-orm';
 import z from 'zod';
 
 export default defineEventHandler(async (event) => {
-  await new Promise(resolve => setTimeout(resolve, 3000));
-
   const requestBody = transactionsInsertSchema.extend({
     transaction_items: z.array(transactionItemInsertSchema),
   });
