@@ -7,3 +7,8 @@ services:
       - "3000:3000"
     env_file:
       - .env
+    networks:
+      - app_network
+networks:
+  app_network:
+    external: true
