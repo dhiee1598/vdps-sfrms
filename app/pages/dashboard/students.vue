@@ -9,6 +9,9 @@ const currentPage = ref(1);
 const pageSize = 7;
 const maxVisiblePages = 4;
 const searchQuery = ref('');
+const showImportModal = ref(false);
+const importFile = ref<File | null>(null);
+const isImporting = ref(false);
 
 const { isMessage, isError, responseMessage, showMessage } = useNotification();
 
@@ -127,6 +130,47 @@ function updateStudent(student: Student) {
   showFormModal.value = true;
 }
 
+function openImportModal() {
+  showImportModal.value = true;
+}
+
+function handleFileUpload(event: Event) {
+  const target = event.target as HTMLInputElement;
+  importFile.value = target.files?.[0] ?? null;
+}
+
+async function importExcel() {
+  if (!importFile.value)
+    return;
+
+  isImporting.value = true;
+
+  try {
+    // Create FormData and append the file
+    const formData = new FormData();
+    formData.append('file', importFile.value);
+
+    // Send POST request to server
+    const response = await $fetch('/api/private/import', {
+      method: 'POST',
+      body: formData,
+    });
+
+    showMessage(response.message || 'Students imported successfully.', false);
+
+    showImportModal.value = false;
+    importFile.value = null;
+    await refresh();
+  }
+  catch (error) {
+    const err = error as FetchError;
+    showMessage(err.data?.message || 'Import failed.', true);
+  }
+  finally {
+    isImporting.value = false;
+  }
+}
+
 watch(searchQuery, () => {
   currentPage.value = 1;
 });
@@ -138,9 +182,14 @@ watch(searchQuery, () => {
       <p class="text-3xl">
         List of Students
       </p>
-      <button class="btn btn-accent" @click="openAddStudentModal">
-        <Icon name="solar:add-circle-linear" size="24" /> Add Student
-      </button>
+      <div class="flex gap-2">
+        <button class="btn btn-accent" @click="openAddStudentModal">
+          <Icon name="solar:add-circle-linear" size="24" /> Add Student
+        </button>
+        <button class="btn btn-accent" @click="openImportModal">
+          <Icon name="solar:import-bold" size="24" /> Import Data
+        </button>
+      </div>
     </div>
     <div class="flex space-x-2 justify-end">
       <input
@@ -237,6 +286,36 @@ watch(searchQuery, () => {
           @submit="handleFormSubmit"
           @show-modal="showFormModal = false"
         />
+      </div>
+    </dialog>
+
+    <dialog :open="showImportModal" class="modal">
+      <div class="modal-box">
+        <h3 class="text-xl font-bold mb-4">
+          Import Student Data
+        </h3>
+
+        <input
+          type="file"
+          accept=".xlsx,.xls"
+          class="file-input file-input-bordered w-full"
+          @change="handleFileUpload"
+        >
+
+        <div class="modal-action">
+          <button class="btn" @click="showImportModal = false">
+            Cancel
+          </button>
+
+          <button
+            class="btn btn-accent"
+            :disabled="isImporting || !importFile"
+            @click="importExcel"
+          >
+            <span v-if="!isImporting">Upload</span>
+            <span v-else class="loading loading-spinner" />
+          </button>
+        </div>
       </div>
     </dialog>
 
