@@ -8,7 +8,7 @@ services:
     env_file:
       - .env
     networks:
-      - app_network
+      - mariadb_network
 networks:
-  app_network:
+  mariadb_network:
     external: true
