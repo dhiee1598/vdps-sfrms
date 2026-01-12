@@ -2,12 +2,12 @@
 const { data: transactions } = await useFetch('/api/private/transactions');
 
 const pendingTx = computed(() => {
-  return transactions.value?.data.filter(t => t.transaction.status === 'pending');
+  return transactions.value?.data.filter(t => t.transaction && t.transaction.status === 'pending');
 });
 
 const today = new Date().toISOString().split('T')[0];
 const completedTx = computed(() => {
-  return transactions.value?.data.filter(t => t.transaction.status === 'paid' && t.transaction.date_paid.split('T')[0] === today);
+  return transactions.value?.data.filter(t => t.transaction && t.transaction.status === 'paid' && t.transaction.date_paid.split('T')[0] === today);
 });
 
 const totalCollectedToday = computed(() => {
@@ -16,6 +16,8 @@ const totalCollectedToday = computed(() => {
 
   return transactions.value.data
     .filter((t) => {
+      if (!t.transaction)
+        return false;
       const datePaid = t.transaction.date_paid?.split('T')[0];
       return t.transaction.status === 'paid' && datePaid === today;
     })

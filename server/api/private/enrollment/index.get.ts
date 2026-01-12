@@ -47,6 +47,7 @@ export default defineEventHandler(async (event) => {
       address: students.address,
       contact_number: students.contact_number,
       grade_level: gradeLevel.grade_level_name,
+      grade_level_id: gradeLevel.id,
       strand_name: strands.strand_name,
       semester: semesters.semester,
       academic_year: academicYears.academic_year,

@@ -121,52 +121,13 @@ const balance = computed(() => {
                   {{ fee.fee_name }}
                 </td>
                 <td class="p-3 text-right">
-                  ₱{{ parseFloat(fee.fee_amount).toFixed(2) }}
+                  ₱{{ parseFloat(fee.amount).toFixed(2) }}
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
-
-      <!-- <div class="border rounded-lg overflow-hidden border-accent-content">
-        <h4 class="p-3 font-medium">
-          Payments History
-        </h4>
-        <div class="overflow-x-auto overflow-y-auto max-h-[180px]">
-          <table class="table w-full text-sm">
-            <thead>
-              <tr>
-                <th class="p-3 font-medium text-left">
-                  Date
-                </th>
-                <th class="p-3 font-medium text-right">
-                  Amount Paid
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="localStudentAssessment.payments.length === 0">
-                <td colspan="2" class="text-center p-4">
-                  No payments recorded.
-                </td>
-              </tr>
-              <tr
-                v-for="payment in localStudentAssessment.payments"
-                v-else
-                :key="payment.id"
-              >
-                <td class="p-3">
-                  {{ new Date(payment.createdAt).toLocaleDateString() }}
-                </td>
-                <td class="p-3 text-right">
-                  ₱{{ parseFloat(payment.amount_paid).toFixed(2) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div> -->
     </div>
   </div>
 </template>

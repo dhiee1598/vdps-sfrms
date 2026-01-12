@@ -27,6 +27,7 @@ export default defineEventHandler(async (event) => {
       student_id: body.data.student_id,
       total_amount: body.data.total_amount.toFixed(2),
       status: body.data.status ? 'paid' : 'pending',
+      date_paid: body.data.status ? new Date() : null,
     }).$returningId();
 
     if (body.data.transaction_items.length > 0) {

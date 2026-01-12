@@ -13,6 +13,7 @@ import { transaction_items } from '~~/server/db/schema/transaction-items-schema'
 import { transactions } from '~~/server/db/schema/transaction-schema';
 import { and, eq } from 'drizzle-orm';
 import z from 'zod';
+import { gradeLevelFees } from '~~/server/db/schema/grade-level-fees-schema';
 
 export const studentEnrolledAssessment = z.object({
   student: studentSelectSchema.nullable(),
@@ -55,7 +56,12 @@ export default defineEventHandler(async (_event) => {
       enrollment: enrollments,
       student: students,
       assessmentFees,
-      fee: fees,
+      fee: {
+        id: fees.id,
+        fee_name: fees.fee_name,
+        fee_description: fees.fee_description,
+        amount: gradeLevelFees.amount,
+      },
       transactions,
       transactions_item: transaction_items,
       academicYears: academicYears.academic_year,
@@ -69,6 +75,7 @@ export default defineEventHandler(async (_event) => {
     .leftJoin(enrollments, eq(enrollments.id, assessments.enrollment_id))
     .leftJoin(assessmentFees, eq(assessmentFees.assessment_id, assessments.id))
     .leftJoin(fees, eq(fees.id, assessmentFees.fee_id))
+    .leftJoin(gradeLevelFees, and(eq(gradeLevelFees.fee_id, fees.id), eq(gradeLevelFees.grade_level_id, enrollments.grade_level_id)))
     .leftJoin(transactions, eq(transactions.assessment_id, assessments.id))
     .leftJoin(transaction_items, eq(transaction_items.transaction_id, transactions.transaction_id))
     .leftJoin(academicYears, eq(academicYears.id, enrollments.academic_year_id))

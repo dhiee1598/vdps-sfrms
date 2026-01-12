@@ -1,11 +1,10 @@
-import db from '~~/server/db';
-import { assessments } from '~~/server/db/schema/asesssment-schema';
-import { assessmentFees } from '~~/server/db/schema/assessment-fees-schema';
-import { assessmentSchema } from '~~/server/lib/zod-schema';
-import { and, desc, eq } from 'drizzle-orm';
+import db from "~~/server/db";
+import { assessments } from "~~/server/db/schema/asesssment-schema";
+import { assessmentFees } from "~~/server/db/schema/assessment-fees-schema";
+import { assessmentSchema } from "~~/server/lib/zod-schema";
+import { and, desc, eq } from "drizzle-orm";
 
 export default defineEventHandler(async (event) => {
-  // Require a user session (send back 401 if no `user` key in session)
   await requireUserSession(event);
 
   const body = await readValidatedBody(event, assessmentSchema.safeParse);
@@ -13,12 +12,11 @@ export default defineEventHandler(async (event) => {
   if (!body.success) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Bad Request',
-      message: 'Invalid data provided. Please check the required fields.',
+      statusMessage: "Bad Request",
+      message: "Invalid data provided. Please check the required fields.",
     });
   }
 
-  // Check if already assessed for this enrollment
   const existing = await db
     .select()
     .from(assessments)
@@ -32,8 +30,8 @@ export default defineEventHandler(async (event) => {
   if (existing.length > 0) {
     throw createError({
       statusCode: 409,
-      statusMessage: 'Conflict',
-      message: 'Student is already assessed for this enrollment.',
+      statusMessage: "Conflict",
+      message: "Student is already assessed for this enrollment.",
     });
   }
 
@@ -64,7 +62,7 @@ export default defineEventHandler(async (event) => {
         enrollment_id: Number(body.data.enrollment_id),
         student_id: body.data.student_id,
         total_amount_due: String(newTotalDue.toFixed(2)),
-        total_paid: '0.00', // new assessment starts unpaid
+        total_paid: "0.00",
       })
       .$returningId();
 
@@ -80,11 +78,11 @@ export default defineEventHandler(async (event) => {
     return newAssessment;
   });
 
-  event.context.io.emit('newData', 'A new assessment has been added.');
+  event.context.io.emit("newData", "A new assessment has been added.");
 
   return {
     success: true,
-    message: 'Student successfully assessed',
+    message: "Student successfully assessed",
     carriedBalance: outstandingBalance,
     totalDue: newTotalDue,
     data: result,

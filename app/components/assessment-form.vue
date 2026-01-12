@@ -12,35 +12,33 @@ const emit = defineEmits<{
   (e: 'submit', formData: Assessment): void;
 }>();
 
-const { data: fees } = useFetch('/api/private/fees');
 const { data: students, refresh } = useFetch('/api/private/enrollment?withoutAssessment=true');
 const localAssessment = ref(props.assessment);
 const selectedStudents = ref();
-const selectedGrade = ref();
+const selectedGrade = ref<{id: number, grade_level_name: string} | null>(null);
 const selectedSection = ref();
-console.warn('students', students.value);
+const fees = ref<any[]>([]);
 
-const filteredGrade = computed(() => {
-  if (!students.value)
-    return [];
-
-  const set = new Set(students.value.data.map(s => s.grade_level));
-  return Array.from(set);
+const gradeLevels = computed(() => {
+    if (!students.value) return [];
+    const uniqueGradeLevels = Array.from(new Set(students.value.data.map((s: any) => JSON.stringify({ id: s.grade_level_id, grade_level_name: s.grade_level }))))
+        .map((s: any) => JSON.parse(s));
+    return uniqueGradeLevels;
 });
 
 const filteredSections = computed(() => {
   if (!students.value || !selectedGrade.value)
     return [];
 
-  const grade = selectedGrade.value.value;
+  const grade = selectedGrade.value.grade_level_name;
 
-  const set = new Set(
-    students.value.data
-      .filter(s => s.grade_level === grade)
-      .map(s => s.section_name), // or s.section if it’s nested
-  );
+  const sections = students.value.data
+    .filter((s: any) => s.grade_level === grade && s.section_name)
+    .map((s: any) => s.section_name);
 
-  return Array.from(set).map(section => ({
+  const uniqueSections = [...new Set(sections)];
+
+  return uniqueSections.map(section => ({
     value: section,
     label: section,
   }));
@@ -50,11 +48,11 @@ const filteredStudents = computed(() => {
   if (!students.value || !selectedGrade.value || !selectedSection.value)
     return [];
 
-  const grade = selectedGrade.value.value;
+  const grade = selectedGrade.value.grade_level_name;
   const section = selectedSection.value.value;
 
   return students.value.data.filter(
-    student =>
+    (student:any) =>
       student.grade_level === grade
       && student.section_name === section,
   );
@@ -67,7 +65,7 @@ const formData = computed({
 
 const totalAmountDue = computed(() => {
   const sum = formData.value.fees.reduce((total, fee) => {
-    return total + Number.parseFloat(fee.fee_amount as string);
+    return total + Number.parseFloat(fee.amount as string);
   }, 0);
 
   return sum.toFixed(2);
@@ -87,9 +85,16 @@ watch(totalAmountDue, (newSum) => {
   formData.value.total_fees = Number(newSum);
 });
 
-watch(selectedGrade, (newVal) => {
-  selectedGrade.value = newVal;
+watch(selectedGrade, async (newGrade) => {
   selectedSection.value = null;
+  formData.value.fees = [];
+  if (newGrade) {
+    const { data } = await useFetch(`/api/private/grade-level-fees?grade_level_id=${newGrade.id}`);
+    fees.value = data.value?.data || [];
+  }
+  else {
+    fees.value = [];
+  }
 });
 
 watch(selectedSection, (newVal) => {
@@ -107,6 +112,7 @@ function handleClose() {
   formData.value.student_id = '';
   formData.value.fees = [];
   formData.value.total_fees = 0;
+  fees.value = [];
 
   // ✅ clear grade/section/student selections
   selectedGrade.value = null;
@@ -131,12 +137,9 @@ function handleClose() {
           </label>
           <Multiselect
             v-model="selectedGrade"
-            :options="filteredGrade.map((grade) => ({
-              value: grade,
-              label: grade,
-            }))"
-            label="label"
-            track-by="value"
+            :options="gradeLevels"
+            label="grade_level_name"
+            track-by="id"
           />
 
           <template v-if="selectedGrade">
@@ -157,7 +160,7 @@ function handleClose() {
           <template v-if="selectedGrade && selectedSection">
             <Multiselect
               v-model="selectedStudents"
-              :options="filteredStudents.map((s) => ({
+              :options="filteredStudents.map((s: any) => ({
                 value: s.student_id,
                 enrollmentId: s.id,
                 name: `${s.first_name} ${s.middle_name} ${s.last_name}`,
@@ -174,25 +177,25 @@ function handleClose() {
           </legend>
           <div class="space-y-2">
             <div
-              v-for="fee in fees?.data"
+              v-for="fee in fees"
               :key="fee.id"
             >
               <label class="label">
                 <input
                   type="checkbox"
                   class="checkbox"
-                  :checked="formData.fees.some(f => f.id === fee.id)"
+                  :checked="formData.fees.some((f: any) => f.id === fee.id)"
                   @change="(event) => {
                     const target = event.target as HTMLInputElement;
                     if (target.checked) {
                       formData.fees.push(fee);
                     }
                     else {
-                      formData.fees = formData.fees.filter(f => f.id !== fee.id);
+                      formData.fees = formData.fees.filter((f: any) => f.id !== fee.id);
                     }
                   }"
                 >
-                {{ fee.fee_name }} - ₱ {{ fee.fee_amount }}
+                {{ fee.fee_name }} - ₱ {{ fee.amount }}
               </label>
             </div>
           </div>

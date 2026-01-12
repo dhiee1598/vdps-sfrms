@@ -18,15 +18,21 @@ const feeSchema = z.object({
   id: z.number().int(),
   fee_name: z.string().min(1, 'Fee name is required'),
   fee_description: z.string().nullable(),
-  fee_amount: z.string(),
   createdAt: z.string().nullable(),
+});
+
+const assessmentFeeSchema = z.object({
+  id: z.number().int(),
+  fee_id: z.number().int(),
+  fee_name: z.string(),
+  amount: z.string(),
 });
 
 const assessmentSchema = z.object({
   id: z.int().optional(),
   enrollment_id: z.number().int().nullable(),
   student_id: z.string(),
-  fees: z.array(feeSchema),
+  fees: z.array(assessmentFeeSchema),
   total_fees: z.number().positive(),
 });
 
@@ -60,11 +66,12 @@ const reportDataSchema = z.object({
   to_date: z.string(),
 });
 
-export { assessmentSchema, enrolledStudentSchema, loginSchema, reportDataSchema, studentSchema, sundriesSchema };
+export { assessmentSchema, enrolledStudentSchema, loginSchema, reportDataSchema, studentSchema, sundriesSchema, feeSchema };
 
 export type Login = z.infer<typeof loginSchema>;
 export type Student = z.infer<typeof studentSchema>;
 export type Assessment = z.infer<typeof assessmentSchema>;
+export type AssessmentFee = z.infer<typeof assessmentFeeSchema>;
 export type Fees = z.infer<typeof feeSchema>;
 export type Sundries = z.infer<typeof sundriesSchema>;
 export type EnrolledStudent = z.infer<typeof enrolledStudentSchema>;
