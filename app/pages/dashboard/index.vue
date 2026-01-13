@@ -2,7 +2,6 @@
 const { data: students } = await useFetch('/api/private/student');
 const { data: enrolledStudents } = await useFetch('/api/private/enrollment', { lazy: true });
 const { data: activeYear } = await useFetch('/api/private/academic-years?activeYear=true', { lazy: true });
-const { data: activeSemester } = await useFetch('/api/private/semesters?activeSemester=true', { lazy: true });
 </script>
 
 <template>
@@ -54,19 +53,6 @@ const { data: activeSemester } = await useFetch('/api/private/semesters?activeSe
           </p>
           <p class="text-sm">
             Active academic year
-          </p>
-        </div>
-      </div>
-      <div class="card w-full card-md shadow-sm bg-blue-100 text-blue-800">
-        <div class="card-body">
-          <h2 class="card-title">
-            Semester
-          </h2>
-          <p class="text-3xl font-bold">
-            {{ activeSemester?.data[0]?.semester }}
-          </p>
-          <p class="text-sm">
-            Active semester
           </p>
         </div>
       </div>

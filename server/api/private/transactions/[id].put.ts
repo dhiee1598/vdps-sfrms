@@ -2,7 +2,6 @@ import db from '~~/server/db';
 import { academicYears } from '~~/server/db/schema/academic-years-schema';
 import { assessments } from '~~/server/db/schema/asesssment-schema';
 import { enrollments } from '~~/server/db/schema/enrollment-schema';
-import { semesters } from '~~/server/db/schema/semester-schema';
 import { transaction_items } from '~~/server/db/schema/transaction-items-schema';
 import { transactions } from '~~/server/db/schema/transaction-schema';
 import { and, eq } from 'drizzle-orm';
@@ -34,16 +33,6 @@ export default defineEventHandler(async (event) => {
 
   if (activeYear) {
     conditions.push(eq(enrollments.academic_year_id, activeYear.id));
-  }
-
-  // Active Semester
-  const [activeSemester] = await db
-    .select()
-    .from(semesters)
-    .where(eq(semesters.status, true));
-
-  if (activeSemester) {
-    conditions.push(eq(enrollments.semester_id, activeSemester.id));
   }
 
   const body = await readBody(event);

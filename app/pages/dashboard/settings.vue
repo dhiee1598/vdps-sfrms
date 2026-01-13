@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const activeTab = ref<'sundries' | 'fees' | 'academic-years' | 'grade-levels' | 'strands' | 'section' | 'semester'>('academic-years');
+const activeTab = ref<'sundries' | 'fees' | 'academic-years' | 'grade-levels' | 'strands' | 'section'>('academic-years');
 </script>
 
 <template>
@@ -13,13 +13,6 @@ const activeTab = ref<'sundries' | 'fees' | 'academic-years' | 'grade-levels' | 
         Academic-years
       </button>
 
-      <button
-        class="px-4 py-2 hover:bg-base-200 rounded-tl-lg rounded-tr-lg"
-        :class="[activeTab === 'semester' ? 'border-b-2 border-blue-500' : '']"
-        @click="activeTab = 'semester'"
-      >
-        Semester
-      </button>
       <button
         class="px-4 py-2 hover:bg-base-200 rounded-tl-lg rounded-tr-lg"
         :class="[activeTab === 'grade-levels' ? 'border-b-2 border-blue-500' : '']"
@@ -62,7 +55,6 @@ const activeTab = ref<'sundries' | 'fees' | 'academic-years' | 'grade-levels' | 
 
     <div>
       <DashboardAcademicYear v-if="activeTab === 'academic-years'" />
-      <DashboardSemesters v-else-if="activeTab === 'semester'" />
       <DashboardGradeLevel v-else-if="activeTab === 'grade-levels'" />
       <DashboardSection v-else-if="activeTab === 'section'" />
       <DashboardStrands v-else-if="activeTab === 'strands'" />

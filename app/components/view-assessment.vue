@@ -9,8 +9,6 @@ const emit = defineEmits<{
   (e: 'showModal'): void;
 }>();
 
-const { data: semesters } = await useFetch('/api/private/semesters?activeSemester=true');
-
 const { data: academicYears } = await useFetch('/api/private/academic-years?activeYear=true');
 
 const localStudentAssessment = ref(props.data);
@@ -69,9 +67,7 @@ const balance = computed(() => {
         <div>
           <span class="font-light">Year:</span> {{ academicYears?.data[0]?.academic_year }}
         </div>
-        <div>
-          <span class="font-light">Semester:</span> {{ semesters?.data[0]?.semester }}
-        </div>
+        
       </div>
     </div>
 

@@ -47,7 +47,7 @@ const gradeLevels = computed(() => {
   return Array.from(set);
 });
 const strands = computed(() => {
-  const set = new Set(transactions.value?.data.map(t => t.strand.strand_name));
+  const set = new Set(transactions.value?.data.map(t => t.strand?.strand_name).filter(Boolean));
   return Array.from(set);
 });
 
@@ -63,7 +63,7 @@ const filteredTransactions = computed(() => {
       );
     })
     .filter(t => !selectedGrade.value || t.grade_level.grade_level_name === selectedGrade.value)
-    .filter(t => !selectedStrand.value || t.strand.strand_name === selectedStrand.value);
+    .filter(t => !selectedStrand.value || t.strand?.strand_name === selectedStrand.value);
 });
 
 const paginatedTransactions = computed(() => {
@@ -203,7 +203,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
             <td>{{ item.student.id }}</td>
             <td>{{ item.student.first_name }} {{ item.student.middle_name }} {{ item.student.last_name }}</td>
             <td>{{ item.grade_level.grade_level_name }}</td>
-            <td>{{ item.strand.strand_name }}</td>
+            <td>{{ item.strand?.strand_name || 'N/A' }}</td>
             <td>{{ item.transaction.status }}</td>
             <td>₱ {{ Number(item.transaction.total_amount).toFixed(2) }}</td>
             <td>{{ new Date(item.transaction.createdAt).toLocaleDateString('en-US', { timeZone: "UTC", month: 'short', day: 'numeric', year: 'numeric' }) }}</td>
@@ -289,8 +289,8 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
             </p>
             <ul class="text-sm space-y-1">
               <li><span class="font-medium">Grade Level:</span> {{ selectedItem?.grade_level.grade_level_name }}</li>
-              <li><span class="font-medium">Strand:</span> {{ selectedItem?.strand.strand_name }}</li>
-              <li><span class="font-medium">Semester:</span> {{ selectedItem?.semester.semester }}</li>
+              <li><span class="font-medium">Strand:</span> {{ selectedItem?.strand?.strand_name || 'N/A' }}</li>
+              
               <li><span class="font-medium">Academic Year:</span> {{ selectedItem?.academic_year.academic_year }}</li>
             </ul>
           </div>
@@ -399,8 +399,8 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
       <!-- Enrollment Information -->
       <div class="mb-4 text-sm">
         <p><span class="font-medium">Grade Level:</span> {{ selectedItem?.grade_level.grade_level_name }}</p>
-        <p><span class="font-medium">Strand:</span> {{ selectedItem?.strand.strand_name }}</p>
-        <p><span class="font-medium">Semester:</span> {{ selectedItem?.semester.semester }}</p>
+        <p><span class="font-medium">Strand:</span> {{ selectedItem?.strand?.strand_name || 'N/A' }}</p>
+        
         <p><span class="font-medium">Academic Year:</span> {{ selectedItem?.academic_year.academic_year }}</p>
       </div>
 

@@ -161,7 +161,7 @@ async function handleSubmit() {
         <ul class="text-sm space-y-1">
           <li><span class="font-medium">Grade Level:</span> {{ selectedAssessment?.grade_level || 'N/A' }}</li>
           <li><span class="font-medium">Strand:</span> {{ selectedAssessment?.strand || 'N/A' }}</li>
-          <li><span class="font-medium">Semester:</span> {{ selectedAssessment?.semester || 'N/A' }}</li>
+          
           <li><span class="font-medium">Academic Year:</span> {{ selectedAssessment?.academic_year || 'N/A' }}</li>
         </ul>
       </div>

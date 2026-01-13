@@ -304,7 +304,7 @@ function goToPage(page: number) {
             <ul class="text-sm space-y-1">
               <li><span class="font-medium">Grade Level:</span> {{ selectedTx?.grade_level.grade_level_name }}</li>
               <li><span class="font-medium">Strand:</span> {{ selectedTx?.strand.strand_name }}</li>
-              <li><span class="font-medium">Semester:</span> {{ selectedTx?.semester.semester }}</li>
+              
               <li><span class="font-medium">Academic Year:</span> {{ selectedTx?.academic_year.academic_year }}</li>
             </ul>
           </div>

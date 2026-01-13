@@ -154,20 +154,20 @@ function handleClose() {
             />
           </template>
 
-          <label class="label mb-1">
-            <span>Select a Student:</span>
-          </label>
           <template v-if="selectedGrade && selectedSection">
-            <Multiselect
-              v-model="selectedStudents"
-              :options="filteredStudents.map((s: any) => ({
-                value: s.student_id,
-                enrollmentId: s.id,
-                name: `${s.first_name} ${s.middle_name} ${s.last_name}`,
-              }))"
-              label="name"
-              track-by="value"
-            />
+            <label class="label mb-1">
+              <span>Select a Student:</span>
+            </label>
+              <Multiselect
+                v-model="selectedStudents"
+                :options="filteredStudents.map((s: any) => ({
+                  value: s.student_id,
+                  enrollmentId: s.id,
+                  name: `${s.first_name} ${s.middle_name} ${s.last_name}`,
+                }))"
+                label="name"
+                track-by="value"
+              />
           </template>
         </div>
 

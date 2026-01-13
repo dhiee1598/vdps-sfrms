@@ -6,7 +6,6 @@ import { enrollments, enrollmentSelectSchema } from '~~/server/db/schema/enrollm
 import { fees } from '~~/server/db/schema/fees-schema';
 import { gradeLevel } from '~~/server/db/schema/grade-level-schema';
 import { sections } from '~~/server/db/schema/section-schema';
-import { semesters } from '~~/server/db/schema/semester-schema';
 import { strands } from '~~/server/db/schema/strands-schema';
 import { students, studentSelectSchema } from '~~/server/db/schema/student-schema';
 import { transaction_items } from '~~/server/db/schema/transaction-items-schema';
@@ -38,16 +37,6 @@ export default defineEventHandler(async (_event) => {
     if (activeYear) {
       conditions.push(eq(enrollments.academic_year_id, activeYear.id));
     }
-
-    // Active Semester
-    const [activeSemester] = await db
-      .select()
-      .from(semesters)
-      .where(eq(semesters.status, true));
-
-    if (activeSemester) {
-      conditions.push(eq(enrollments.semester_id, activeSemester.id));
-    }
   }
 
   const rows = await db
@@ -65,7 +54,6 @@ export default defineEventHandler(async (_event) => {
       transactions,
       transactions_item: transaction_items,
       academicYears: academicYears.academic_year,
-      semesters: semesters.semester,
       strand: strands.strand_name,
       grade_level: gradeLevel.grade_level_name,
       section: sections.section_name,
@@ -79,7 +67,6 @@ export default defineEventHandler(async (_event) => {
     .leftJoin(transactions, eq(transactions.assessment_id, assessments.id))
     .leftJoin(transaction_items, eq(transaction_items.transaction_id, transactions.transaction_id))
     .leftJoin(academicYears, eq(academicYears.id, enrollments.academic_year_id))
-    .leftJoin(semesters, eq(semesters.id, enrollments.semester_id))
     .leftJoin(strands, eq(strands.id, enrollments.strand_id))
     .leftJoin(gradeLevel, eq(gradeLevel.id, enrollments.grade_level_id))
     .leftJoin(sections, eq(sections.id, enrollments.section_id))
@@ -100,7 +87,6 @@ export default defineEventHandler(async (_event) => {
           totalPaid: 0,
           balance: a.total_amount_due || 0,
           academic_year: row.academicYears,
-          semester: row.semesters,
           strand: row.strand,
           grade_level: row.grade_level,
           section: row.section,

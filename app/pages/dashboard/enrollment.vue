@@ -26,7 +26,6 @@ const enrolledStudentData = ref<EnrolledStudent | null>({
   contact_number: '',
   grade_level: '',
   academic_year: '',
-  semester: '',
   strand_name: '',
   date_enrolled: null,
   createdAt: null,
@@ -40,7 +39,6 @@ function closeModal() {
 // fetch students from backend
 const { data: enrolledStudents, pending, error, refresh: refreshEnroll } = await useFetch('/api/private/enrollment', { lazy: true });
 const { data: allStudents, refresh: refreshStudent } = await useFetch('/api/private/student?enrolled=true');
-const { data: semesters } = await useFetch('/api/private/semesters?activeSemester=true');
 const { data: gradeLevels } = await useFetch('/api/private/grade-level');
 const { data: strands } = await useFetch('/api/private/strands');
 const { data: academicYears } = await useFetch('/api/private/academic-years?activeYear=true');
@@ -156,7 +154,6 @@ const visiblePages = computed(() => {
 // reactive form state
 const formData = ref({
   selectedStudent: { id: '', first_name: '', middle_name: '', last_name: '' },
-  selectedSemester: { id: '', semester: '' },
   selectedGradeLevel: { id: '', grade_level_name: '' },
   selectedSection: { id: '', section_name: '' },
   selectedStrand: { id: '', strand_name: '' },
@@ -173,12 +170,16 @@ async function handleSave() {
   if (!formData.value.selectedStudent)
     return;
 
+  let strandId = null;
+  if (formData.value.selectedGradeLevel && ['Grade 11', 'Grade 12'].includes(formData.value.selectedGradeLevel.grade_level_name)) {
+    strandId = formData.value.selectedStrand?.id;
+  }
+
   // build payload here → only IDs
   const payload = {
     student_id: formData.value.selectedStudent?.id,
-    semester_id: semesters.value?.data[0]?.id,
     grade_level_id: formData.value.selectedGradeLevel?.id,
-    strand_id: formData.value.selectedStrand?.id,
+    strand_id: strandId,
     academic_year_id: academicYears.value?.data[0]?.id,
     section_id: formData.value.selectedSection?.id,
   };
@@ -203,7 +204,6 @@ async function handleSave() {
     showFormModal.value = false;
     formData.value = {
       selectedStudent: { id: '', first_name: '', middle_name: '', last_name: '' },
-      selectedSemester: { id: '', semester: '' },
       selectedGradeLevel: { id: '', grade_level_name: '' },
       selectedSection: { id: '', section_name: '' },
       selectedStrand: { id: '', strand_name: '' },
@@ -370,9 +370,6 @@ watch(() => formData.value.selectedGradeLevel?.id, (newVal) => {
           <div class="font-light">
             Year: {{ academicYears?.data[0]?.academic_year }}
           </div>
-          <div class="font-light">
-            Semester: {{ semesters?.data[0]?.semester }}
-          </div>
         </div>
         <form class="flex flex-col gap-4 w-full mt-4" @submit.prevent="handleSave">
           <div class="flex flex-col gap-4 mt-4">
@@ -468,7 +465,6 @@ watch(() => formData.value.selectedGradeLevel?.id, (newVal) => {
               class="btn"
               @click="() => {
                 formData.selectedStudent = { id: '', first_name: '', middle_name: '', last_name: '' };
-                formData.selectedSemester = { id: '', semester: '' };
                 formData.selectedGradeLevel = { id: '', grade_level_name: '' };
                 formData.selectedSection = { id: '', section_name: '' };
                 formData.selectedStrand = { id: '', strand_name: '' };

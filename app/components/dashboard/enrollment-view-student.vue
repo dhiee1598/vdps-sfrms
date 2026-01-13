@@ -102,15 +102,6 @@ const emit = defineEmits<{
 
       <div class="flex flex-col">
         <p class="text-sm text-gray-400">
-          Semester
-        </p>
-        <p class="capitalize">
-          {{ props.student.semester }}
-        </p>
-      </div>
-
-      <div class="flex flex-col">
-        <p class="text-sm text-gray-400">
           Academic Year
         </p>
         <p class="capitalize">
@@ -121,7 +112,6 @@ const emit = defineEmits<{
       <!-- <ul class="text-sm space-y-1">
         <li><span class="font-medium">Grade Level:</span> {{ props.student.grade_level }}</li>
         <li><span class="font-medium">Strand:</span> {{ props.student.strand_name }}</li>
-        <li><span class="font-medium">Semester:</span> {{ props.student.semester }}</li>
         <li><span class="font-medium">Academic Year:</span> {{ props.student.academic_year }}</li>
         <li>
           <span class="font-medium">Date Enrolled:</span>

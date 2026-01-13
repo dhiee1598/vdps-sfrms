@@ -2,7 +2,6 @@ import db from '~~/server/db';
 import { academicYears } from '~~/server/db/schema/academic-years-schema';
 import { enrollments } from '~~/server/db/schema/enrollment-schema';
 import { gradeLevel } from '~~/server/db/schema/grade-level-schema';
-import { semesters } from '~~/server/db/schema/semester-schema';
 import { strands } from '~~/server/db/schema/strands-schema';
 import { students } from '~~/server/db/schema/student-schema';
 import { transaction_items } from '~~/server/db/schema/transaction-items-schema';
@@ -17,7 +16,6 @@ export default defineEventHandler(async (_event) => {
       item: transaction_items,
       enrollment: enrollments,
       academic_year: academicYears,
-      semester: semesters,
       grade_level: gradeLevel,
       strand: strands,
     })
@@ -31,10 +29,6 @@ export default defineEventHandler(async (_event) => {
     .leftJoin(
       academicYears,
       eq(enrollments.academic_year_id, academicYears.id),
-    )
-    .leftJoin(
-      semesters,
-      eq(enrollments.semester_id, semesters.id),
     )
     .leftJoin(
       gradeLevel,
