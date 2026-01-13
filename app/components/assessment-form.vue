@@ -13,15 +13,24 @@ const emit = defineEmits<{
 }>();
 
 const { data: students, refresh } = useFetch('/api/private/enrollment?withoutAssessment=true');
+const { data: strands } = useFetch('/api/private/strands');
 const localAssessment = ref(props.assessment);
 const selectedStudents = ref();
-const selectedGrade = ref<{id: number, grade_level_name: string} | null>(null);
+const selectedGrade = ref<{id: number, grade_level_name: string, is_shs: boolean} | null>(null);
 const selectedSection = ref();
+const selectedStrand = ref();
 const fees = ref<any[]>([]);
 
 const gradeLevels = computed(() => {
     if (!students.value) return [];
-    const uniqueGradeLevels = Array.from(new Set(students.value.data.map((s: any) => JSON.stringify({ id: s.grade_level_id, grade_level_name: s.grade_level }))))
+    const uniqueGradeLevels = Array.from(new Set(students.value.data.map((s: any) => {
+        const gradeLevel = {
+            id: s.grade_level_id,
+            grade_level_name: s.grade_level,
+            is_shs: s.grade_level.toUpperCase() === 'GRADE 11' || s.grade_level.toUpperCase() === 'GRADE 12'
+        };
+        return JSON.stringify(gradeLevel);
+    })))
         .map((s: any) => JSON.parse(s));
     return uniqueGradeLevels;
 });
@@ -85,11 +94,18 @@ watch(totalAmountDue, (newSum) => {
   formData.value.total_fees = Number(newSum);
 });
 
-watch(selectedGrade, async (newGrade) => {
+watch([selectedGrade, selectedStrand], async ([newGrade, newStrand]) => {
   selectedSection.value = null;
   formData.value.fees = [];
   if (newGrade) {
-    const { data } = await useFetch(`/api/private/grade-level-fees?grade_level_id=${newGrade.id}`);
+    let url = `/api/private/grade-level-fees?grade_level_id=${newGrade.id}`;
+    if (newGrade.is_shs) {
+        url += `&is_shs=true`;
+        if (newStrand) {
+            url += `&strand_id=${newStrand.id}`;
+        }
+    }
+    const { data } = await useFetch(url);
     fees.value = data.value?.data || [];
   }
   else {
@@ -118,6 +134,7 @@ function handleClose() {
   selectedGrade.value = null;
   selectedSection.value = null;
   selectedStudents.value = null;
+  selectedStrand.value = null;
 
   emit('showModal'); // tell parent to actually close the modal
 }
@@ -141,6 +158,18 @@ function handleClose() {
             label="grade_level_name"
             track-by="id"
           />
+
+          <template v-if="selectedGrade?.is_shs">
+            <label class="label mb-1 mt-2">
+              <span>Select a Strand:</span>
+            </label>
+            <Multiselect
+              v-model="selectedStrand"
+              :options="strands || []"
+              label="strand_name"
+              track-by="id"
+            />
+          </template>
 
           <template v-if="selectedGrade">
             <label class="label mb-1 mt-2">

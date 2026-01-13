@@ -1,24 +1,29 @@
-import db from '~~/server/db';
-import { academicYears } from '~~/server/db/schema/academic-years-schema';
-import { enrollments } from '~~/server/db/schema/enrollment-schema';
-import { students, studentSelectSchema } from '~~/server/db/schema/student-schema';
-import { and, asc, desc, eq, isNull, ne } from 'drizzle-orm';
-import { getQuery } from 'h3';
+import db from "~~/server/db";
+import { academicYears } from "~~/server/db/schema/academic-years-schema";
+import { enrollments } from "~~/server/db/schema/enrollment-schema";
+import {
+  students,
+  studentSelectSchema,
+} from "~~/server/db/schema/student-schema";
+import { and, desc, eq, isNull, ne } from "drizzle-orm";
+import { getQuery } from "h3";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const enrolled = query.enrolled === 'true';
-  const carryOver = query.carryOver === 'true';
+  const enrolled = query.enrolled === "true";
+  const carryOver = query.carryOver === "true";
 
   // 1. get active academic year
-  const activeYear = (await db
-    .select({ year: academicYears })
-    .from(academicYears)
-    .where(eq(academicYears.status, true))
-    .limit(1))[0]?.year;
+  const activeYear = (
+    await db
+      .select({ year: academicYears })
+      .from(academicYears)
+      .where(eq(academicYears.status, true))
+      .limit(1)
+  )[0]?.year;
 
   if (!activeYear) {
-    return { message: 'No active academic year found', data: [] };
+    return { message: "No active academic year found", data: [] };
   }
 
   if (enrolled) {
@@ -36,10 +41,12 @@ export default defineEventHandler(async (event) => {
       .where(isNull(enrollments.student_id))
       .orderBy(desc(students.last_name));
 
-    const parsed = studentSelectSchema.array().parse(notEnrolledStudents.map(s => s.student));
+    const parsed = studentSelectSchema
+      .array()
+      .parse(notEnrolledStudents.map((s) => s.student));
 
     return {
-      message: 'Not enrolled students (current year)',
+      message: "Not enrolled students (current year)",
       data: parsed,
     };
   }
@@ -58,10 +65,12 @@ export default defineEventHandler(async (event) => {
       )
       .orderBy(desc(students.last_name));
 
-    const parsed = studentSelectSchema.array().parse(prevEnrolled.map(s => s.student));
+    const parsed = studentSelectSchema
+      .array()
+      .parse(prevEnrolled.map((s) => s.student));
 
     return {
-      message: 'Previously enrolled students (carry over to new year)',
+      message: "Previously enrolled students (carry over to new year)",
       data: parsed,
     };
   }
@@ -71,7 +80,7 @@ export default defineEventHandler(async (event) => {
   const parsedAll = studentSelectSchema.array().parse(allStudents);
 
   return {
-    message: 'All students fetched successfully',
+    message: "All students fetched successfully",
     data: parsedAll,
   };
 });
