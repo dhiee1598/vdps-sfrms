@@ -167,8 +167,11 @@ function openAddStudentModal() {
 }
 
 async function handleSave() {
-  if (!formData.value.selectedStudent)
+  if (!formData.value.selectedStudent || !formData.value.selectedStudent.id) {
+    showMessage('Please select a student to enroll.', true);
+    isSubmitting.value = false;
     return;
+  }
 
   let strandId = null;
   if (formData.value.selectedGradeLevel && ['Grade 11', 'Grade 12'].includes(formData.value.selectedGradeLevel.grade_level_name)) {

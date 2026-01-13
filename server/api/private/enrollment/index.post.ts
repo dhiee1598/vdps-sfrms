@@ -16,10 +16,18 @@ export default defineEventHandler(async (event) => {
   );
 
   if (!body.success) {
+    if (!body.error.issues.find(issue => issue.path.includes('student_id'))) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Bad Request",
+        message: "Invalid data provided. Please check the required fields.",
+      });
+    }
+
     throw createError({
       statusCode: 400,
       statusMessage: "Bad Request",
-      message: "Invalid data provided. Please check the required fields.",
+      message: "Student ID is required for enrollment.",
     });
   }
 
