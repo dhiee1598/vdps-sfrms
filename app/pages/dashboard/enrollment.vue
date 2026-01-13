@@ -14,7 +14,7 @@ const searchQuery = ref('');
 const showViewModal = ref(false);
 const selectedGrade = ref('');
 const selectedStrand = ref('');
-const filteredSections = ref();
+const filteredSections = ref<any[]>([]);
 
 const enrolledStudentData = ref<EnrolledStudent | null>({
   id: 0,
@@ -151,6 +151,63 @@ const visiblePages = computed(() => {
   return pages;
 });
 
+const showStrand = computed(() => {
+  const name = formData.value.selectedGradeLevel?.grade_level_name;
+  if (typeof name !== 'string') {
+    return false;
+  }
+  const lowerCaseName = name.trim().toLowerCase();
+  return lowerCaseName === 'grade 11' || lowerCaseName === 'grade 12';
+});
+
+function openEditModal(item: any) {
+  isEditing.value = true;
+  const gradeLevelName = item.grade_level?.trim().toLowerCase() ?? '';
+  const gradeLevelFound = gradeLevels.value?.find(g => g.grade_level_name.trim().toLowerCase() === gradeLevelName);
+
+  if (gradeLevelFound && sections.value) {
+    filteredSections.value = sections.value.data.filter((section) => {
+      return section.grade_level_id === Number(gradeLevelFound.id);
+    });
+  }
+
+  const strandName = item.strand_name?.trim().toLowerCase() ?? '';
+  const strandFound = strands.value?.find(s => s.strand_name.trim().toLowerCase() === strandName);
+
+  const sectionName = item.section_name?.trim().toLowerCase() ?? '';
+  const sectionFound = sections.value?.data.find(s => s.section_name.trim().toLowerCase() === sectionName);
+
+  const academicYear = item.academic_year?.trim().toLowerCase() ?? '';
+  const academicYearFound = academicYears.value?.data.find(ay => ay.academic_year.trim().toLowerCase() === academicYear);
+
+  formData.value = {
+    selectedStudent: {
+      id: item.student_id,
+      first_name: item.first_name,
+      middle_name: item.middle_name,
+      last_name: item.last_name,
+      fullName: `${item.student_id} — ${item.last_name}, ${item.first_name} ${item.middle_name}`.trim(),
+    },
+    selectedGradeLevel: {
+      id: gradeLevelFound?.id ?? undefined,
+      grade_level_name: gradeLevelFound?.grade_level_name ?? '',
+    },
+    selectedSection: {
+      id: sectionFound?.id ?? undefined,
+      section_name: sectionFound?.section_name ?? '',
+    },
+    selectedStrand: {
+      id: strandFound?.id ?? undefined,
+      strand_name: strandFound?.strand_name ?? '',
+    },
+    selectedAcademicYear: {
+      id: academicYearFound?.id ?? undefined,
+      academic_year: academicYearFound?.academic_year ?? '',
+    },
+  };
+  showFormModal.value = true;
+}
+
 // reactive form state
 const formData = ref({
   selectedStudent: { id: '', first_name: '', middle_name: '', last_name: '' },
@@ -163,7 +220,13 @@ const formData = ref({
 function openAddStudentModal() {
   showFormModal.value = true;
   isEditing.value = false;
-  formData.value.selectedStudent = { id: '', first_name: '', middle_name: '', last_name: '' };
+  formData.value = {
+    selectedStudent: { id: '', first_name: '', middle_name: '', last_name: '' },
+    selectedGradeLevel: { id: '', grade_level_name: '' },
+    selectedSection: { id: '', section_name: '' },
+    selectedStrand: { id: '', strand_name: '' },
+    selectedAcademicYear: { id: '', academic_year: '' },
+  };
 }
 
 async function handleSave() {
@@ -183,7 +246,9 @@ async function handleSave() {
     student_id: formData.value.selectedStudent?.id,
     grade_level_id: formData.value.selectedGradeLevel?.id,
     strand_id: strandId,
-    academic_year_id: academicYears.value?.data[0]?.id,
+    academic_year_id: isEditing.value
+      ? formData.value.selectedAcademicYear?.id
+      : academicYears.value?.data[0]?.id,
     section_id: formData.value.selectedSection?.id,
   };
 
@@ -228,7 +293,6 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
 
 watch(() => formData.value.selectedGradeLevel?.id, (newVal) => {
   if (newVal && sections.value) {
-    formData.value.selectedSection = { id: '', section_name: '' };
     filteredSections.value = sections.value.data.filter((section) => {
       return section.grade_level_id === Number(newVal);
     });
@@ -326,6 +390,13 @@ watch(() => formData.value.selectedGradeLevel?.id, (newVal) => {
             >
               <Icon name="solar:eye-linear" size="16" />
             </button>
+            <button
+              class="btn btn-sm btn-info tooltip tooltip-info"
+              data-tip="Edit"
+              @click="openEditModal(item)"
+            >
+              <Icon name="solar:pen-new-square-linear" size="16" />
+            </button>
           </td>
         </tr>
         <tr v-if="paginatedStudents.length === 0">
@@ -367,7 +438,7 @@ watch(() => formData.value.selectedGradeLevel?.id, (newVal) => {
     <dialog :open="showFormModal" class="modal">
       <div class="modal-box">
         <h3 class="font-bold text-2xl mb-6 text-center">
-          New Enrollment Form
+          {{ isEditing ? 'Edit Enrollment Form' : 'New Enrollment Form' }}
         </h3>
         <div class="flex flex-col">
           <div class="font-light">
@@ -386,13 +457,14 @@ watch(() => formData.value.selectedGradeLevel?.id, (newVal) => {
                 placeholder="Search by last name"
                 :max-height="150"
                 open-direction="below"
+                :disabled="isEditing"
               >
                 <template #noResult>
                   <span>Student Not Found.</span>
                 </template>
               </Multiselect>
             </div>
-            <div class="label flex-col items-start">
+            <div v-if="showStrand" class="label flex-col items-start">
               Select Strand:
               <Multiselect
                 v-model="formData.selectedStrand"
@@ -472,6 +544,7 @@ watch(() => formData.value.selectedGradeLevel?.id, (newVal) => {
                 formData.selectedSection = { id: '', section_name: '' };
                 formData.selectedStrand = { id: '', strand_name: '' };
                 formData.selectedAcademicYear = { id: '', academic_year: '' };
+                filteredSections.value = [];
                 showFormModal = false;
               }"
             >

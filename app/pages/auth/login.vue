@@ -44,7 +44,7 @@ function togglePasswordVisibility() {
   <div class="min-h-screen flex items-center justify-center p-6">
     <div class="flex flex-col glass lg:flex-row items-center justify-center gap-12 w-full max-w-5xl shadow-md px-4 py-10 rounded-lg">
       <div class="flex flex-col items-center text-center lg:text-left max-w-md">
-        <NuxtImg
+        <img
           src="/vdps-logo.png"
           alt="Logo"
           height="200"

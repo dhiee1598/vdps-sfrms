@@ -9,7 +9,7 @@ async function logout() {
 <template>
   <div class="navbar bg-base-100 shadow-sm fixed z-100">
     <div class="navbar-start">
-      <NuxtImg
+      <img
         src="/vdps-logo.png"
         alt="Profile"
         height="56"
