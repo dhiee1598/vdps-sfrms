@@ -236,8 +236,13 @@ async function handleSave() {
     return;
   }
 
+  const gradeLevelName
+    = formData.value.selectedGradeLevel?.grade_level_name.toLowerCase() || '';
   let strandId = null;
-  if (formData.value.selectedGradeLevel && ['Grade 11', 'Grade 12'].includes(formData.value.selectedGradeLevel.grade_level_name)) {
+  if (
+    formData.value.selectedGradeLevel
+    && (gradeLevelName === 'grade 11' || gradeLevelName === 'grade 12')
+  ) {
     strandId = formData.value.selectedStrand?.id;
   }
 

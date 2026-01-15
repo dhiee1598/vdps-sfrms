@@ -41,9 +41,17 @@ const filteredSections = computed(() => {
 
   const grade = selectedGrade.value.grade_level_name;
 
-  const sections = students.value.data
-    .filter((s: any) => s.grade_level === grade && s.section_name)
-    .map((s: any) => s.section_name);
+  let sectionsData = students.value.data.filter(
+    (s: any) => s.grade_level === grade && s.section_name,
+  );
+
+  if (selectedGrade.value.is_shs && selectedStrand.value) {
+    sectionsData = sectionsData.filter(
+      (s: any) => s.strand_id === selectedStrand.value.id,
+    );
+  }
+
+  const sections = sectionsData.map((s: any) => s.section_name);
 
   const uniqueSections = [...new Set(sections)];
 

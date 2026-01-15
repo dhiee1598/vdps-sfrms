@@ -8,14 +8,15 @@ import db from "..";
 import { users } from "../schema/user-schema";
 import { gradeLevel } from "../schema/grade-level-schema";
 import { sections } from "../schema/section-schema";
-import { sql } from "drizzle-orm";
+import { and, eq, sql, isNull } from "drizzle-orm";
 import { academicYears } from "../schema/academic-years-schema";
 import { strands } from "../schema/strands-schema";
 import { students } from "../schema/student-schema";
-import { eq } from "drizzle-orm";
 import { enrollments } from "../schema/enrollment-schema";
 import { fees } from "../schema/fees-schema";
 import { gradeLevelFees } from "../schema/grade-level-fees-schema";
+import { assessmentFees } from "../schema/assessment-fees-schema";
+import { assessments } from "../schema/asesssment-schema";
 import { sundries } from "../schema/sundry-schema";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -48,6 +49,8 @@ async function main() {
   console.log("🧹 Cleaning database...");
   await db.execute(sql`SET FOREIGN_KEY_CHECKS = 0;`);
   const tables = [
+    assessmentFees,
+    assessments,
     enrollments,
     students,
     sections,
@@ -202,11 +205,10 @@ async function main() {
   const allSections = await db.select().from(sections);
 
   // =========================================================
-  // 6. SEED FEES & FEE SCHEDULES
+  // 6. SEED FEES & FEE SCHEDULES (UPDATED)
   // =========================================================
   console.log("💰 Processing Fee Structures...");
 
-  // A. Define and Insert Fee Names
   const feeTypes = [
     "Tuition Fee",
     "Miscellaneous Fee",
@@ -227,85 +229,85 @@ async function main() {
     return found.id;
   };
 
-  // B. Define Fee Data (Extracted from your images)
+  // NOTE: 'last_month' is the 10th payment (March)
   const feeSchedules = [
     // --- PRE-SCHOOL ---
     {
       grades: ["NURSERY", "KINDER 1", "KINDER 2"],
       items: [
-        { type: "Tuition Fee", ue: 11260, monthly: 1690 },
-        { type: "Miscellaneous Fee", ue: 310, monthly: 310 },
-        { type: "Other Fees", ue: 500, monthly: 500 },
+        { type: "Tuition Fee", ue: 11260, monthly: 1690, last_month: 1670 },
+        { type: "Miscellaneous Fee", ue: 310, monthly: 310, last_month: 280 },
+        { type: "Other Fees", ue: 500, monthly: 500, last_month: 465 },
       ],
     },
     // --- GRADE SCHOOL (1-2) ---
     {
       grades: ["GRADE 1", "GRADE 2"],
       items: [
-        { type: "Tuition Fee", ue: 11050, monthly: 1660 },
-        { type: "Miscellaneous Fee", ue: 345, monthly: 345 },
-        { type: "Other Fees", ue: 735, monthly: 735 },
-        { type: "Tech Dev Fee", ue: 155, monthly: 155 },
+        { type: "Tuition Fee", ue: 11050, monthly: 1660, last_month: 1630 },
+        { type: "Miscellaneous Fee", ue: 345, monthly: 345, last_month: 310 },
+        { type: "Other Fees", ue: 735, monthly: 735, last_month: 690 },
+        { type: "Tech Dev Fee", ue: 155, monthly: 155, last_month: 150 },
       ],
     },
     // --- GRADE SCHOOL (3) ---
     {
       grades: ["GRADE 3"],
       items: [
-        { type: "Tuition Fee", ue: 11190, monthly: 1680 },
-        { type: "Miscellaneous Fee", ue: 350, monthly: 350 },
-        { type: "Other Fees", ue: 735, monthly: 735 },
-        { type: "Tech Dev Fee", ue: 155, monthly: 155 },
+        { type: "Tuition Fee", ue: 11190, monthly: 1680, last_month: 1660 },
+        { type: "Miscellaneous Fee", ue: 350, monthly: 350, last_month: 335 },
+        { type: "Other Fees", ue: 735, monthly: 735, last_month: 690 },
+        { type: "Tech Dev Fee", ue: 155, monthly: 155, last_month: 150 },
       ],
     },
     // --- GRADE SCHOOL (4) ---
     {
       grades: ["GRADE 4"],
       items: [
-        { type: "Tuition Fee", ue: 11190, monthly: 1680 },
-        { type: "Miscellaneous Fee", ue: 350, monthly: 350 },
-        { type: "Other Fees", ue: 735, monthly: 735 },
-        { type: "Tech Dev/TLE Fee", ue: 165, monthly: 165 },
+        { type: "Tuition Fee", ue: 11190, monthly: 1680, last_month: 1660 },
+        { type: "Miscellaneous Fee", ue: 350, monthly: 350, last_month: 335 },
+        { type: "Other Fees", ue: 735, monthly: 735, last_month: 690 },
+        { type: "Tech Dev/TLE Fee", ue: 165, monthly: 165, last_month: 130 },
       ],
     },
     // --- GRADE SCHOOL (5) ---
     {
       grades: ["GRADE 5"],
       items: [
-        { type: "Tuition Fee", ue: 11325, monthly: 1700 },
-        { type: "Miscellaneous Fee", ue: 350, monthly: 350 },
-        { type: "Other Fees", ue: 735, monthly: 735 },
-        { type: "Tech Dev/TLE Fee", ue: 165, monthly: 165 },
+        { type: "Tuition Fee", ue: 11325, monthly: 1700, last_month: 1680 },
+        { type: "Miscellaneous Fee", ue: 350, monthly: 350, last_month: 335 },
+        { type: "Other Fees", ue: 735, monthly: 735, last_month: 690 },
+        { type: "Tech Dev/TLE Fee", ue: 165, monthly: 165, last_month: 130 },
       ],
     },
     // --- GRADE SCHOOL (6) ---
     {
       grades: ["GRADE 6"],
       items: [
-        { type: "Tuition Fee", ue: 11325, monthly: 1700 },
-        { type: "Miscellaneous Fee", ue: 350, monthly: 350 },
-        { type: "Other Fees", ue: 1000, monthly: 1000 },
-        { type: "Tech Dev/TLE Fee", ue: 165, monthly: 165 },
+        { type: "Tuition Fee", ue: 11325, monthly: 1700, last_month: 1680 },
+        { type: "Miscellaneous Fee", ue: 350, monthly: 350, last_month: 335 },
+        { type: "Other Fees", ue: 1000, monthly: 1000, last_month: 970 },
+        { type: "Tech Dev/TLE Fee", ue: 165, monthly: 165, last_month: 130 },
       ],
     },
     // --- JUNIOR HIGH (7-8) ---
     {
       grades: ["GRADE 7", "GRADE 8"],
       items: [
-        { type: "Tuition Fee", ue: 12485, monthly: 1880 },
-        { type: "Miscellaneous Fee", ue: 375, monthly: 375 },
-        { type: "Other Fees", ue: 735, monthly: 735 },
-        { type: "Tech Dev/TLE Fee", ue: 165, monthly: 165 },
+        { type: "Tuition Fee", ue: 12485, monthly: 1880, last_month: 1800 },
+        { type: "Miscellaneous Fee", ue: 375, monthly: 375, last_month: 365 },
+        { type: "Other Fees", ue: 735, monthly: 735, last_month: 690 },
+        { type: "Tech Dev/TLE Fee", ue: 165, monthly: 165, last_month: 130 },
       ],
     },
     // --- JUNIOR HIGH (9-10) ---
     {
       grades: ["GRADE 9", "GRADE 10"],
       items: [
-        { type: "Tuition Fee", ue: 6435, monthly: 2575 },
-        { type: "Miscellaneous Fee", ue: 375, monthly: 375 },
-        { type: "Other Fees", ue: 1000, monthly: 1000 },
-        { type: "Tech Dev/TLE Fee", ue: 165, monthly: 165 },
+        { type: "Tuition Fee", ue: 6435, monthly: 2575, last_month: 2555 },
+        { type: "Miscellaneous Fee", ue: 375, monthly: 375, last_month: 365 },
+        { type: "Other Fees", ue: 1000, monthly: 1000, last_month: 970 }, // G10 others 1000, G9 others 735 - Split below if strictly needed, simplifying to G10 max
+        { type: "Tech Dev/TLE Fee", ue: 165, monthly: 165, last_month: 130 },
       ],
     },
     // --- SENIOR HIGH (11) ---
@@ -313,28 +315,28 @@ async function main() {
       grades: ["GRADE 11"],
       strands: ["TVL"],
       items: [
-        { type: "Tuition Fee", ue: 6790, monthly: 2715 },
-        { type: "Miscellaneous Fee", ue: 460, monthly: 460 },
-        { type: "Other Fees", ue: 580, monthly: 580 },
-        { type: "TLE Fee", ue: 10, monthly: 10 },
+        { type: "Tuition Fee", ue: 6790, monthly: 2715, last_month: 2705 },
+        { type: "Miscellaneous Fee", ue: 460, monthly: 460, last_month: 410 },
+        { type: "Other Fees", ue: 580, monthly: 580, last_month: 565 },
+        { type: "TLE Fee", ue: 10, monthly: 10, last_month: 0 },
       ],
     },
     {
       grades: ["GRADE 11"],
       strands: ["GAS", "HUMSS", "ABM"],
       items: [
-        { type: "Tuition Fee", ue: 6915, monthly: 2770 },
-        { type: "Miscellaneous Fee", ue: 460, monthly: 460 },
-        { type: "Other Fees", ue: 580, monthly: 580 },
+        { type: "Tuition Fee", ue: 6915, monthly: 2770, last_month: 2725 },
+        { type: "Miscellaneous Fee", ue: 460, monthly: 460, last_month: 410 },
+        { type: "Other Fees", ue: 580, monthly: 580, last_month: 565 },
       ],
     },
     {
       grades: ["GRADE 11"],
       strands: ["STEM"],
       items: [
-        { type: "Tuition Fee", ue: 7045, monthly: 2820 },
-        { type: "Miscellaneous Fee", ue: 460, monthly: 460 },
-        { type: "Other Fees", ue: 580, monthly: 580 },
+        { type: "Tuition Fee", ue: 7045, monthly: 2820, last_month: 2780 },
+        { type: "Miscellaneous Fee", ue: 460, monthly: 460, last_month: 410 },
+        { type: "Other Fees", ue: 580, monthly: 580, last_month: 565 },
       ],
     },
     // --- SENIOR HIGH (12) ---
@@ -342,42 +344,39 @@ async function main() {
       grades: ["GRADE 12"],
       strands: ["TVL"],
       items: [
-        { type: "Tuition Fee", ue: 6790, monthly: 2715 },
-        { type: "Miscellaneous Fee", ue: 460, monthly: 460 },
-        { type: "Other Fees", ue: 875, monthly: 875 },
-        { type: "TLE Fee", ue: 10, monthly: 10 },
+        { type: "Tuition Fee", ue: 6790, monthly: 2715, last_month: 2705 },
+        { type: "Miscellaneous Fee", ue: 460, monthly: 460, last_month: 410 },
+        { type: "Other Fees", ue: 875, monthly: 875, last_month: 825 },
+        { type: "TLE Fee", ue: 10, monthly: 10, last_month: 0 },
       ],
     },
     {
       grades: ["GRADE 12"],
       strands: ["GAS", "HUMSS", "ABM"],
       items: [
-        { type: "Tuition Fee", ue: 6915, monthly: 2770 },
-        { type: "Miscellaneous Fee", ue: 460, monthly: 460 },
-        { type: "Other Fees", ue: 875, monthly: 875 },
+        { type: "Tuition Fee", ue: 6915, monthly: 2770, last_month: 2725 },
+        { type: "Miscellaneous Fee", ue: 460, monthly: 460, last_month: 410 },
+        { type: "Other Fees", ue: 875, monthly: 875, last_month: 825 },
       ],
     },
     {
       grades: ["GRADE 12"],
       strands: ["STEM"],
       items: [
-        { type: "Tuition Fee", ue: 7045, monthly: 2820 },
-        { type: "Miscellaneous Fee", ue: 460, monthly: 460 },
-        { type: "Other Fees", ue: 875, monthly: 875 },
+        { type: "Tuition Fee", ue: 7045, monthly: 2820, last_month: 2780 },
+        { type: "Miscellaneous Fee", ue: 460, monthly: 460, last_month: 410 },
+        { type: "Other Fees", ue: 875, monthly: 875, last_month: 825 },
       ],
     },
   ];
 
-  // C. Execute Insert Loop
   for (const schedule of feeSchedules) {
-    // Find Grade IDs
     const targetGradeIds = allGrades
       .filter((g) => schedule.grades.includes(g.grade_level_name.toUpperCase()))
       .map((g) => g.id);
 
     if (targetGradeIds.length === 0) continue;
 
-    // Find Strand IDs (if applicable)
     let targetStrandIds: (number | null)[] = [null];
     if (schedule.strands && schedule.strands.length > 0) {
       targetStrandIds = allStrands
@@ -385,16 +384,17 @@ async function main() {
         .map((s) => s.id);
     }
 
-    // Insert
     for (const gradeId of targetGradeIds) {
       for (const strandId of targetStrandIds) {
         for (const item of schedule.items) {
-          // Calculation: Upon Enrollment + (Monthly * 10)
-          const totalAmount = item.ue + item.monthly * 10;
+          // Calculation: UE + (9 * Standard Monthly) + (1 * Last Month)
+          const monthlyTotal = item.monthly * 9;
+          const lastMonth = item.last_month ?? item.monthly;
+          const totalAmount = item.ue + monthlyTotal + lastMonth;
 
           await db.insert(gradeLevelFees).values({
             grade_level_id: gradeId,
-            strand_id: strandId, // Important: Null for G1-10, Set for SHS
+            strand_id: strandId,
             fee_id: getFeeId(item.type),
             amount: totalAmount.toFixed(2),
           });
@@ -405,7 +405,7 @@ async function main() {
   console.log("✅ Grade Level Fees Seeded.");
 
   // =========================================================
-  // 7. SEED SUNDRIES (NEW SECTION)
+  // 7. SEED SUNDRIES
   // =========================================================
   console.log("🎒 Seeding Sundries...");
 
@@ -421,7 +421,7 @@ async function main() {
     },
     { name: "Clinic - Taekwondo", desc: "Clinic Program", amount: 3500.0 },
     { name: "Clinic - Volleyball", desc: "Clinic Program", amount: 2850.0 },
-    { name: "Clinic - Table Tennis", desc: "Clinic Program", amount: 2850.0 }, // Corrected 3500->2850 based on img
+    { name: "Clinic - Table Tennis", desc: "Clinic Program", amount: 2850.0 },
     {
       name: "Clinic - Basic Guitar Lesson",
       desc: "Clinic Program",
@@ -488,7 +488,7 @@ async function main() {
   console.log("✅ Sundries Seeded.");
 
   // =========================================================
-  // 7. SEED STUDENTS & ENROLLMENTS
+  // 8. SEED STUDENTS, ENROLLMENTS & ASSESSMENTS
   // =========================================================
 
   const files = ["student1.xlsx"];
@@ -551,7 +551,7 @@ async function main() {
           continue;
 
         const { firstName, middleName, lastName } = parseFullName(row["NAME"]);
-        const studentId = `STU-2025-${String(studentCounter++).padStart(4, "0")}`;
+        const studentId = `STU-${String(studentCounter++).padStart(4, "0")}-2026`;
 
         let finalContact = "N/A";
         if (row["CONTACT NUMBER"]) {
@@ -568,6 +568,13 @@ async function main() {
           finalContact = isValidMobile ? cleanNumber : "N/A";
         }
 
+        const rawEsc = row["ESC GRANT"];
+        const isEscGrant =
+          rawEsc === true ||
+          String(rawEsc).toUpperCase() === "YES" ||
+          String(rawEsc).toUpperCase() === "TRUE" ||
+          rawEsc == 1;
+
         await db.insert(students).values({
           id: studentId,
           first_name: firstName,
@@ -577,7 +584,7 @@ async function main() {
           contact_number: finalContact,
         });
 
-        await db.insert(enrollments).values({
+        const [enrollmentResult] = await db.insert(enrollments).values({
           student_id: studentId,
           grade_level_id: targetGrade.id,
           section_id: targetSection.id,
@@ -585,6 +592,49 @@ async function main() {
           strand_id: currentStrandId,
           enroll_status: "ENROLLED",
         });
+
+        // --- CALCULATE ASSESSMENT ---
+        const studentFees = await db
+          .select()
+          .from(gradeLevelFees)
+          .where(
+            and(
+              eq(gradeLevelFees.grade_level_id, targetGrade.id),
+              currentStrandId
+                ? eq(gradeLevelFees.strand_id, currentStrandId)
+                : isNull(gradeLevelFees.strand_id),
+            ),
+          );
+
+        let totalDue = 0;
+        const feeIdsToLink: number[] = [];
+
+        for (const feeEntry of studentFees) {
+          const feeType = allFees.find((f) => f.id === feeEntry.fee_id);
+
+          if (isEscGrant && feeType?.fee_name === "Tuition Fee") {
+            continue;
+          }
+
+          totalDue += Number(feeEntry.amount);
+          feeIdsToLink.push(feeEntry.fee_id);
+        }
+
+        const [assessmentResult] = await db.insert(assessments).values({
+          enrollment_id: enrollmentResult.insertId,
+          student_id: studentId,
+          total_amount_due: totalDue.toFixed(2),
+          total_paid: "0.00",
+        });
+
+        if (feeIdsToLink.length > 0) {
+          await db.insert(assessmentFees).values(
+            feeIdsToLink.map((fid) => ({
+              assessment_id: assessmentResult.insertId,
+              fee_id: fid,
+            })),
+          );
+        }
       }
       console.log(`✅ Processed Sheet: ${sheetName}`);
     }

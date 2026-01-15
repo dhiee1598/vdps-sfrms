@@ -39,6 +39,7 @@ export default defineEventHandler(async (event) => {
       grade_level: gradeLevel.grade_level_name,
       grade_level_id: gradeLevel.id,
       strand_name: strands.strand_name,
+      strand_id: strands.id,
       academic_year: academicYears.academic_year,
       date_enrolled: enrollments.date_enrolled,
       createdAt: enrollments.createdAt,
