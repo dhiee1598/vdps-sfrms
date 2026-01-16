@@ -369,7 +369,7 @@ watch([searchQuery, selectedGrade, selectedStrand], () => {
       </div>
     </dialog>
     <!-- ✅ PRINTABLE RECEIPT -->
-    <div ref="componentRef" class="print-area mx-auto my-6 max-w-md bg-white text-black p-6 rounded-lg shadow-md block md:hidden lg:hidden">
+    <div ref="componentRef" class="print-area mx-auto my-6 max-w-md bg-white text-black p-6 rounded-lg shadow-md hidden print:block">
       <!-- School Header -->
       <div class="text-center border-b pb-4 mb-4 flex flex-col justify-center items-center">
         <NuxtImg
