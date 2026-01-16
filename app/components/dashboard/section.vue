@@ -115,7 +115,7 @@ function removeSectionName(index: number) {
           <th class="w-1/3">
             ID
           </th>
-          <th class="w-1/3">
+          <th class="w-full">
             Name
           </th>
           <th class="w-1/3">
