@@ -5,8 +5,10 @@ import { fees } from "~~/server/db/schema/fees-schema";
 import { enrollments } from "~~/server/db/schema/enrollment-schema";
 import { gradeLevel } from "~~/server/db/schema/grade-level-schema";
 import { assessmentSchema } from "~~/server/lib/zod-schema";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, gt } from "drizzle-orm";
 import { assessments } from "~~/server/db/schema/asesssment-schema";
+import { transactions } from "~~/server/db/schema/transaction-schema";
+import { transaction_items } from "~~/server/db/schema/transaction-items-schema"; // ✅ Import Items
 
 export default defineEventHandler(async (event) => {
   await requireUserSession(event);
@@ -41,7 +43,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // 2. Fetch Enrollment & Grade Level (To determine JHS vs SHS)
+  // 2. Fetch Enrollment & Grade Level
   const [enrollmentData] = await db
     .select({
       grade_level: gradeLevel.grade_level_name,
@@ -62,14 +64,13 @@ export default defineEventHandler(async (event) => {
   const isJHS = jhsGrades.includes(gName);
   const isSHS = ["GRADE 11", "GRADE 12"].includes(gName);
 
-  // 3. FETCH FEES AND RESOLVE THE GENERIC ID
-  // The frontend sends an array of GradeLevelFee IDs (e.g. [80, 81, 82])
+  // 3. FETCH FEES
   const inputGradeLevelFeeIds = body.data.fees.map((f: any) => f.id);
 
   const dbFees = await db
     .select({
-      gradeLevelFeeId: gradeLevelFees.id, // The ID sent by frontend (e.g., 80)
-      genericFeeId: fees.id, // <--- THE ID WE NEED TO STORE (e.g., 1)
+      gradeLevelFeeId: gradeLevelFees.id,
+      genericFeeId: fees.id,
       amount: gradeLevelFees.amount,
       name: fees.fee_name,
     })
@@ -83,12 +84,10 @@ export default defineEventHandler(async (event) => {
   for (const fee of dbFees) {
     let amount = Number(fee.amount);
 
-    // Cash Discount (4% off Tuition)
     if (body.data.is_cash_discount && fee.name === "Tuition Fee") {
       amount = amount * 0.96;
     }
 
-    // SHS ESC (Waive Tuition)
     if (isSHS && body.data.is_esc_grant && fee.name === "Tuition Fee") {
       amount = 0;
     }
@@ -96,15 +95,13 @@ export default defineEventHandler(async (event) => {
     calculatedSubtotal += amount;
   }
 
-  // JHS ESC (Less 9,000 from Total)
   if (isJHS && body.data.is_esc_grant) {
     calculatedSubtotal -= 9000;
   }
 
-  // Round Up to nearest Peso
   const finalCurrentFees = Math.ceil(Math.max(0, calculatedSubtotal));
 
-  // 5. Get Outstanding Balance
+  // 5. Get Outstanding Balance (From Previous Years)
   const [lastAssessment] = await db
     .select()
     .from(assessments)
@@ -116,12 +113,54 @@ export default defineEventHandler(async (event) => {
   if (lastAssessment) {
     const prevDue = Number(lastAssessment.total_amount_due);
     const prevPaid = Number(lastAssessment.total_paid ?? 0);
-    outstandingBalance = prevDue - prevPaid;
+
+    // do not reduce the new assessment amount.
+    outstandingBalance = Math.max(0, prevDue - prevPaid);
   }
 
   const totalAmountDue = finalCurrentFees + outstandingBalance;
+  // 6. CHECK FOR VALID "ADVANCE" PAYMENTS (Refined)
+  // Logic: Find Orphan Transactions that CONTAIN a 'Reservation Fee' item.
 
-  // 6. Insert into Database
+  const advanceConditions = [
+    eq(transactions.student_id, body.data.student_id),
+    isNull(transactions.assessment_id), // Must be Orphan
+    // Filter by Item Name (Reservation, Downpayment, etc.)
+    inArray(transaction_items.item_type, [
+      "Reservation Fee",
+      "RF",
+      "Downpayment",
+      "Advance Payment",
+    ]),
+  ];
+
+  // Safety: Ensure it's newer than the last assessment
+  if (lastAssessment && lastAssessment.createdAt) {
+    advanceConditions.push(
+      gt(transactions.createdAt, lastAssessment.createdAt),
+    );
+  }
+
+  const advanceTransactions = await db
+    .selectDistinct({
+      // Use Distinct to avoid duplicates if multiple items match
+      transaction_id: transactions.transaction_id,
+      total_amount: transactions.total_amount,
+    })
+    .from(transactions)
+    // ✅ JOIN with Items to check the type
+    .innerJoin(
+      transaction_items,
+      eq(transactions.transaction_id, transaction_items.transaction_id),
+    )
+    .where(and(...advanceConditions));
+
+  const totalAdvancePaid = advanceTransactions.reduce(
+    (sum, t) => sum + Number(t.total_amount || 0),
+    0,
+  );
+
+  // 7. Insert into Database
   const result = await db.transaction(async (tx) => {
     // Insert Assessment
     const [newAssessment] = await tx
@@ -130,20 +169,29 @@ export default defineEventHandler(async (event) => {
         enrollment_id: Number(body.data.enrollment_id),
         student_id: body.data.student_id,
         total_amount_due: String(totalAmountDue.toFixed(2)),
-        total_paid: "0.00",
+        total_paid: String(totalAdvancePaid.toFixed(2)),
         is_esc_grant: body.data.is_esc_grant,
         is_cash_discount: body.data.is_cash_discount,
       })
       .$returningId();
 
-    // Insert Fees (Using genericFeeId)
+    // Insert Fees
     if (dbFees.length > 0) {
       await tx.insert(assessmentFees).values(
         dbFees.map((fee) => ({
           assessment_id: newAssessment.id,
-          fee_id: fee.genericFeeId, // <--- Correctly mapping to the Generic ID
+          fee_id: fee.genericFeeId,
         })),
       );
+    }
+
+    // ✅ LINK THE FOUND RESERVATION TRANSACTIONS
+    if (advanceTransactions.length > 0) {
+      const transactionIds = advanceTransactions.map((t) => t.transaction_id);
+      await tx
+        .update(transactions)
+        .set({ assessment_id: newAssessment.id })
+        .where(inArray(transactions.transaction_id, transactionIds));
     }
 
     return newAssessment;

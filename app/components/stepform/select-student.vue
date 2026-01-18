@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { socket } from '~/components/socket';
+
 const props = defineProps({
   selectedStudent: {
     type: Object,
@@ -25,7 +27,7 @@ function handleSearchChange(query: string) {
   }, 300);
 }
 
-const { data: assessments, pending } = useFetch('/api/private/assessment', {
+const { data: assessments, pending, refresh } = useFetch('/api/private/assessment', {
   lazy: true,
   query: computed(() => ({
     search: debouncedSearch.value,
@@ -37,11 +39,32 @@ watch(selected, (val) => {
   emit('update:selectedStudent', val);
 });
 
+watch(() => props.selectedStudent, (newVal) => {
+  selected.value = newVal;
+});
+
 const studentOptions = computed(() => {
   return (assessments.value?.data ?? []).map((assessment: any) => ({
     ...assessment,
     name: `${assessment.student?.last_name ?? ''}, ${assessment.student?.first_name ?? ''} ${assessment.student?.middle_name ?? ''}`.trim(),
   }));
+});
+
+async function handleSocketData() {
+  await refresh();
+}
+
+onMounted(() => {
+  if (socket.connected) {
+    //
+  } else {
+    socket.connect();
+  }
+  socket.on('newData', handleSocketData);
+});
+
+onBeforeUnmount(() => {
+  socket.off('newData', handleSocketData);
 });
 </script>
 

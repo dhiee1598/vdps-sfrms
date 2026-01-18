@@ -7,11 +7,14 @@ import { socket } from '../socket';
 const isConnected = ref(false);
 const transport = ref('N/A');
 const isOpen = ref(false);
+const showCancelModal = ref(false);
 const selectedItem = ref();
+const itemToCancel = ref();
 const searchQuery = ref('');
 const selectedGrade = ref('');
 const selectedStrand = ref('');
 const isSubmitting = ref(false);
+const isCancelling = ref(false);
 const showPrintModal = ref(false);
 const componentRef = ref();
 const { isMessage, isError, responseMessage, showMessage } = useNotification();
@@ -92,6 +95,30 @@ function goToPage(page: number | string) {
 function openModal(item: any) {
   isOpen.value = true;
   selectedItem.value = item;
+}
+
+function confirmCancel(item: any) {
+  itemToCancel.value = item;
+  showCancelModal.value = true;
+}
+
+async function handleCancel() {
+  if (!itemToCancel.value) return;
+  isCancelling.value = true;
+  try {
+    const response = await $fetch(`/api/private/transactions/${itemToCancel.value.transaction.transaction_id}`, {
+      method: 'DELETE',
+    });
+    showMessage(response.message || 'Transaction cancelled successfully.', false);
+    showCancelModal.value = false;
+    itemToCancel.value = null;
+    await refresh();
+  } catch (e) {
+    const error = e as FetchError;
+    showMessage(error.data?.message || 'Failed to cancel transaction.', true);
+  } finally {
+    isCancelling.value = false;
+  }
 }
 
 const { handlePrint } = useVueToPrint({
@@ -226,13 +253,22 @@ async function handleSubmit() {
               <td class="font-mono">₱ {{ Number(item.transaction.total_amount).toFixed(2) }}</td>
               <td>{{ new Date(item.transaction.createdAt).toLocaleDateString('en-US', { timeZone: "UTC", month: 'short', day: 'numeric', year: 'numeric' }) }}</td>
               <td>
-                <button
-                  class="btn btn-sm btn-success tooltip tooltip-success"
-                  data-tip="View"
-                  @click="openModal(item)"
-                >
-                  <Icon name="solar:eye-linear" size="16" />
-                </button>
+                <div class="flex gap-2">
+                  <button
+                    class="btn btn-sm btn-success tooltip tooltip-success"
+                    data-tip="View"
+                    @click="openModal(item)"
+                  >
+                    <Icon name="solar:eye-linear" size="16" />
+                  </button>
+                  <button
+                    class="btn btn-sm btn-error tooltip tooltip-error"
+                    data-tip="Cancel"
+                    @click="confirmCancel(item)"
+                  >
+                    <Icon name="solar:trash-bin-trash-linear" size="16" />
+                  </button>
+                </div>
               </td>
             </tr>
             <tr v-if="(transactions?.data || []).length === 0">
@@ -332,6 +368,24 @@ async function handleSubmit() {
           <button class="btn btn-primary" :disabled="isSubmitting" @click="handleSubmit">
             <span v-if="isSubmitting" class="loading loading-spinner loading-xs"></span>
             Mark as Paid
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog :open="showCancelModal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg text-error">Cancel Transaction</h3>
+        <p class="py-4">
+          Are you sure you want to cancel this transaction for 
+          <span class="font-bold">{{ itemToCancel?.student.first_name }} {{ itemToCancel?.student.last_name }}</span>?
+          This action cannot be undone.
+        </p>
+        <div class="modal-action">
+          <button class="btn" @click="showCancelModal = false">No, Keep it</button>
+          <button class="btn btn-error" :disabled="isCancelling" @click="handleCancel">
+            <span v-if="isCancelling" class="loading loading-spinner"></span>
+            Yes, Cancel Transaction
           </button>
         </div>
       </div>

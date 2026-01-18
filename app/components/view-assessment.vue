@@ -17,37 +17,61 @@ watch(() => props.data, (newVal) => {
   localStudentAssessment.value = newVal;
 });
 
-// 1. Calculate Reservation/Advance Payments
+// 1. Define Whitelists
+const ALL_MONTHS = [
+  "January", "February", "March", "April", "May", "June", 
+  "July", "August", "September", "October", "November", "December"
+];
+
+const TUITION_KEYWORDS = [
+  "Full Payment", "Downpayment", "Down Payment", "DP", 
+  "Partial Payment", "Partial", "Tuition", "Tuition Fee", 
+  "Upon Enrollment", "1st Quarter", "2nd Quarter", "3rd Quarter", "4th Quarter"
+];
+
+const RESERVATION_KEYWORDS = ["Reservation Fee", "RF", "Advance Payment"];
+
+// 2. Calculate Reservation/Advance Payments (Strict Item Check)
 const reservationPaid = computed(() => {
   if (!localStudentAssessment.value?.transactions?.length) {
     return 0;
   }
-  return localStudentAssessment.value.transactions.reduce((sum: number, txn: any) => {
-      const isReservation = txn.items?.some((i: any) => 
-        ['Reservation Fee', 'RF', 'Downpayment', 'Advance Payment'].includes(i.item_type)
-      );
-      
-      if (isReservation) {
-         return sum + (Number(txn.total_amount) || 0);
-      }
-      return sum;
+  return localStudentAssessment.value.transactions.reduce((totalSum: number, txn: any) => {
+      // Only count PAID transactions
+      if (txn.status !== 'paid') return totalSum;
+
+      const txnSum = (txn.items || []).reduce((sum: number, item: any) => {
+          if (RESERVATION_KEYWORDS.includes(item.item_type)) {
+              return sum + (Number(item.amount) || 0);
+          }
+          return sum;
+      }, 0);
+      return totalSum + txnSum;
   }, 0);
 });
 
-// 2. Calculate Tuition/Standard Payments
+// 3. Calculate Tuition/Standard Payments (Strict Item Check)
 const tuitionPaid = computed(() => {
   if (!localStudentAssessment.value?.transactions?.length) {
     return 0;
   }
-  return localStudentAssessment.value.transactions.reduce((sum: number, txn: any) => {
-      const isReservation = txn.items?.some((i: any) => 
-        ['Reservation Fee', 'RF', 'Downpayment', 'Advance Payment'].includes(i.item_type)
-      );
+  return localStudentAssessment.value.transactions.reduce((totalSum: number, txn: any) => {
+      // Only count PAID transactions
+      if (txn.status !== 'paid') return totalSum;
 
-      if (!isReservation) {
-         return sum + (Number(txn.total_amount) || 0);
-      }
-      return sum;
+      const txnSum = (txn.items || []).reduce((sum: number, item: any) => {
+          const type = item.item_type;
+          
+          const isMonth = ALL_MONTHS.includes(type);
+          const isKeyword = TUITION_KEYWORDS.some(k => type.toLowerCase() === k.toLowerCase());
+          const isTuitionLike = type.toLowerCase().includes('tuition');
+
+          if (isMonth || isKeyword || isTuitionLike) {
+              return sum + (Number(item.amount) || 0);
+          }
+          return sum;
+      }, 0);
+      return totalSum + txnSum;
   }, 0);
 });
 

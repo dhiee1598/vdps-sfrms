@@ -48,7 +48,41 @@ export default defineEventHandler(async (event) => {
       .where(eq(assessments.id, body.data.assessment_id))
       .execute();
 
-    const newTotalPaid = Number.parseFloat(current.total_paid || '0') + body.data.total_amount;
+    // Logic to filter ONLY tuition-related items
+    const TUITION_KEYWORDS = [
+      "Full Payment",
+      "Downpayment",
+      "Down Payment",
+      "DP",
+      "Partial Payment",
+      "Partial",
+      "Tuition",
+      "Tuition Fee",
+      "Upon Enrollment",
+      "Reservation Fee", 
+      "RF"
+    ];
+
+    const ALL_MONTHS = [
+      "January", "February", "March", "April", "May", "June", 
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    const tuitionAmount = body.data.transaction_items.reduce((sum, item) => {
+      const type = item.item_type;
+      const amount = item.amount; // item.amount is already a number from Zod coerce
+
+      const isMonth = ALL_MONTHS.includes(type);
+      const isKeyword = TUITION_KEYWORDS.some(k => type.toLowerCase() === k.toLowerCase());
+      const isTuitionLike = type.toLowerCase().includes('tuition');
+
+      if (isMonth || isKeyword || isTuitionLike) {
+        return sum + amount;
+      }
+      return sum;
+    }, 0);
+
+    const newTotalPaid = Number.parseFloat(current.total_paid || '0') + tuitionAmount;
 
     await db
       .update(assessments)

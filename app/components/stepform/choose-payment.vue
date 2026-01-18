@@ -75,7 +75,8 @@ function togglePaymentOption(option: string) {
   let amountToSet = 0;
   
   if (option === 'Full Payment') {
-    amountToSet = datas.value.overall_balance;
+    // Use props.datas directly to ensure freshness
+    amountToSet = props.datas.overall_balance;
   } 
   else if (datas.value.remaining_per_month && datas.value.remaining_per_month[option]) {
     // Default to the specific month's remaining balance

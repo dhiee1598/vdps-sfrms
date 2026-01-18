@@ -101,7 +101,10 @@ onMounted(() => {
 
   socket.on('newData', async (message: any) => {
     console.warn(message);
-    // Data refresh is now handled within components or on new interactions
+    // Only reset if the Academic Year changes (prevent resetting during transaction submission)
+    if (typeof message === 'string' && message.toLowerCase().includes('academic year')) {
+      resetForm(); 
+    }
   });
 });
 

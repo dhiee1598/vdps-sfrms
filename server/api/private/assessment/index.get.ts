@@ -150,73 +150,107 @@ export default defineEventHandler(async (_event) => {
     .leftJoin(sections, eq(sections.id, enrollments.section_id))
     .where(inArray(assessments.id, ids));
 
-  const grouped = Object.values(
-    rows.reduce(
-      (acc, row) => {
-        const a = row.assessment;
+  const TUITION_KEYWORDS = [
+    "Full Payment", "Downpayment", "Down Payment", "DP", 
+    "Partial Payment", "Partial", "Tuition", "Tuition Fee", 
+    "Upon Enrollment", "Reservation Fee", "RF", 
+    "1st Quarter", "2nd Quarter", "3rd Quarter", "4th Quarter"
+  ];
 
-        if (!acc[a.id]) {
-          const totalDue = Number(a.total_amount_due) || 0;
-          const totalPaid = Number(a.total_paid) || 0;
+  const ALL_MONTHS = [
+    "January", "February", "March", "April", "May", "June", 
+    "July", "August", "September", "October", "November", "December"
+  ];
 
-          const balance = Math.max(0, totalDue - totalPaid);
+  const groupedMap = rows.reduce(
+    (acc, row) => {
+      const a = row.assessment;
 
-          acc[a.id] = {
-            ...a,
-            enrollment: row.enrollment,
-            student: row.student,
-            fees: [],
-            transactions: [],
-            transaction_items: [],
+      if (!acc[a.id]) {
+        acc[a.id] = {
+          ...a,
+          enrollment: row.enrollment,
+          student: row.student,
+          fees: [],
+          transactions: [],
+          transaction_items: [],
 
-            totalPaid: totalPaid.toFixed(2),
-            balance: balance.toFixed(2),
+          // Initialize custom tracking
+          calculatedTotalPaid: 0,
+          
+          academic_year: row.academicYears,
+          strand: row.strand,
+          grade_level: row.grade_level,
+          section: row.section,
+        };
+      }
 
-            academic_year: row.academicYears,
-            strand: row.strand,
-            grade_level: row.grade_level,
-            section: row.section,
+      // 1. Process Fees
+      if (row.fee?.id) {
+        const alreadyExists = acc[a.id].fees.some(
+          (f: any) => f.id === row.fee!.id,
+        );
+        if (!alreadyExists) {
+          acc[a.id].fees.push(row.fee);
+        }
+      }
+
+      // 2. Process Transactions & Items
+      if (row.transactions?.transaction_id) {
+        let transaction = acc[a.id].transactions.find(
+          (t: any) => t.transaction_id === row.transactions!.transaction_id,
+        );
+
+        if (!transaction) {
+          transaction = {
+            ...row.transactions,
+            items: [],
           };
+          acc[a.id].transactions.push(transaction);
         }
 
-        if (row.fee?.id) {
-          const alreadyExists = acc[a.id].fees.some(
-            (f: any) => f.id === row.fee!.id,
+        if (row.transactions_item?.id) {
+          const item = row.transactions_item;
+          const alreadyExists = transaction.items.some(
+            (i: any) => i.id === item.id,
           );
+
           if (!alreadyExists) {
-            acc[a.id].fees.push(row.fee);
-          }
-        }
+            transaction.items.push(item);
 
-        if (row.transactions?.transaction_id) {
-          let transaction = acc[a.id].transactions.find(
-            (t: any) => t.transaction_id === row.transactions!.transaction_id,
-          );
+            // 3. On-the-fly Calculation: Only sum Tuition items from PAID transactions
+            if (row.transactions.status === 'paid') {
+              const type = item.item_type;
+              const isMonth = ALL_MONTHS.includes(type);
+              const isKeyword = TUITION_KEYWORDS.some(k => type.toLowerCase() === k.toLowerCase());
+              const isTuitionLike = type.toLowerCase().includes('tuition');
 
-          if (!transaction) {
-            transaction = {
-              ...row.transactions,
-              items: [],
-            };
-            acc[a.id].transactions.push(transaction);
-          }
-
-          if (row.transactions_item?.id) {
-            const alreadyExists = transaction.items.some(
-              (item: any) => item.id === row.transactions_item!.id,
-            );
-
-            if (!alreadyExists) {
-              transaction.items.push(row.transactions_item);
+              if (isMonth || isKeyword || isTuitionLike) {
+                acc[a.id].calculatedTotalPaid += Number(item.amount || 0);
+              }
             }
           }
         }
+      }
 
-        return acc;
-      },
-      {} as Record<number, any>,
-    ),
+      return acc;
+    },
+    {} as Record<number, any>,
   );
+
+  // Finalize totals
+  const grouped = Object.values(groupedMap).map((assessment: any) => {
+    const totalDue = Number(assessment.total_amount_due) || 0;
+    const totalPaid = assessment.calculatedTotalPaid; // Use our calculated value
+    const balance = Math.max(0, totalDue - totalPaid);
+
+    return {
+      ...assessment,
+      total_paid: totalPaid.toFixed(2), // Overwrite DB value with corrected sum
+      totalPaid: totalPaid.toFixed(2), // Legacy/Helper property
+      balance: balance.toFixed(2),
+    };
+  });
 
   return {
     success: true,

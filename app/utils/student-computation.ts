@@ -71,19 +71,36 @@ export default function studentComputation(newVal: any) {
   });
 
   // 3. Tally Payments
+  const TUITION_KEYWORDS = [
+    "Full Payment",
+    "Downpayment",
+    "Down Payment",
+    "DP",
+    "Partial Payment",
+    "Partial",
+    "Tuition",
+    "Tuition Fee",
+    "Upon Enrollment",
+    "Reservation Fee", // Usually RF is deducted from Tuition, user can remove if not
+    "RF"
+  ];
+
   transactionItems.forEach((item: any) => {
     const type = item.normalizedType;
     const amount = Number(item.amount) || 0;
 
-    // ✅ FIX: Count EVERYTHING unless it is explicitly the "Reservation Fee"
-    // This ensures "Downpayment", "Partial Payment", etc. are counted.
-    const isIgnored = ["Reservation Fee", "RF"].includes(type);
+    // ✅ FIX: Only count Tuition-related payments. Exclude Sundries (Uniform, ID, etc.)
+    const isMonth = months.includes(type);
+    const isKeyword = TUITION_KEYWORDS.some(k => type.toLowerCase() === k.toLowerCase());
+    const isTuitionLike = type.toLowerCase().includes('tuition');
 
-    if (!isIgnored) {
+    const isTuitionPayment = isMonth || isKeyword || isTuitionLike;
+
+    if (isTuitionPayment) {
       payments.totalPaid += amount;
 
       // If it matches a specific month name, track it for that bucket
-      if (months.includes(type)) {
+      if (isMonth) {
         payments.perMonthPaid[type] =
           (payments.perMonthPaid[type] || 0) + amount;
       }
