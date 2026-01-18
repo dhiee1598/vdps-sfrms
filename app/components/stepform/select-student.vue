@@ -4,25 +4,45 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
-  allStudent: {
-    type: Array,
-    default: () => [],
+  disabled: {
+    type: Boolean,
+    default: false,
   },
 });
 
 const emit = defineEmits(['update:selectedStudent']);
 const selected = ref({ ...props.selectedStudent });
+const studentSearch = ref('');
+let searchTimeout: NodeJS.Timeout;
+
+const debouncedSearch = ref('');
+
+// Debounce the search input
+function handleSearchChange(query: string) {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    debouncedSearch.value = query;
+  }, 300);
+}
+
+const { data: assessments, pending } = useFetch('/api/private/assessment', {
+  lazy: true,
+  query: computed(() => ({
+    search: debouncedSearch.value,
+    pageSize: 20, // Limit results for dropdown
+  })),
+});
 
 watch(selected, (val) => {
   emit('update:selectedStudent', val);
 });
 
-const allStudents = computed(() =>
-  (props.allStudent ?? []).map((s: any) => ({
-    ...s,
-    name: `${s.student?.first_name ?? ''} ${s.student?.middle_name ?? ''} ${s.student?.last_name ?? ''}`.trim(),
-  })),
-);
+const studentOptions = computed(() => {
+  return (assessments.value?.data ?? []).map((assessment: any) => ({
+    ...assessment,
+    name: `${assessment.student?.last_name ?? ''}, ${assessment.student?.first_name ?? ''} ${assessment.student?.middle_name ?? ''}`.trim(),
+  }));
+});
 </script>
 
 <template>
@@ -44,13 +64,21 @@ const allStudents = computed(() =>
       </label>
       <Multiselect
         v-model="selected"
-        :options="allStudents"
+        :options="studentOptions"
         :searchable="true"
+        :internal-search="false"
+        :loading="pending || disabled"
+        :disabled="disabled"
         label="name"
         track-by="id"
         placeholder="Search by name..."
         class="w-full border rounded-sm"
-      />
+        @search-change="handleSearchChange"
+      >
+        <template #noResult>
+          <span>No student found.</span>
+        </template>
+      </Multiselect>
     </div>
   </div>
 </template>

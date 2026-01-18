@@ -15,7 +15,7 @@ import {
 } from "~~/server/db/schema/student-schema";
 import { transaction_items } from "~~/server/db/schema/transaction-items-schema";
 import { transactions } from "~~/server/db/schema/transaction-schema";
-import { and, eq, or, isNull } from "drizzle-orm";
+import { and, eq, or, isNull, like, sql, inArray, desc } from "drizzle-orm";
 import z from "zod";
 import { gradeLevelFees } from "~~/server/db/schema/grade-level-fees-schema";
 import {
@@ -33,6 +33,12 @@ export default defineEventHandler(async (_event) => {
   const query = getQuery(_event);
   const conditions = [];
 
+  // Pagination & Search
+  const page = Number(query.page) || 1;
+  const pageSize = Number(query.pageSize) || 8;
+  const search = (query.search as string) || "";
+  const offset = (page - 1) * pageSize;
+
   if (query.allAssessments === "true") {
     // Fetch all history
   } else {
@@ -47,6 +53,55 @@ export default defineEventHandler(async (_event) => {
     }
   }
 
+  // Search Filter
+  if (search) {
+    conditions.push(
+      or(
+        like(students.first_name, `%${search}%`),
+        like(students.last_name, `%${search}%`),
+        like(students.middle_name, `%${search}%`),
+        like(students.id, `%${search}%`),
+      ),
+    );
+  }
+
+  // 1. Get Total Count & Paginated IDs
+  // We need to join students and enrollments here to filter by search and active year
+  const baseQuery = db
+    .select({ id: assessments.id })
+    .from(assessments)
+    .leftJoin(students, eq(students.id, assessments.student_id))
+    .leftJoin(enrollments, eq(enrollments.id, assessments.enrollment_id))
+    .where(and(...conditions));
+
+  const totalCountResult = await db
+    .select({ count: sql<number>`count(distinct ${assessments.id})` })
+    .from(assessments)
+    .leftJoin(students, eq(students.id, assessments.student_id))
+    .leftJoin(enrollments, eq(enrollments.id, assessments.enrollment_id))
+    .where(and(...conditions));
+
+  const total = Number(totalCountResult[0]?.count || 0);
+
+  const pagedIds = await baseQuery
+    .limit(pageSize)
+    .offset(offset)
+    .orderBy(desc(assessments.id)); // Order by ID or createdAt if available
+
+  const ids = pagedIds.map((r) => r.id);
+
+  if (ids.length === 0) {
+    return {
+      success: true,
+      data: [],
+      total,
+      page,
+      pageSize,
+      totalPages: 0,
+    };
+  }
+
+  // 2. Fetch Details for these IDs
   const rows = await db
     .select({
       assessment: assessments,
@@ -93,7 +148,7 @@ export default defineEventHandler(async (_event) => {
     .leftJoin(strands, eq(strands.id, enrollments.strand_id))
     .leftJoin(gradeLevel, eq(gradeLevel.id, enrollments.grade_level_id))
     .leftJoin(sections, eq(sections.id, enrollments.section_id))
-    .where(and(...conditions));
+    .where(inArray(assessments.id, ids));
 
   const grouped = Object.values(
     rows.reduce(
@@ -166,5 +221,9 @@ export default defineEventHandler(async (_event) => {
   return {
     success: true,
     data: grouped,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
   };
 });

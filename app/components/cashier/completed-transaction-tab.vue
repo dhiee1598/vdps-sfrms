@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import { useVueToPrint } from 'vue-to-print';
 
-// 1. Add lazy: true and get 'pending' state
-const { data: transactions, pending } = useFetch('/api/private/transactions', { 
-  lazy: true 
-});
-
 const isOpen = ref(false);
 const selectedItem = ref();
 const searchQuery = ref('');
@@ -15,43 +10,40 @@ const selectedStrand = ref('');
 const currentPage = ref(1);
 const itemsPerPage = 8; 
 
-const gradeLevels = computed(() => {
-  // 2. Safe access with optional chaining
-  if (!transactions.value?.data) return [];
-  const set = new Set(transactions.value.data.map((t: any) => t.grade_level.grade_level_name));
-  return Array.from(set);
+const debouncedSearch = ref('');
+let searchTimeout: NodeJS.Timeout;
+
+watch(searchQuery, (newVal) => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    debouncedSearch.value = newVal;
+    currentPage.value = 1;
+  }, 300);
 });
 
-const strands = computed(() => {
-  if (!transactions.value?.data) return [];
-  const set = new Set(transactions.value.data.map((t: any) => t.strand?.strand_name).filter(Boolean));
-  return Array.from(set);
+watch([selectedGrade, selectedStrand], () => {
+  currentPage.value = 1;
 });
 
-const filteredTransactions = computed(() => {
-  if (!transactions.value?.data) return [];
-  
-  return transactions.value.data
-    .filter((t: any) => t.transaction.status === 'paid')
-    .filter((t: any) => {
-      const query = searchQuery.value.toLowerCase();
-      const fullName = `${t.student.first_name} ${t.student.middle_name ?? ''} ${t.student.last_name}`.toLowerCase();
-      return (
-        t.transaction.transaction_id.toLowerCase().includes(query)
-        || fullName.includes(query)
-      );
-    })
-    .filter((t: any) => !selectedGrade.value || t.grade_level.grade_level_name === selectedGrade.value)
-    .filter((t: any) => !selectedStrand.value || t.strand?.strand_name === selectedStrand.value);
-});
+// Fetch Dropdown Data
+const { data: gradeLevels } = useFetch('/api/private/grade-level');
+const { data: strands } = useFetch('/api/private/strands');
 
-const paginatedTransactions = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  return filteredTransactions.value?.slice(start, start + itemsPerPage) || [];
+// Fetch Transactions (Server-Side)
+const { data: transactions, pending } = useFetch('/api/private/transactions', {
+  lazy: true,
+  query: computed(() => ({
+    page: currentPage.value,
+    pageSize: itemsPerPage,
+    search: debouncedSearch.value,
+    status: 'paid',
+    gradeLevel: selectedGrade.value,
+    strand: selectedStrand.value,
+  })),
 });
 
 const totalPages = computed(() => {
-  return Math.max(1, Math.ceil((filteredTransactions.value?.length || 0) / itemsPerPage));
+  return transactions.value?.totalPages || 1;
 });
 
 // Smart Pagination Logic
@@ -88,10 +80,6 @@ function goToPage(page: number | string) {
   }
 }
 
-watch([searchQuery, selectedGrade, selectedStrand], () => {
-  currentPage.value = 1;
-});
-
 function openModal(item: any) {
   isOpen.value = true;
   selectedItem.value = item;
@@ -121,11 +109,11 @@ const { handlePrint } = useVueToPrint({
             All Grades
           </option>
           <option
-            v-for="grade in gradeLevels"
-            :key="grade"
-            :value="grade"
+            v-for="grade in gradeLevels?.data"
+            :key="grade.id"
+            :value="grade.grade_level_name"
           >
-            {{ grade }}
+            {{ grade.grade_level_name }}
           </option>
         </select>
 
@@ -134,11 +122,11 @@ const { handlePrint } = useVueToPrint({
             All Strands
           </option>
           <option
-            v-for="strand in strands"
-            :key="strand"
-            :value="strand"
+            v-for="strand in strands?.data"
+            :key="strand.id"
+            :value="strand.strand_name"
           >
-            {{ strand }}
+            {{ strand.strand_name }}
           </option>
         </select>
         <input
@@ -175,7 +163,7 @@ const { handlePrint } = useVueToPrint({
           </tr>
 
           <template v-else>
-            <tr v-for="item in paginatedTransactions" :key="item.transaction.transaction_id">
+            <tr v-for="item in transactions?.data || []" :key="item.transaction.transaction_id">
               <td class="font-mono text-xs">{{ item.transaction.transaction_id.slice(0, 15) }}...</td>
               <td>{{ item.student.id }}</td>
               <td>{{ item.student.first_name }} {{ item.student.middle_name }} {{ item.student.last_name }}</td>
@@ -196,7 +184,7 @@ const { handlePrint } = useVueToPrint({
                 </button>
               </td>
             </tr>
-            <tr v-if="paginatedTransactions.length === 0">
+            <tr v-if="(transactions?.data || []).length === 0">
               <td colspan="9" class="text-center text-gray-500 py-4">
                 No transactions found
               </td>

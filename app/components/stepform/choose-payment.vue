@@ -4,10 +4,14 @@ import type { Sundries } from '~~/server/lib/zod-schema';
 const props = defineProps<{
   formData: any;
   datas: any; // Contains overall_balance, remaining_per_month, available_payment_option etc.
-  sundries?: Sundries[];
 }>();
 
 const emit = defineEmits(['update:datas', 'update:formData']);
+
+// Fetch sundries internally
+const { data: sundriesData } = useFetch('/api/private/sundries');
+
+const sundryList = computed(() => sundriesData.value?.data || []);
 
 // Use a ref for the numeric input to avoid string/number conflicts
 const inputAmount = ref<number | string>("");
@@ -20,7 +24,6 @@ const formData = computed({
 
 const datas = ref({ ...props.datas });
 const localFormData = ref(props.formData);
-const sundryList = ref(props.sundries);
 const selectedPaymentOption = ref<string | null>(null);
 
 // 1. Calculate Total (Reactive)

@@ -1,30 +1,14 @@
 <script setup lang="ts">
-const { data: transactions } = useFetch('/api/private/transactions');
+import { socket } from '~/components/socket';
 
-const pendingTx = computed(() => {
-  return transactions.value?.data.filter(t => t.transaction && t.transaction.status === 'pending');
-});
+const { data: stats, refresh } = useFetch('/api/private/transactions/stats', { lazy: true });
 
-const today = new Date().toISOString().split('T')[0];
-const completedTx = computed(() => {
-  return transactions.value?.data.filter(t => t.transaction && t.transaction.status === 'paid' && t.transaction.date_paid.split('T')[0] === today);
-});
-
-const totalCollectedToday = computed(() => {
-  if (!transactions.value?.data)
-    return 0;
-
-  return transactions.value.data
-    .filter((t) => {
-      if (!t.transaction)
-        return false;
-      const datePaid = t.transaction.date_paid?.split('T')[0];
-      return t.transaction.status === 'paid' && datePaid === today;
-    })
-    .reduce((acc, t) => {
-      const amount = Number(t.transaction.total_amount) || 0;
-      return acc + amount;
-    }, 0);
+onMounted(() => {
+  if (socket.connected) {
+    socket.on('newTransaction', async () => {
+      await refresh();
+    });
+  }
 });
 </script>
 
@@ -46,8 +30,8 @@ const totalCollectedToday = computed(() => {
             Today's Collection
           </h2>
           <p class="text-5xl font-bold">
-            P{{ Number(totalCollectedToday).toFixed(2) }}
-          </p><p>+{{ completedTx?.length }} transactions completed</p>
+            P{{ Number(stats?.todayPaidAmount || 0).toFixed(2) }}
+          </p><p>+{{ stats?.todayPaidCount || 0 }} transactions completed</p>
         </div>
       </div>
 
@@ -57,7 +41,7 @@ const totalCollectedToday = computed(() => {
             Pending Slips
           </h2>
           <p class="text-5xl font-bold">
-            {{ pendingTx?.length }}
+            {{ stats?.pendingCount || 0 }}
           </p><p>awaiting payment processing</p>
         </div>
       </div>
@@ -68,7 +52,7 @@ const totalCollectedToday = computed(() => {
             Completed Today
           </h2>
           <p class="text-5xl font-bold">
-            {{ completedTx?.length }}
+            {{ stats?.todayPaidCount || 0 }}
           </p><p>Successfully processed payments</p>
         </div>
       </div>

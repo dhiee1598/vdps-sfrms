@@ -8,12 +8,30 @@ const showViewModal = ref(false);
 const isSubmitting = ref(false);
 const selectedStudentAssessment = ref();
 const currentPage = ref(1);
-const pageSize = 5;
+const pageSize = 8;
 const maxVisiblePages = 4;
 const searchQuery = ref('');
 
+const debouncedSearch = ref('');
+let searchTimeout: NodeJS.Timeout;
+
+watch(searchQuery, (newVal) => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    debouncedSearch.value = newVal;
+    currentPage.value = 1;
+  }, 300);
+});
+
 const { isMessage, isError, responseMessage, showMessage } = useNotification();
-const { data: studentAssessments, pending, error, refresh } = useFetch('/api/private/assessment', { lazy: true });
+const { data: studentAssessments, pending, error, refresh } = useFetch('/api/private/assessment', {
+  lazy: true,
+  query: computed(() => ({
+    page: currentPage.value,
+    pageSize,
+    search: debouncedSearch.value,
+  })),
+});
 
 const assessmentData = ref<Assessment>({
   enrollment_id: null,
@@ -22,30 +40,8 @@ const assessmentData = ref<Assessment>({
   total_fees: 0,
 });
 
-const filteredStudents = computed(() => {
-  if (!studentAssessments.value?.data)
-    return [];
-  if (!searchQuery.value)
-    return studentAssessments.value.data;
-
-  return studentAssessments.value.data.filter((s) => {
-    const stu = s.student;
-    if (!stu)
-      return false;
-
-    return `${stu.first_name ?? ''} ${stu.middle_name ?? ''} ${stu.last_name ?? ''} ${stu.address ?? ''} ${stu.contact_number ?? ''}`
-      .toLowerCase()
-      .includes(searchQuery.value.toLowerCase());
-  });
-});
-
-const paginatedStudents = computed(() => {
-  const start = (currentPage.value - 1) * pageSize;
-  return filteredStudents.value.slice(start, start + pageSize);
-});
-
 const totalPages = computed(() => {
-  return Math.max(1, Math.ceil(filteredStudents.value.length / pageSize));
+  return studentAssessments.value?.totalPages || 1;
 });
 
 const visiblePages = computed(() => {
@@ -164,7 +160,7 @@ async function handleFormSubmit() {
         </tr>
 
         <tr
-          v-for="item in paginatedStudents"
+          v-for="item in studentAssessments?.data || []"
           v-else
           :key="item.id"
         >
@@ -185,7 +181,7 @@ async function handleFormSubmit() {
             </button>
           </td>
         </tr>
-        <tr v-if="paginatedStudents.length === 0">
+        <tr v-if="(studentAssessments?.data || []).length === 0">
           <td colspan="8" class="text-center text-gray-500 py-4">
             No students found
           </td>

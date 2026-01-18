@@ -8,13 +8,28 @@ const isEditing = ref(false);
 const showFormModal = ref(false);
 const isSubmitting = ref(false);
 const currentPage = ref(1);
-const pageSize = 10;
+const pageSize = 8;
 const maxVisiblePages = 4;
 const searchQuery = ref('');
 const showViewModal = ref(false);
 const selectedGrade = ref('');
 const selectedStrand = ref('');
 const filteredSections = ref<any[]>([]);
+
+const debouncedSearch = ref('');
+let searchTimeout: NodeJS.Timeout;
+
+watch(searchQuery, (newVal) => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    debouncedSearch.value = newVal;
+    currentPage.value = 1;
+  }, 300);
+});
+
+watch([selectedGrade, selectedStrand], () => {
+  currentPage.value = 1;
+});
 
 const enrolledStudentData = ref<EnrolledStudent | null>({
   id: 0,
@@ -37,22 +52,36 @@ function closeModal() {
 }
 
 // fetch students from backend
-const { data: enrolledStudents, pending, error, refresh: refreshEnroll } = await useFetch('/api/private/enrollment', { lazy: true });
-const { data: allStudents, refresh: refreshStudent } = await useFetch('/api/private/student?enrolled=true');
+const studentSearch = ref('');
+const { data: enrolledStudents, pending, error, refresh: refreshEnroll } = await useFetch('/api/private/enrollment', {
+  lazy: true,
+  query: computed(() => ({
+    page: currentPage.value,
+    pageSize,
+    search: debouncedSearch.value,
+    gradeLevel: selectedGrade.value,
+    strand: selectedStrand.value,
+  })),
+});
+
+const { data: allStudents, refresh: refreshStudent, pending: pendingStudents } = await useFetch('/api/private/student', {
+  query: computed(() => ({
+    enrolled: 'true',
+    search: studentSearch.value,
+  })),
+});
 const { data: gradeLevels } = await useFetch('/api/private/grade-level');
 const { data: strands } = await useFetch('/api/private/strands');
 const { data: academicYears } = await useFetch('/api/private/academic-years?activeYear=true');
 const { data: sections } = await useFetch('/api/private/section');
 
-// Extract unique grade levels & strands for dropdown filters
-const filteredGradeLevels = computed(() => {
-  const set = new Set(enrolledStudents.value?.data.map(t => t.grade_level));
-  return Array.from(set);
+// Use gradeLevels and strands directly for dropdowns
+const allGradeLevels = computed(() => {
+  return gradeLevels.value?.map(g => g.grade_level_name) || [];
 });
 
-const filteredStrands = computed(() => {
-  const set = new Set(enrolledStudents.value?.data.map(t => t.strand_name));
-  return Array.from(set);
+const allStrands = computed(() => {
+  return strands.value?.map(s => s.strand_name) || [];
 });
 
 function openViewModal(item: any) {
@@ -73,48 +102,8 @@ const studentsData = computed(() =>
   })),
 );
 
-const filteredStudents = computed(() => {
-  if (!enrolledStudents.value?.data)
-    return [];
-
-  let result = enrolledStudents.value.data;
-
-  // search
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase();
-    result = result.filter((t) => {
-      const fullName = `${t.first_name} ${t.middle_name ?? ''} ${t.last_name}`.toLowerCase();
-      return (
-        t.student_id?.toLowerCase().includes(query)
-        || fullName.includes(query)
-      );
-    });
-  }
-
-  // grade filter
-  if (selectedGrade.value) {
-    result = result.filter(
-      t => (t.grade_level ?? '').toLowerCase().trim() === selectedGrade.value.toLowerCase().trim(),
-    );
-  }
-
-  // strand filter
-  if (selectedStrand.value) {
-    result = result.filter(
-      t => (t.strand_name ?? '').toLowerCase().trim() === selectedStrand.value.toLowerCase().trim(),
-    );
-  }
-
-  return result;
-});
-
-const paginatedStudents = computed(() => {
-  const start = (currentPage.value - 1) * pageSize;
-  return filteredStudents.value.slice(start, start + pageSize);
-});
-
 const totalPages = computed(() => {
-  return Math.max(1, Math.ceil(filteredStudents.value.length / pageSize));
+  return enrolledStudents.value?.totalPages || 1;
 });
 
 const visiblePages = computed(() => {
@@ -292,10 +281,6 @@ async function handleSave() {
   }
 }
 
-watch([searchQuery, selectedGrade, selectedStrand], () => {
-  currentPage.value = 1;
-});
-
 watch(() => formData.value.selectedGradeLevel?.id, (newVal) => {
   if (newVal && sections.value) {
     filteredSections.value = sections.value.data.filter((section) => {
@@ -323,7 +308,7 @@ watch(() => formData.value.selectedGradeLevel?.id, (newVal) => {
           All Grades
         </option>
         <option
-          v-for="(grade, index) in filteredGradeLevels"
+          v-for="(grade, index) in allGradeLevels"
           :key="index"
           :value="grade"
         >
@@ -335,7 +320,7 @@ watch(() => formData.value.selectedGradeLevel?.id, (newVal) => {
           All Strands
         </option>
         <option
-          v-for="(strand, index) in filteredStrands"
+          v-for="(strand, index) in allStrands"
           :key="index"
           :value="strand"
         >
@@ -377,7 +362,7 @@ watch(() => formData.value.selectedGradeLevel?.id, (newVal) => {
             Failed to load students. Please try again.
           </td>
         </tr>
-        <tr v-for="item in paginatedStudents" :key="item.id">
+        <tr v-for="item in enrolledStudents?.data || []" :key="item.id">
           <td>{{ item?.student_id }}</td>
           <td>{{ item?.last_name }}, {{ item?.first_name }} {{ item?.middle_name }}</td>
           <td>{{ item?.academic_year }}</td>
@@ -404,7 +389,7 @@ watch(() => formData.value.selectedGradeLevel?.id, (newVal) => {
             </button>
           </td>
         </tr>
-        <tr v-if="paginatedStudents.length === 0">
+        <tr v-if="(enrolledStudents?.data || []).length === 0">
           <td colspan="8" class="text-center text-gray-500 py-4">
             No Students found
           </td>
@@ -463,6 +448,9 @@ watch(() => formData.value.selectedGradeLevel?.id, (newVal) => {
                 :max-height="150"
                 open-direction="below"
                 :disabled="isEditing"
+                :internal-search="false"
+                :loading="pendingStudents"
+                @search-change="(query: string) => studentSearch = query"
               >
                 <template #noResult>
                   <span>Student Not Found.</span>

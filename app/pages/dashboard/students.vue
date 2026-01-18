@@ -13,9 +13,27 @@ const showImportModal = ref(false);
 const importFile = ref<File | null>(null);
 const isImporting = ref(false);
 
+const debouncedSearch = ref('');
+let searchTimeout: NodeJS.Timeout;
+
+watch(searchQuery, (newVal) => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    debouncedSearch.value = newVal;
+    currentPage.value = 1;
+  }, 300);
+});
+
 const { isMessage, isError, responseMessage, showMessage } = useNotification();
 
-const { data: students, pending, error, refresh } = useFetch('/api/private/student', { lazy: true });
+const { data: students, pending, error, refresh } = useFetch('/api/private/student', {
+  lazy: true,
+  query: computed(() => ({
+    page: currentPage.value,
+    pageSize,
+    search: debouncedSearch.value,
+  })),
+});
 
 const studentData = ref<Student>({
   first_name: '',
@@ -25,26 +43,8 @@ const studentData = ref<Student>({
   contact_number: '',
 });
 
-const filteredStudents = computed(() => {
-  if (!students.value?.data)
-    return [];
-  if (!searchQuery.value)
-    return students.value.data;
-
-  return students.value.data.filter(s =>
-    `${s.first_name} ${s.middle_name} ${s.last_name} ${s.address} ${s.contact_number}`
-      .toLowerCase()
-      .includes(searchQuery.value.toLowerCase()),
-  );
-});
-
-const paginatedStudents = computed(() => {
-  const start = (currentPage.value - 1) * pageSize;
-  return filteredStudents.value.slice(start, start + pageSize);
-});
-
 const totalPages = computed(() => {
-  return Math.max(1, Math.ceil(filteredStudents.value.length / pageSize));
+  return students.value?.totalPages || 1;
 });
 
 const visiblePages = computed(() => {
@@ -170,10 +170,6 @@ async function importExcel() {
     isImporting.value = false;
   }
 }
-
-watch(searchQuery, () => {
-  currentPage.value = 1;
-});
 </script>
 
 <template>
@@ -225,7 +221,7 @@ watch(searchQuery, () => {
         </tr>
 
         <tr
-          v-for="student in paginatedStudents"
+          v-for="student in students?.data || []"
           v-else
           :key="student.id"
         >

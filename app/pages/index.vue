@@ -6,24 +6,8 @@ useHead({
   title: 'Student Portal',
 });
 
-// 1. EXTRACT 'status' TO TRACK REFRESHING STATE
-const { 
-  data: assessment, 
-  refresh: refreshAssessment, 
-  status: assessmentStatus 
-} = await useFetch('/api/private/assessment');
-
-const { 
-  data: sundries, 
-  refresh: refreshSundries, 
-  status: sundriesStatus 
-} = await useFetch('/api/private/sundries');
-
 // 2. STATE MANAGEMENT
 const isMounted = ref(false);
-
-// Combined loading state
-const isRefreshing = computed(() => assessmentStatus.value === 'pending' || sundriesStatus.value === 'pending');
 
 const step = ref(1);
 const selectedStudent = ref();
@@ -117,10 +101,7 @@ onMounted(() => {
 
   socket.on('newData', async (message: any) => {
     console.warn(message);
-    await Promise.all([
-      refreshAssessment(),
-      refreshSundries()
-    ]);
+    // Data refresh is now handled within components or on new interactions
   });
 });
 
@@ -160,22 +141,14 @@ watch(selectedStudent, (newVal) => {
       <div v-if="step === 1" class="w-full relative">
         <StepformSelectStudent
           :selected-student="selectedStudent"
-          :all-student="assessment?.data"
-          :disabled="isRefreshing" 
           @update:selected-student="selectedStudent = $event"
         />
-        
-        <div v-if="isRefreshing" class="absolute top-0 right-0 -mt-6 right-2 text-xs text-warning flex items-center gap-1 animate-pulse">
-           <span class="loading loading-spinner loading-xs"></span>
-           Updating records...
-        </div>
       </div>
 
       <div v-if="step === 2" class="w-full">
         <StepformChoosePayment
           v-model:datas="studentdata"
           v-model:form-data="formData"
-          :sundries="sundries?.data"
         />
       </div>
 
@@ -240,8 +213,7 @@ watch(selectedStudent, (newVal) => {
           class="btn btn-accent w-full max-w-md"
           :disabled="!isMounted
             || (step === 1 && !selectedStudent)
-            || (step === 2 && formData.total_amount === 0)
-            || isRefreshing"
+            || (step === 2 && formData.total_amount === 0)"
           @click="handleStepClick"
         >
           {{ step === 3 ? 'Confirm' : 'Next' }}

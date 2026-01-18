@@ -5,13 +5,19 @@ import {
   students,
   studentSelectSchema,
 } from "~~/server/db/schema/student-schema";
-import { and, desc, eq, isNull, ne } from "drizzle-orm";
+import { and, desc, eq, isNull, ne, or, like, sql } from "drizzle-orm";
 import { getQuery } from "h3";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const enrolled = query.enrolled === "true";
   const carryOver = query.carryOver === "true";
+
+  // Pagination & Search params
+  const page = Number(query.page) || 1;
+  const pageSize = Number(query.pageSize) || 10;
+  const search = (query.search as string) || "";
+  const offset = (page - 1) * pageSize;
 
   // 1. get active academic year
   const activeYear = (
@@ -28,6 +34,19 @@ export default defineEventHandler(async (event) => {
 
   if (enrolled) {
     // 🔹 Students NOT enrolled in the current active year
+    const conditions = [isNull(enrollments.student_id)];
+
+    if (search) {
+      conditions.push(
+        or(
+          like(students.first_name, `%${search}%`),
+          like(students.last_name, `%${search}%`),
+          like(students.middle_name, `%${search}%`),
+          like(students.address, `%${search}%`)
+        )
+      );
+    }
+
     const notEnrolledStudents = await db
       .select({ student: students })
       .from(students)
@@ -38,8 +57,9 @@ export default defineEventHandler(async (event) => {
           eq(enrollments.academic_year_id, activeYear.id),
         ),
       )
-      .where(isNull(enrollments.student_id))
-      .orderBy(desc(students.last_name));
+      .where(and(...conditions))
+      .orderBy(desc(students.last_name))
+      .limit(50); // Limit to 50 for dropdown performance
 
     const parsed = studentSelectSchema
       .array()
@@ -75,12 +95,41 @@ export default defineEventHandler(async (event) => {
     };
   }
 
-  // 🔹 fallback → all students
-  const allStudents = await db.select().from(students);
+  // 🔹 fallback → all students (Paginated & Searchable)
+  const searchCondition = search
+    ? or(
+        like(students.first_name, `%${search}%`),
+        like(students.last_name, `%${search}%`),
+        like(students.middle_name, `%${search}%`),
+        like(students.address, `%${search}%`),
+        like(students.id, `%${search}%`)
+      )
+    : undefined;
+
+  // Get total count
+  const totalCountResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(students)
+    .where(searchCondition);
+  const total = Number(totalCountResult[0]?.count || 0);
+
+  // Get paginated data
+  const allStudents = await db
+    .select()
+    .from(students)
+    .where(searchCondition)
+    .limit(pageSize)
+    .offset(offset)
+    .orderBy(desc(students.last_name));
+
   const parsedAll = studentSelectSchema.array().parse(allStudents);
 
   return {
     message: "All students fetched successfully",
     data: parsedAll,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
   };
 });

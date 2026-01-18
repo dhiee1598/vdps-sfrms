@@ -22,7 +22,7 @@ const { data: activeYear } = await useFetch('/api/private/academic-years?activeY
             Total Students
           </h2>
           <p class="text-3xl font-bold">
-            {{ students?.data.length }}
+            {{ students?.total || 0 }}
           </p>
           <p class="text-sm">
             Total number of students
@@ -36,7 +36,7 @@ const { data: activeYear } = await useFetch('/api/private/academic-years?activeY
             Total Enrolled Students
           </h2>
           <p class="text-3xl font-bold">
-            {{ enrolledStudents?.count }}
+            {{ enrolledStudents?.total || 0 }}
           </p><p class="text-sm">
             Number of enrolled students
           </p>
