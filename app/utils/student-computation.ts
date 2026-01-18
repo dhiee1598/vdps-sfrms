@@ -1,126 +1,171 @@
+// Helper: Force rounding to 2 decimal places
+function round(num: number): number {
+  return Math.round((num + Number.EPSILON) * 100) / 100;
+}
+
+const ALL_MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+function getSchoolYearMonths(startMonth: string): string[] {
+  const normalizedStart =
+    startMonth.charAt(0).toUpperCase() + startMonth.slice(1).toLowerCase();
+  const startIndex = ALL_MONTHS.indexOf(normalizedStart);
+  const validStartIndex = startIndex === -1 ? 5 : startIndex;
+
+  const schoolMonths: string[] = [];
+  for (let i = 0; i < 10; i++) {
+    const monthIndex = (validStartIndex + i) % 12;
+    const monthName = ALL_MONTHS[monthIndex];
+    if (monthName) schoolMonths.push(monthName);
+  }
+  return schoolMonths;
+}
+
 export default function studentComputation(newVal: any) {
-  if (!newVal) {
-    return;
+  // 1. Safety Checks
+  if (!newVal || !newVal.total_amount_due) {
+    return {
+      selected_students: newVal,
+      total_paid: 0,
+      overall_balance: 0,
+      remaining_per_month: {},
+      available_payment_option: [],
+      hasPendingTransaction: false,
+    };
   }
 
+  const schoolStartMonth = "June";
+  const months = getSchoolYearMonths(schoolStartMonth);
+
+  // 2. Extract Transactions
   const transactionItems = newVal.transactions
-    ? newVal.transactions.filter((t: any) => t.status === 'paid').flatMap((t: any) =>
-        t.items.map((i: any) => ({ ...i, normalizedType: normalizeItem(i.item_type) })),
+    ? newVal.transactions
+      .filter((t: any) => t.status === "paid")
+      .flatMap((t: any) =>
+        (t.items || []).map((i: any) => ({
+          ...i,
+          normalizedType: i.item_type,
+        })),
       )
     : [];
 
-  const payments: any = {
-    downpayment: 0,
+  const payments = {
     totalPaid: 0,
-    perQuarterPaid: {
-      '1st Quarter': 0,
-      '2nd Quarter': 0,
-      '3rd Quarter': 0,
-      '4th Quarter': 0,
-    },
+    perMonthPaid: {} as Record<string, number>,
   };
 
+  months.forEach((m) => {
+    payments.perMonthPaid[m] = 0;
+  });
+
+  // 3. Tally Payments
   transactionItems.forEach((item: any) => {
-    if (item.normalizedType) {
-      const amount = Number(item.amount) || 0;
+    const type = item.normalizedType;
+    const amount = Number(item.amount) || 0;
+
+    // ✅ FIX: Count EVERYTHING unless it is explicitly the "Reservation Fee"
+    // This ensures "Downpayment", "Partial Payment", etc. are counted.
+    const isIgnored = ["Reservation Fee", "RF"].includes(type);
+
+    if (!isIgnored) {
       payments.totalPaid += amount;
 
-      if (item.normalizedType === 'Downpayment') {
-        payments.downpayment += amount;
-      }
-      else if (item.normalizedType in payments.perQuarterPaid) {
-        payments.perQuarterPaid[item.normalizedType] += amount;
+      // If it matches a specific month name, track it for that bucket
+      if (months.includes(type)) {
+        payments.perMonthPaid[type] =
+          (payments.perMonthPaid[type] || 0) + amount;
       }
     }
   });
 
-  const totalAmountDue = Number(newVal.total_amount_due);
-  const balance = totalAmountDue - payments.totalPaid;
+  payments.totalPaid = round(payments.totalPaid);
 
-  const perQuarterAmount = (totalAmountDue - payments.downpayment) / 4;
+  const totalAmountDue = Number(newVal.total_amount_due) || 0;
 
-  const quarters = ['1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter'];
-  const remainingPerQuarter: Record<string, number> = {};
+  // Balance Check (Clamped to 0)
+  const balance = round(Math.max(0, totalAmountDue - payments.totalPaid));
+
+  // 4. Calculate Monthly Amortization
+  const perMonthAmount = round(totalAmountDue / 10);
+
+  const remainingPerMonth: Record<string, number> = {};
   let carryOver = 0;
 
   const hasFullPayment = transactionItems.some(
-    (item: any) => item.normalizedType === 'Full Payment',
+    (item: any) => item.normalizedType === "Full Payment",
   );
 
-  if (hasFullPayment) {
-    quarters.forEach(q => remainingPerQuarter[q] = 0);
-  }
-  else {
-    for (const q of quarters) {
-      const paid = payments.perQuarterPaid[q] + carryOver;
+  months.forEach((m) => {
+    remainingPerMonth[m] = 0;
+  });
 
-      if (paid >= perQuarterAmount) {
-        remainingPerQuarter[q] = 0;
-        carryOver = paid - perQuarterAmount;
-      }
-      else {
-        remainingPerQuarter[q] = perQuarterAmount - paid;
+  if (!hasFullPayment && balance > 0) {
+    // Logic: Calculate "Unallocated Credit"
+    // This is money paid (like Downpayment) that wasn't assigned to a specific month name
+    const totalSpecificMonthPaid = Object.values(payments.perMonthPaid).reduce(
+      (a, b) => a + b,
+      0,
+    );
+    const unallocatedCredit = round(
+      payments.totalPaid - totalSpecificMonthPaid,
+    );
+
+    carryOver = unallocatedCredit;
+
+    for (const m of months) {
+      const paid = round((payments.perMonthPaid[m] || 0) + carryOver);
+
+      if (paid >= perMonthAmount) {
+        remainingPerMonth[m] = 0;
+        carryOver = round(paid - perMonthAmount);
+      } else {
+        const due = round(Math.max(0, perMonthAmount - paid));
+        remainingPerMonth[m] = due;
         carryOver = 0;
       }
     }
   }
 
+  // 5. Determine Options
   const availableOptions: string[] = [];
-  const hasDownpayment = payments.downpayment > 0;
-  const hasPendingTransaction = newVal.transactions?.some((t: any) => {
-    return t.status === 'pending' && t.items?.some((item: any) => {
-      return ['Downpayment', '1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter'].includes(item.item_type);
-    });
-  }) ?? false;
 
-  if (!hasPendingTransaction) {
-    if (!hasDownpayment) {
-      availableOptions.push('Downpayment', 'Full Payment');
-    }
-    else {
-      let allQuartersPaid = true;
+  const hasPendingTransaction =
+    newVal.transactions?.some((t: any) => {
+      return (
+        t.status === "pending" &&
+        (t.items || []).some((item: any) => {
+          return [...months, "Full Payment"].includes(item.item_type);
+        })
+      );
+    }) ?? false;
 
-      for (const q of quarters) {
-        if ((remainingPerQuarter[q] || 0) > 0) {
-          availableOptions.push(q);
-          allQuartersPaid = false;
-          break;
-        }
-      }
-
-      if (!allQuartersPaid) {
-        availableOptions.push('Full Payment');
-      }
-    }
-  }
-  else if (!hasDownpayment) {
-    if (!hasFullPayment) {
-      availableOptions.push('Downpayment');
-    }
-  }
-  else {
-    for (const q of quarters) {
-      if ((remainingPerQuarter[q] || 0) > 0) {
-        availableOptions.push(q);
-
+  if (!hasPendingTransaction && balance > 0.01) {
+    for (const m of months) {
+      if ((remainingPerMonth[m] || 0) > 1) {
+        availableOptions.push(m);
         break;
       }
     }
+    availableOptions.push("Full Payment");
   }
-
-  // console.warn('Selected Student:', newVal);
-  // console.warn('Downpayment:', payments.downpayment);
-  // console.warn('Total Paid:', payments.totalPaid);
-  // console.warn('Overall Balance:', balance);
-  // console.warn('Remaining per Quarter:', remainingPerQuarter);
-  // console.warn('Available Payment Option', availableOptions);
 
   return {
     selected_students: newVal,
-    total_downpayment: payments.downpayment,
     total_paid: payments.totalPaid,
     overall_balance: balance,
-    remaining_per_quarter: remainingPerQuarter,
+    remaining_per_month: remainingPerMonth,
     available_payment_option: availableOptions,
     hasPendingTransaction,
   };

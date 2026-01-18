@@ -9,7 +9,7 @@ const emit = defineEmits<{
   (e: 'showModal'): void;
 }>();
 
-const { data: academicYears } = await useFetch('/api/private/academic-years?activeYear=true');
+const { data: academicYears } = useFetch('/api/private/academic-years?activeYear=true', {lazy: true});
 
 const localStudentAssessment = ref(props.data);
 
@@ -17,18 +17,64 @@ watch(() => props.data, (newVal) => {
   localStudentAssessment.value = newVal;
 });
 
-const totalPaid = computed(() => {
-  if (!localStudentAssessment.value || !localStudentAssessment.value.payments || localStudentAssessment.value.payments.length === 0) {
+// 1. Calculate Reservation/Advance Payments
+const reservationPaid = computed(() => {
+  if (!localStudentAssessment.value?.transactions?.length) {
     return 0;
   }
-  return localStudentAssessment.value.payments.reduce((sum: any, payment: any) => sum + Number.parseFloat(payment.amount_paid), 0);
+  return localStudentAssessment.value.transactions.reduce((sum: number, txn: any) => {
+      const isReservation = txn.items?.some((i: any) => 
+        ['Reservation Fee', 'RF', 'Downpayment', 'Advance Payment'].includes(i.item_type)
+      );
+      
+      if (isReservation) {
+         return sum + (Number(txn.total_amount) || 0);
+      }
+      return sum;
+  }, 0);
 });
 
+// 2. Calculate Tuition/Standard Payments
+const tuitionPaid = computed(() => {
+  if (!localStudentAssessment.value?.transactions?.length) {
+    return 0;
+  }
+  return localStudentAssessment.value.transactions.reduce((sum: number, txn: any) => {
+      const isReservation = txn.items?.some((i: any) => 
+        ['Reservation Fee', 'RF', 'Downpayment', 'Advance Payment'].includes(i.item_type)
+      );
+
+      if (!isReservation) {
+         return sum + (Number(txn.total_amount) || 0);
+      }
+      return sum;
+  }, 0);
+});
+
+// 3. Calculate Gross Subtotal
+const feesSubtotal = computed(() => {
+  if (!localStudentAssessment.value?.fees?.length) {
+    return 0;
+  }
+  return localStudentAssessment.value.fees.reduce((sum: number, fee: any) => sum + Number(fee.amount), 0);
+});
+
+// 4. Calculate Discount Amount
+const discountAmount = computed(() => {
+  if (!localStudentAssessment.value) return 0;
+  const due = Number(localStudentAssessment.value.total_amount_due);
+  const sub = feesSubtotal.value;
+  return Math.max(0, sub - due);
+});
+
+// 5. Calculate Balance
 const balance = computed(() => {
   if (!localStudentAssessment.value) {
     return 0;
   }
-  return Number.parseFloat(localStudentAssessment.value.total_amount_due) - totalPaid.value;
+  const calculatedBalance = Number(localStudentAssessment.value.total_amount_due) - tuitionPaid.value;
+  
+  return Math.max(0, calculatedBalance);
 });
 </script>
 
@@ -40,87 +86,143 @@ const balance = computed(() => {
       </h2>
       <button
         type="button"
-        class="btn btn-error rounded-full p-2"
+        class="btn btn-error btn-sm btn-circle"
         @click="emit('showModal')"
       >
-        <Icon name="solar:close-circle-bold" size="25" />
+        <Icon name="solar:close-circle-bold" size="24" />
       </button>
     </div>
 
-    <div class="mb-6 border-b border-accent-content pb-4">
-      <h3 class="text-xl font-medium mb-2">
-        Student Information
-      </h3>
+    <div class="mb-6 border-b border-base-300 pb-4">
+      <div class="flex justify-between items-start mb-4">
+        <h3 class="text-xl font-medium">
+          Student Information
+        </h3>
+        <div class="flex gap-2">
+            <div v-if="localStudentAssessment.is_esc_grant" class="badge badge-primary gap-1 p-3">
+                <Icon name="solar:verified-check-bold" /> ESC Grant Applied
+            </div>
+            <div v-if="localStudentAssessment.is_cash_discount" class="badge badge-secondary gap-1 p-3">
+                <Icon name="solar:tag-price-bold" /> Cash Discount (4%)
+            </div>
+        </div>
+      </div>
+      
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
         <div>
-          <span class="font-light">Name:</span> {{ localStudentAssessment.student.first_name }} {{ localStudentAssessment.student.middle_name }} {{ localStudentAssessment.student.last_name }}
+          <span class="font-light opacity-70">Name:</span> 
+          <span class="font-medium ml-1">{{ localStudentAssessment.student.last_name }}, {{ localStudentAssessment.student.first_name }} {{ localStudentAssessment.student.middle_name }}</span>
         </div>
         <div>
-          <span class="font-light">Student ID:</span> {{ localStudentAssessment.student.id }}
+          <span class="font-light opacity-70">Student ID:</span> 
+          <span class="font-medium ml-1">{{ localStudentAssessment.student.id }}</span>
         </div>
         <div>
-          <span class="font-light">Address:</span> {{ localStudentAssessment.student.address }}
+          <span class="font-light opacity-70">Address:</span> 
+          <span class="font-medium ml-1">{{ localStudentAssessment.student.address }}</span>
         </div>
         <div>
-          <span class="font-light">Contact:</span> {{ localStudentAssessment.student.contact_number }}
+          <span class="font-light opacity-70">Contact:</span> 
+          <span class="font-medium ml-1">{{ localStudentAssessment.student.contact_number }}</span>
         </div>
         <div>
-          <span class="font-light">Year:</span> {{ academicYears?.data[0]?.academic_year }}
+          <span class="font-light opacity-70">Academic Year:</span> 
+          <span class="font-medium ml-1">{{ academicYears?.data[0]?.academic_year }}</span>
         </div>
-        
       </div>
     </div>
 
-    <div class="mb-6 border-b border-accent-content pb-4">
-      <h3 class="text-lg font-semibold mb-2">
+    <div class="mb-6 border-b border-base-300 pb-4">
+      <h3 class="text-lg font-semibold mb-3">
         Financial Summary
       </h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-bold">
-        <div class="p-3 rounded-md border border-accent-content">
-          <span class="block font-normal label">Total Fees</span>
-          <span class="text-xl text-green-500">₱ {{ parseFloat(localStudentAssessment.total_amount_due).toFixed(2) }}</span>
+      
+      <div class="grid grid-cols-1 gap-4 text-sm" :class="reservationPaid > 0 ? 'md:grid-cols-4' : 'md:grid-cols-3'">
+        
+        <div class="stats shadow border border-base-200">
+            <div class="stat px-4">
+                <div class="stat-title text-xs uppercase font-bold opacity-60">Total Tuition</div>
+                <div class="stat-value text-success text-xl">₱ {{ parseFloat(localStudentAssessment.total_amount_due).toFixed(2) }}</div>
+                <div v-if="discountAmount > 0" class="stat-desc text-warning text-xs">
+                    (Net of Discounts)
+                </div>
+            </div>
         </div>
-        <div class=" p-3 rounded-md border border-accent-content">
-          <span class="block font-normal label">Total Paid</span>
-          <span class="text-xl text-blue-500">₱ {{ parseFloat(localStudentAssessment.total_paid).toFixed(2) }}</span>
+
+        <div v-if="reservationPaid > 0" class="stats shadow border border-base-200 bg-base-200/50">
+            <div class="stat px-4">
+                <div class="stat-title text-xs uppercase font-bold opacity-60">Reservation / Advance</div>
+                <div class="stat-value text-xl opacity-70">₱ {{ reservationPaid.toFixed(2) }}</div>
+                <div class="stat-desc text-xs">
+                    (Not deducted from bal)
+                </div>
+            </div>
         </div>
-        <div class="p-3 rounded-md border border-accent-content">
-          <span class="block  font-normal label">Balance</span>
-          <span class="text-xl" :class="{ 'text-red-500': balance > 0, 'text-green-600': balance === 0 }">₱ {{ balance.toFixed(2) }}</span>
+
+        <div class="stats shadow border border-base-200">
+            <div class="stat px-4">
+                <div class="stat-title text-xs uppercase font-bold opacity-60">Tuition Paid</div>
+                <div class="stat-value text-info text-xl">₱ {{ tuitionPaid.toFixed(2) }}</div>
+            </div>
         </div>
+
+        <div class="stats shadow border border-base-200">
+            <div class="stat px-4">
+                <div class="stat-title text-xs uppercase font-bold opacity-60">Current Balance</div>
+                <div class="stat-value text-xl" :class="{ 'text-error': balance > 0, 'text-success': balance === 0 }">
+                    ₱ {{ balance.toFixed(2) }}
+                </div>
+            </div>
+        </div>
+
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="border rounded-lg overflow-hidden border-accent-content">
-        <h4 class="p-3 font-medium">
+    <div class="grid grid-cols-1">
+      <div class="border border-base-300 rounded-lg overflow-hidden">
+        <h4 class="p-3 font-medium bg-base-200">
           Fees Breakdown
         </h4>
-        <div class="overflow-x-auto overflow-y-auto max-h-[180px]">
+        <div class="overflow-x-auto max-h-[300px]">
           <table class="table w-full text-sm">
-            <thead>
+            <thead class="sticky top-0 bg-base-100 z-10">
               <tr>
-                <th class="p-3 font-medium text-left">
-                  Fee Name
-                </th>
-                <th class="p-3 font-medium text-right">
-                  Amount
-                </th>
+                <th class="p-3 font-bold text-left">Fee Name</th>
+                <th class="p-3 font-bold text-right">Amount</th>
               </tr>
             </thead>
             <tbody>
+              <tr v-if="!localStudentAssessment.fees || localStudentAssessment.fees.length === 0">
+                  <td colspan="2" class="text-center py-4 opacity-50">No fees details available</td>
+              </tr>
               <tr
                 v-for="fee in localStudentAssessment.fees"
                 :key="fee.id"
+                class="hover"
               >
-                <td class="p-3">
-                  {{ fee.fee_name }}
-                </td>
-                <td class="p-3 text-right">
-                  ₱{{ parseFloat(fee.amount).toFixed(2) }}
-                </td>
+                <td class="p-3">{{ fee.fee_name }}</td>
+                <td class="p-3 text-right">₱ {{ parseFloat(fee.amount).toFixed(2) }}</td>
               </tr>
             </tbody>
+            
+            <tfoot class="bg-base-100 font-bold border-t-2 border-base-200">
+                <tr>
+                    <td class="p-3 text-right">Subtotal (Gross):</td>
+                    <td class="p-3 text-right">₱ {{ feesSubtotal.toFixed(2) }}</td>
+                </tr>
+                
+                <tr v-if="discountAmount > 0" class="text-error">
+                    <td class="p-3 text-right flex items-center justify-end gap-2">
+                        <span>Less: Discounts / ESC Grant</span>
+                    </td>
+                    <td class="p-3 text-right">- ₱ {{ discountAmount.toFixed(2) }}</td>
+                </tr>
+
+                <tr class="bg-base-200 text-lg">
+                    <td class="p-3 text-right">Net Amount Due:</td>
+                    <td class="p-3 text-right text-success">₱ {{ parseFloat(localStudentAssessment.total_amount_due).toFixed(2) }}</td>
+                </tr>
+            </tfoot>
           </table>
         </div>
       </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { data: transactions } = await useFetch('/api/private/transactions');
+const { data: transactions } = useFetch('/api/private/transactions');
 
 const pendingTx = computed(() => {
   return transactions.value?.data.filter(t => t.transaction && t.transaction.status === 'pending');

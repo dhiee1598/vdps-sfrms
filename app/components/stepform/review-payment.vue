@@ -4,7 +4,14 @@ const props = defineProps<{
   datas: any;
 }>();
 
-const tuitionTypes = ['Downpayment', '1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter', 'Full Payment'];
+// UPDATE: Include months in the tuition types list
+const tuitionTypes = [
+  'Downpayment', 
+  'Full Payment',
+  'June', 'July', 'August', 'September', 'October', 
+  'November', 'December', 'January', 'February', 'March',
+  'April', 'May' // Added just in case
+];
 
 const tuitionItems = computed(() =>
   props.formData.transaction_items.filter((item: { item_type: string; amount: number }) =>
@@ -32,28 +39,27 @@ const additionalItems = computed(() =>
           Student ID: <span class="font-medium text-gray-800">{{ props.formData.student_id }}</span>
         </p>
         <p class="text-sm text-gray-600">
-          Student Name: <span class="font-medium text-gray-800">{{ props.datas.selected_students.name }}</span>
+          Student Name: <span class="font-medium text-gray-800">{{ props.datas.selected_students.student.first_name }} {{ props.datas.selected_students.student.last_name }}</span>
         </p>
         <p class="text-sm text-gray-600">
           Transaction ID: <span class="font-medium text-gray-800">{{ props.formData.transaction_id }}</span>
         </p>
       </div>
+
       <div class="space-y-3">
         <ul>
-          <p class="text-lg font-semibold text-gray-700">
+          <p class="text-lg font-semibold text-gray-700 border-b border-gray-300 pb-1 mb-2">
             Tuition Fees
           </p>
           <template v-if="tuitionItems.length > 0">
             <li
               v-for="(item, index) in tuitionItems"
               :key="index"
-              class="flex justify-between items-center text-base text-gray-600"
+              class="flex justify-between items-center text-base text-gray-600 py-1"
             >
-              <div class="flex flex-col w-full gap-2">
-                <div class="flex flex-row justify-between">
-                  <span>{{ item.item_type }}</span>
-                  <span>₱ {{ item.amount.toFixed(2) }}</span>
-                </div>
+              <div class="flex flex-row justify-between w-full">
+                <span>{{ item.item_type }}</span>
+                <span class="font-medium text-gray-800">₱ {{ Number(item.amount).toFixed(2) }}</span>
               </div>
             </li>
           </template>
@@ -65,20 +71,18 @@ const additionalItems = computed(() =>
 
       <div class="space-y-3">
         <ul>
-          <p class="text-lg font-semibold text-gray-700">
+          <p class="text-lg font-semibold text-gray-700 border-b border-gray-300 pb-1 mb-2">
             Additional Fees
           </p>
           <template v-if="additionalItems.length > 0">
             <li
               v-for="(item, index) in additionalItems"
               :key="index"
-              class="flex justify-between items-center text-base text-gray-600"
+              class="flex justify-between items-center text-base text-gray-600 py-1"
             >
-              <div class="flex flex-col w-full gap-2">
-                <div class="flex flex-row justify-between">
-                  <span>{{ item.item_type }}</span>
-                  <span>₱ {{ item.amount.toFixed(2) }}</span>
-                </div>
+              <div class="flex flex-row justify-between w-full">
+                <span>{{ item.item_type }}</span>
+                <span class="font-medium text-gray-800">₱ {{ Number(item.amount).toFixed(2) }}</span>
               </div>
             </li>
           </template>
@@ -94,7 +98,7 @@ const additionalItems = computed(() =>
             Total Amount:
           </p>
           <p class="text-xl font-extrabold text-green-600">
-            ₱ {{ props.formData.total_amount.toFixed(2) }}
+            ₱ {{ Number(props.formData.total_amount).toFixed(2) }}
           </p>
         </div>
       </div>

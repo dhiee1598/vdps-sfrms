@@ -1,8 +1,10 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 const loginSchema = z.object({
   email: z.email(),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters long.' }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters long." }),
 });
 
 const studentSchema = z.object({
@@ -16,7 +18,7 @@ const studentSchema = z.object({
 
 const feeSchema = z.object({
   id: z.number().int(),
-  fee_name: z.string().min(1, 'Fee name is required'),
+  fee_name: z.string().min(1, "Fee name is required"),
   fee_description: z.string().nullable(),
   createdAt: z.string().nullable(),
 });
@@ -29,11 +31,15 @@ const assessmentFeeSchema = z.object({
 });
 
 const assessmentSchema = z.object({
-  id: z.int().optional(),
+  id: z.number().int().optional(),
   enrollment_id: z.number().int().nullable(),
   student_id: z.string(),
   fees: z.array(assessmentFeeSchema),
-  total_fees: z.number().positive(),
+
+  total_fees: z.union([z.number(), z.string()]).transform((val) => Number(val)),
+
+  is_esc_grant: z.boolean().optional().default(false),
+  is_cash_discount: z.boolean().optional().default(false),
 });
 
 const sundriesSchema = z.object({
@@ -66,7 +72,15 @@ const reportDataSchema = z.object({
   to_date: z.string(),
 });
 
-export { assessmentSchema, enrolledStudentSchema, loginSchema, reportDataSchema, studentSchema, sundriesSchema, feeSchema };
+export {
+  assessmentSchema,
+  enrolledStudentSchema,
+  loginSchema,
+  reportDataSchema,
+  studentSchema,
+  sundriesSchema,
+  feeSchema,
+};
 
 export type Login = z.infer<typeof loginSchema>;
 export type Student = z.infer<typeof studentSchema>;

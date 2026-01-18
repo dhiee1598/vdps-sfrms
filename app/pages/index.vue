@@ -1,14 +1,29 @@
 <script setup lang="ts">
 import { v4 as uuidv4 } from 'uuid';
-
 import { socket } from '~/components/socket';
 
 useHead({
   title: 'Student Portal',
 });
 
-const { data: assessment, refresh: refreshAssessment } = await useFetch('/api/private/assessment');
-const { data: sundries, refresh: refreshSundries } = await useFetch('/api/private/sundries');
+// 1. EXTRACT 'status' TO TRACK REFRESHING STATE
+const { 
+  data: assessment, 
+  refresh: refreshAssessment, 
+  status: assessmentStatus 
+} = await useFetch('/api/private/assessment');
+
+const { 
+  data: sundries, 
+  refresh: refreshSundries, 
+  status: sundriesStatus 
+} = await useFetch('/api/private/sundries');
+
+// 2. STATE MANAGEMENT
+const isMounted = ref(false);
+
+// Combined loading state
+const isRefreshing = computed(() => assessmentStatus.value === 'pending' || sundriesStatus.value === 'pending');
 
 const step = ref(1);
 const selectedStudent = ref();
@@ -91,6 +106,8 @@ onBeforeUnmount(() => {
 });
 
 onMounted(() => {
+  isMounted.value = true;
+
   if (socket.connected) {
     onConnect();
   }
@@ -100,8 +117,10 @@ onMounted(() => {
 
   socket.on('newData', async (message: any) => {
     console.warn(message);
-    await refreshAssessment();
-    await refreshSundries();
+    await Promise.all([
+      refreshAssessment(),
+      refreshSundries()
+    ]);
   });
 });
 
@@ -111,6 +130,11 @@ watch(selectedStudent, (newVal) => {
     formData.value.assessment_id = studentdata.value.selected_students.id;
     formData.value.transaction_id = uuidv4();
     formData.value.student_id = studentdata.value.selected_students.student_id;
+  } else {
+    studentdata.value = null;
+    formData.value.assessment_id = '';
+    formData.value.student_id = '';
+    formData.value.transaction_items = [];
   }
 });
 </script>
@@ -133,12 +157,18 @@ watch(selectedStudent, (newVal) => {
     </ul>
 
     <div class="w-full max-w-3xl my-auto p-2 md:p-8 rounded-lg shadow-md flex flex-col gap-6 items-center">
-      <div v-if="step === 1" class="w-full">
+      <div v-if="step === 1" class="w-full relative">
         <StepformSelectStudent
           :selected-student="selectedStudent"
           :all-student="assessment?.data"
+          :disabled="isRefreshing" 
           @update:selected-student="selectedStudent = $event"
         />
+        
+        <div v-if="isRefreshing" class="absolute top-0 right-0 -mt-6 right-2 text-xs text-warning flex items-center gap-1 animate-pulse">
+           <span class="loading loading-spinner loading-xs"></span>
+           Updating records...
+        </div>
       </div>
 
       <div v-if="step === 2" class="w-full">
@@ -205,10 +235,13 @@ watch(selectedStudent, (newVal) => {
         >
           Back
         </button>
+        
         <button
           class="btn btn-accent w-full max-w-md"
-          :disabled="(step === 1 && formData.student_id === '')
-            || (step === 2 && formData.total_amount === 0)"
+          :disabled="!isMounted
+            || (step === 1 && !selectedStudent)
+            || (step === 2 && formData.total_amount === 0)
+            || isRefreshing"
           @click="handleStepClick"
         >
           {{ step === 3 ? 'Confirm' : 'Next' }}

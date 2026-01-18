@@ -8,7 +8,7 @@ import db from "..";
 import { users } from "../schema/user-schema";
 import { gradeLevel } from "../schema/grade-level-schema";
 import { sections } from "../schema/section-schema";
-import { and, eq, sql, isNull } from "drizzle-orm";
+import { and, eq, sql, isNull, like } from "drizzle-orm";
 import { academicYears } from "../schema/academic-years-schema";
 import { strands } from "../schema/strands-schema";
 import { students } from "../schema/student-schema";
@@ -18,17 +18,21 @@ import { gradeLevelFees } from "../schema/grade-level-fees-schema";
 import { assessmentFees } from "../schema/assessment-fees-schema";
 import { assessments } from "../schema/asesssment-schema";
 import { sundries } from "../schema/sundry-schema";
+import { transactions } from "../schema/transaction-schema";
+import { transaction_items } from "../schema/transaction-items-schema";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function parseFullName(nameString: string) {
+// --- HELPER 1: Parse Student List Name ---
+function parseStudentListName(nameString: string) {
   if (!nameString || !nameString.includes(",")) {
     return { firstName: nameString || "", middleName: null, lastName: "" };
   }
   const [lastName, rest] = nameString.split(",").map((s) => s.trim());
-  const nameParts = rest.split(" ");
+  if (!rest) return { firstName: "", middleName: null, lastName };
 
+  const nameParts = rest.split(" ");
   const lastPart = nameParts[nameParts.length - 1];
   const isMiddleInitial = /^[A-Z]\.?$/i.test(lastPart);
 
@@ -45,10 +49,83 @@ function parseFullName(nameString: string) {
   return { firstName, middleName, lastName };
 }
 
+// --- HELPER 2: Parse Transaction Name ---
+function parseTransactionName(nameStr: string) {
+  if (!nameStr) return null;
+  const parts = nameStr.split(",").map((s) => s.trim());
+  if (parts.length < 2) return null;
+
+  const lastName = parts[0];
+  const firstNameFull = parts[1];
+  const firstNameFirstWord = firstNameFull.split(" ")[0];
+  return { lastName, firstNameFirstWord };
+}
+
+// --- HELPER 3: Parse Date (Handles "1-Aug-25") ---
+function parseTransactionDate(dateInput: any): Date {
+  if (!dateInput) return new Date();
+
+  if (typeof dateInput === "number") {
+    return new Date(Math.round((dateInput - 25569) * 86400 * 1000));
+  }
+
+  const dateStr = String(dateInput).trim();
+  const dMmmYyRegex = /^(\d{1,2})-([A-Za-z]{3})-(\d{2,4})$/;
+  const match = dateStr.match(dMmmYyRegex);
+
+  if (match) {
+    const day = parseInt(match[1], 10);
+    const monthRaw = match[2].toLowerCase();
+    let year = parseInt(match[3], 10);
+    if (year < 100) year += 2000;
+
+    const monthMap: { [key: string]: number } = {
+      jan: 0,
+      feb: 1,
+      mar: 2,
+      apr: 3,
+      may: 4,
+      jun: 5,
+      jul: 6,
+      aug: 7,
+      sep: 8,
+      oct: 9,
+      nov: 10,
+      dec: 11,
+    };
+    if (monthMap[monthRaw] !== undefined) {
+      return new Date(year, monthMap[monthRaw], day);
+    }
+  }
+
+  const standardDate = new Date(dateStr);
+  return isNaN(standardDate.getTime()) ? new Date() : standardDate;
+}
+
+// --- HELPER 4: Determine Item Type from Remarks ---
+function getItemTypeFromRemarks(remarks: string, defaultMonth: string): string {
+  if (!remarks) return defaultMonth;
+  const upperRemarks = remarks.toUpperCase();
+
+  // If remark contains specific keywords, treat as Downpayment
+  if (
+    upperRemarks.includes("RF") ||
+    upperRemarks.includes("RPF") ||
+    upperRemarks.includes("LRF") ||
+    upperRemarks.includes("DOWNPAYMENT")
+  ) {
+    return "Reservation Fee";
+  }
+
+  return defaultMonth;
+}
+
 async function main() {
   console.log("🧹 Cleaning database...");
   await db.execute(sql`SET FOREIGN_KEY_CHECKS = 0;`);
   const tables = [
+    transaction_items,
+    transactions,
     assessmentFees,
     assessments,
     enrollments,
@@ -65,42 +142,24 @@ async function main() {
   for (const table of tables) await db.execute(sql`TRUNCATE TABLE ${table}`);
   await db.execute(sql`SET FOREIGN_KEY_CHECKS = 1;`);
 
-  // --- 1. SEED USERS ---
-  await db
-    .insert(users)
-    .values({
+  // --- 1. SEED REFERENCE DATA (Users, Grades, Sections, Fees...) ---
+  await db.insert(users).values([
+    {
       name: "Admin",
       email: "admin@gmail.com",
       password:
         "$scrypt$n=16384,r=8,p=1$dcsmGB+pSW97NeRaxPwllw$XKv1l3Rro8PQO8Y8YmyVR5XY/h4yTBWqTeucAm+gqieVG1uGdmxXdI8MiWNIedqZH6Xw8IR96OGOBq4sz6S01Q",
       role: "admin",
-    })
-    .onDuplicateKeyUpdate({
-      set: {
-        name: "Admin",
-        password:
-          "$scrypt$n=16384,r=8,p=1$dcsmGB+pSW97NeRaxPwllw$XKv1l3Rro8PQO8Y8YmyVR5XY/h4yTBWqTeucAm+gqieVG1uGdmxXdI8MiWNIedqZH6Xw8IR96OGOBq4sz6S01Q",
-      },
-    });
-
-  await db
-    .insert(users)
-    .values({
+    },
+    {
       name: "Cashier",
       email: "cashier@gmail.com",
       password:
         "$scrypt$n=16384,r=8,p=1$dcsmGB+pSW97NeRaxPwllw$XKv1l3Rro8PQO8Y8YmyVR5XY/h4yTBWqTeucAm+gqieVG1uGdmxXdI8MiWNIedqZH6Xw8IR96OGOBq4sz6S01Q",
       role: "cashier",
-    })
-    .onDuplicateKeyUpdate({
-      set: {
-        name: "Cashier",
-        password:
-          "$scrypt$n=16384,r=8,p=1$dcsmGB+pSW97NeRaxPwllw$XKv1l3Rro8PQO8Y8YmyVR5XY/h4yTBWqTeucAm+gqieVG1uGdmxXdI8MiWNIedqZH6Xw8IR96OGOBq4sz6S01Q",
-      },
-    });
+    },
+  ]);
 
-  // --- 2. SEED ACADEMIC YEAR ---
   await db
     .insert(academicYears)
     .values([{ academic_year: "2025-2026", status: true }]);
@@ -109,7 +168,6 @@ async function main() {
     .from(academicYears)
     .where(eq(academicYears.academic_year, "2025-2026"));
 
-  // --- 3. SEED GRADE LEVELS ---
   const gradeNames = [
     "NURSERY",
     "KINDER 1",
@@ -132,7 +190,6 @@ async function main() {
     .values(gradeNames.map((name) => ({ grade_level_name: name })));
   const allGrades = await db.select().from(gradeLevel);
 
-  // --- 4. SEED STRANDS ---
   const strandInputs = [
     {
       strand_name: "STEM",
@@ -155,7 +212,6 @@ async function main() {
   await db.insert(strands).values(strandInputs);
   const allStrands = await db.select().from(strands);
 
-  // --- 5. SEED SECTIONS ---
   const sectionsData = [
     { name: "BRIGHT", grade: "NURSERY" },
     { name: "ROSE", grade: "KINDER 1" },
@@ -184,31 +240,21 @@ async function main() {
     { name: "ST. JOHN", grade: "GRADE 12" },
     { name: "ST. LUKE", grade: "GRADE 12" },
   ];
-
   const sectionsToInsert = sectionsData
     .map((s) => {
       const gId = allGrades.find(
         (g) => g.grade_level_name.toUpperCase() === s.grade.toUpperCase(),
       )?.id;
-
-      return {
-        section_name: s.name,
-        grade_level_id: gId,
-      };
+      return { section_name: s.name, grade_level_id: gId };
     })
     .filter(
       (s): s is { section_name: string; grade_level_id: number } =>
         s.grade_level_id !== undefined,
     );
-
   await db.insert(sections).values(sectionsToInsert);
   const allSections = await db.select().from(sections);
 
-  // =========================================================
-  // 6. SEED FEES & FEE SCHEDULES (UPDATED)
-  // =========================================================
   console.log("💰 Processing Fee Structures...");
-
   const feeTypes = [
     "Tuition Fee",
     "Miscellaneous Fee",
@@ -217,200 +263,183 @@ async function main() {
     "Tech Dev/TLE Fee",
     "TLE Fee",
   ];
-
-  for (const name of feeTypes) {
-    await db.insert(fees).values({ fee_name: name });
-  }
-
+  for (const name of feeTypes) await db.insert(fees).values({ fee_name: name });
   const allFees = await db.select().from(fees);
-  const getFeeId = (name: string) => {
-    const found = allFees.find((f) => f.fee_name === name);
-    if (!found) throw new Error(`Fee '${name}' not found in database.`);
-    return found.id;
-  };
+  const getFeeId = (name: string) =>
+    allFees.find((f) => f.fee_name === name)?.id!;
 
-  // NOTE: 'last_month' is the 10th payment (March)
+  // (Standard Fees Seed - same as before)
   const feeSchedules = [
-    // --- PRE-SCHOOL ---
     {
-      grades: ["NURSERY", "KINDER 1", "KINDER 2"],
+      grades: ["NURSERY", "KINDER 1"],
       items: [
-        { type: "Tuition Fee", ue: 11260, monthly: 1690, last_month: 1670 },
-        { type: "Miscellaneous Fee", ue: 310, monthly: 310, last_month: 280 },
-        { type: "Other Fees", ue: 500, monthly: 500, last_month: 465 },
+        { type: "Tuition Fee", amount: 27185.0 },
+        { type: "Miscellaneous Fee", amount: 3380.0 },
+        { type: "Other Fees", amount: 5465.0 },
       ],
     },
-    // --- GRADE SCHOOL (1-2) ---
+    {
+      grades: ["KINDER 2"],
+      items: [
+        { type: "Tuition Fee", amount: 27185.0 },
+        { type: "Miscellaneous Fee", amount: 3380.0 },
+        { type: "Other Fees", amount: 8395.0 },
+      ],
+    },
     {
       grades: ["GRADE 1", "GRADE 2"],
       items: [
-        { type: "Tuition Fee", ue: 11050, monthly: 1660, last_month: 1630 },
-        { type: "Miscellaneous Fee", ue: 345, monthly: 345, last_month: 310 },
-        { type: "Other Fees", ue: 735, monthly: 735, last_month: 690 },
-        { type: "Tech Dev Fee", ue: 155, monthly: 155, last_month: 150 },
+        { type: "Tuition Fee", amount: 26685.0 },
+        { type: "Miscellaneous Fee", amount: 3760.0 },
+        { type: "Other Fees", amount: 8040.0 },
+        { type: "Tech Dev Fee", amount: 1700.0 },
       ],
     },
-    // --- GRADE SCHOOL (3) ---
     {
       grades: ["GRADE 3"],
       items: [
-        { type: "Tuition Fee", ue: 11190, monthly: 1680, last_month: 1660 },
-        { type: "Miscellaneous Fee", ue: 350, monthly: 350, last_month: 335 },
-        { type: "Other Fees", ue: 735, monthly: 735, last_month: 690 },
-        { type: "Tech Dev Fee", ue: 155, monthly: 155, last_month: 150 },
+        { type: "Tuition Fee", amount: 27020.0 },
+        { type: "Miscellaneous Fee", amount: 3835.0 },
+        { type: "Other Fees", amount: 8040.0 },
+        { type: "Tech Dev Fee", amount: 1700.0 },
       ],
     },
-    // --- GRADE SCHOOL (4) ---
     {
       grades: ["GRADE 4"],
       items: [
-        { type: "Tuition Fee", ue: 11190, monthly: 1680, last_month: 1660 },
-        { type: "Miscellaneous Fee", ue: 350, monthly: 350, last_month: 335 },
-        { type: "Other Fees", ue: 735, monthly: 735, last_month: 690 },
-        { type: "Tech Dev/TLE Fee", ue: 165, monthly: 165, last_month: 130 },
+        { type: "Tuition Fee", amount: 27020.0 },
+        { type: "Miscellaneous Fee", amount: 3835.0 },
+        { type: "Other Fees", amount: 8040.0 },
+        { type: "Tech Dev/TLE Fee", amount: 1780.0 },
       ],
     },
-    // --- GRADE SCHOOL (5) ---
     {
       grades: ["GRADE 5"],
       items: [
-        { type: "Tuition Fee", ue: 11325, monthly: 1700, last_month: 1680 },
-        { type: "Miscellaneous Fee", ue: 350, monthly: 350, last_month: 335 },
-        { type: "Other Fees", ue: 735, monthly: 735, last_month: 690 },
-        { type: "Tech Dev/TLE Fee", ue: 165, monthly: 165, last_month: 130 },
+        { type: "Tuition Fee", amount: 27345.0 },
+        { type: "Miscellaneous Fee", amount: 3835.0 },
+        { type: "Other Fees", amount: 8040.0 },
+        { type: "Tech Dev/TLE Fee", amount: 1780.0 },
       ],
     },
-    // --- GRADE SCHOOL (6) ---
     {
       grades: ["GRADE 6"],
       items: [
-        { type: "Tuition Fee", ue: 11325, monthly: 1700, last_month: 1680 },
-        { type: "Miscellaneous Fee", ue: 350, monthly: 350, last_month: 335 },
-        { type: "Other Fees", ue: 1000, monthly: 1000, last_month: 970 },
-        { type: "Tech Dev/TLE Fee", ue: 165, monthly: 165, last_month: 130 },
+        { type: "Tuition Fee", amount: 27345.0 },
+        { type: "Miscellaneous Fee", amount: 3835.0 },
+        { type: "Other Fees", amount: 10970.0 },
+        { type: "Tech Dev/TLE Fee", amount: 1780.0 },
       ],
     },
-    // --- JUNIOR HIGH (7-8) ---
     {
       grades: ["GRADE 7", "GRADE 8"],
       items: [
-        { type: "Tuition Fee", ue: 12485, monthly: 1880, last_month: 1800 },
-        { type: "Miscellaneous Fee", ue: 375, monthly: 375, last_month: 365 },
-        { type: "Other Fees", ue: 735, monthly: 735, last_month: 690 },
-        { type: "Tech Dev/TLE Fee", ue: 165, monthly: 165, last_month: 130 },
+        { type: "Tuition Fee", amount: 30145.0 },
+        { type: "Miscellaneous Fee", amount: 4115.0 },
+        { type: "Other Fees", amount: 8040.0 },
+        { type: "Tech Dev/TLE Fee", amount: 1780.0 },
       ],
     },
-    // --- JUNIOR HIGH (9-10) ---
     {
-      grades: ["GRADE 9", "GRADE 10"],
+      grades: ["GRADE 9"],
       items: [
-        { type: "Tuition Fee", ue: 6435, monthly: 2575, last_month: 2555 },
-        { type: "Miscellaneous Fee", ue: 375, monthly: 375, last_month: 365 },
-        { type: "Other Fees", ue: 1000, monthly: 1000, last_month: 970 }, // G10 others 1000, G9 others 735 - Split below if strictly needed, simplifying to G10 max
-        { type: "Tech Dev/TLE Fee", ue: 165, monthly: 165, last_month: 130 },
+        { type: "Tuition Fee", amount: 31380.0 },
+        { type: "Miscellaneous Fee", amount: 4115.0 },
+        { type: "Other Fees", amount: 8040.0 },
+        { type: "Tech Dev/TLE Fee", amount: 1780.0 },
       ],
     },
-    // --- SENIOR HIGH (11) ---
+    {
+      grades: ["GRADE 10"],
+      items: [
+        { type: "Tuition Fee", amount: 31380.0 },
+        { type: "Miscellaneous Fee", amount: 4115.0 },
+        { type: "Other Fees", amount: 10970.0 },
+        { type: "Tech Dev/TLE Fee", amount: 1780.0 },
+      ],
+    },
     {
       grades: ["GRADE 11"],
       strands: ["TVL"],
       items: [
-        { type: "Tuition Fee", ue: 6790, monthly: 2715, last_month: 2705 },
-        { type: "Miscellaneous Fee", ue: 460, monthly: 460, last_month: 410 },
-        { type: "Other Fees", ue: 580, monthly: 580, last_month: 565 },
-        { type: "TLE Fee", ue: 10, monthly: 10, last_month: 0 },
+        { type: "Tuition Fee", amount: 33100.0 },
+        { type: "Miscellaneous Fee", amount: 5010.0 },
+        { type: "Other Fees", amount: 6365.0 },
+        { type: "TLE Fee", amount: 80.0 },
       ],
     },
     {
       grades: ["GRADE 11"],
       strands: ["GAS", "HUMSS", "ABM"],
       items: [
-        { type: "Tuition Fee", ue: 6915, monthly: 2770, last_month: 2725 },
-        { type: "Miscellaneous Fee", ue: 460, monthly: 460, last_month: 410 },
-        { type: "Other Fees", ue: 580, monthly: 580, last_month: 565 },
+        { type: "Tuition Fee", amount: 33725.0 },
+        { type: "Miscellaneous Fee", amount: 5010.0 },
+        { type: "Other Fees", amount: 6365.0 },
       ],
     },
     {
       grades: ["GRADE 11"],
       strands: ["STEM"],
       items: [
-        { type: "Tuition Fee", ue: 7045, monthly: 2820, last_month: 2780 },
-        { type: "Miscellaneous Fee", ue: 460, monthly: 460, last_month: 410 },
-        { type: "Other Fees", ue: 580, monthly: 580, last_month: 565 },
+        { type: "Tuition Fee", amount: 34345.0 },
+        { type: "Miscellaneous Fee", amount: 5010.0 },
+        { type: "Other Fees", amount: 6365.0 },
       ],
     },
-    // --- SENIOR HIGH (12) ---
     {
       grades: ["GRADE 12"],
       strands: ["TVL"],
       items: [
-        { type: "Tuition Fee", ue: 6790, monthly: 2715, last_month: 2705 },
-        { type: "Miscellaneous Fee", ue: 460, monthly: 460, last_month: 410 },
-        { type: "Other Fees", ue: 875, monthly: 875, last_month: 825 },
-        { type: "TLE Fee", ue: 10, monthly: 10, last_month: 0 },
+        { type: "Tuition Fee", amount: 33100.0 },
+        { type: "Miscellaneous Fee", amount: 5010.0 },
+        { type: "Other Fees", amount: 9575.0 },
+        { type: "TLE Fee", amount: 80.0 },
       ],
     },
     {
       grades: ["GRADE 12"],
       strands: ["GAS", "HUMSS", "ABM"],
       items: [
-        { type: "Tuition Fee", ue: 6915, monthly: 2770, last_month: 2725 },
-        { type: "Miscellaneous Fee", ue: 460, monthly: 460, last_month: 410 },
-        { type: "Other Fees", ue: 875, monthly: 875, last_month: 825 },
+        { type: "Tuition Fee", amount: 33725.0 },
+        { type: "Miscellaneous Fee", amount: 5010.0 },
+        { type: "Other Fees", amount: 9575.0 },
       ],
     },
     {
       grades: ["GRADE 12"],
       strands: ["STEM"],
       items: [
-        { type: "Tuition Fee", ue: 7045, monthly: 2820, last_month: 2780 },
-        { type: "Miscellaneous Fee", ue: 460, monthly: 460, last_month: 410 },
-        { type: "Other Fees", ue: 875, monthly: 875, last_month: 825 },
+        { type: "Tuition Fee", amount: 34345.0 },
+        { type: "Miscellaneous Fee", amount: 5010.0 },
+        { type: "Other Fees", amount: 9575.0 },
       ],
     },
   ];
-
   for (const schedule of feeSchedules) {
     const targetGradeIds = allGrades
       .filter((g) => schedule.grades.includes(g.grade_level_name.toUpperCase()))
       .map((g) => g.id);
-
     if (targetGradeIds.length === 0) continue;
-
     let targetStrandIds: (number | null)[] = [null];
-    if (schedule.strands && schedule.strands.length > 0) {
+    if (schedule.strands && schedule.strands.length > 0)
       targetStrandIds = allStrands
         .filter((s) => schedule.strands?.includes(s.strand_name.toUpperCase()))
         .map((s) => s.id);
-    }
-
     for (const gradeId of targetGradeIds) {
       for (const strandId of targetStrandIds) {
-        for (const item of schedule.items) {
-          // Calculation: UE + (9 * Standard Monthly) + (1 * Last Month)
-          const monthlyTotal = item.monthly * 9;
-          const lastMonth = item.last_month ?? item.monthly;
-          const totalAmount = item.ue + monthlyTotal + lastMonth;
-
+        for (const item of schedule.items)
           await db.insert(gradeLevelFees).values({
             grade_level_id: gradeId,
             strand_id: strandId,
             fee_id: getFeeId(item.type),
-            amount: totalAmount.toFixed(2),
+            amount: item.amount.toFixed(2),
           });
-        }
       }
     }
   }
-  console.log("✅ Grade Level Fees Seeded.");
 
-  // =========================================================
-  // 7. SEED SUNDRIES
-  // =========================================================
   console.log("🎒 Seeding Sundries...");
-
   const sundriesData = [
-    // --- CLINIC PROGRAM ---
     { name: "Clinic - Badminton", desc: "Clinic Program", amount: 2850.0 },
     { name: "Clinic - Basketball", desc: "Clinic Program", amount: 2850.0 },
     { name: "Clinic - Soccer", desc: "Clinic Program", amount: 2850.0 },
@@ -433,8 +462,6 @@ async function main() {
       amount: 3500.0,
     },
     { name: "Clinic - Cooking Lesson", desc: "Clinic Program", amount: 3500.0 },
-
-    // --- CERTIFICATES ---
     { name: "CTC (Form 138/137)", desc: "Certificates", amount: 50.0 },
     { name: "Good Moral Certificate", desc: "Certificates", amount: 100.0 },
     {
@@ -444,12 +471,8 @@ async function main() {
     },
     { name: "Original Report Card", desc: "Certificates", amount: 180.0 },
     { name: "Form 137 with Doc. Stamp", desc: "Certificates", amount: 180.0 },
-
-    // --- RETREATS ---
     { name: "Retreat 2026 (Grade 10)", desc: "Retreat Fee", amount: 4875.0 },
     { name: "Retreat 2026 (Grade 12)", desc: "Retreat Fee", amount: 5090.0 },
-
-    // --- NOTEBOOKS (Sticker Prices) ---
     {
       name: "Notebook - Writing (Pre-School)",
       desc: "School Supplies",
@@ -462,8 +485,6 @@ async function main() {
     },
     { name: "Notebook - Math (Elem)", desc: "School Supplies", amount: 52.0 },
     { name: "Notebook - Math (HS Big)", desc: "School Supplies", amount: 65.0 },
-
-    // --- APPLICATION FEES ---
     {
       name: "Application Processing Fee (Elem)",
       desc: "Application Fee",
@@ -477,167 +498,283 @@ async function main() {
     },
     { name: "Entrance Exam (HS)", desc: "Application Fee", amount: 375.0 },
   ];
-
-  for (const item of sundriesData) {
+  for (const item of sundriesData)
     await db.insert(sundries).values({
       sundry_name: item.name,
       sundry_description: item.desc,
       sundry_amount: item.amount.toFixed(2),
     });
-  }
-  console.log("✅ Sundries Seeded.");
 
   // =========================================================
-  // 8. SEED STUDENTS, ENROLLMENTS & ASSESSMENTS
+  // 2. SEED STUDENTS & ASSESSMENTS
   // =========================================================
-
-  const files = ["student1.xlsx"];
+  console.log("📚 Seeding Students & Assessments...");
+  const studentFile = "student1.xlsx";
+  const studentPath = path.join(__dirname, studentFile);
+  const studentWorkbook = XLSX.read(readFileSync(studentPath), {
+    type: "buffer",
+  });
   let studentCounter = 1;
 
-  for (const fileName of files) {
-    const filePath = path.join(__dirname, fileName);
-    const workbook = XLSX.read(readFileSync(filePath), { type: "buffer" });
-
-    for (const sheetName of workbook.SheetNames) {
-      let gradeSearch = "";
-      let sectionSearch = "";
-
-      if (sheetName.includes("-")) {
-        const parts = sheetName.split("-").map((p) => p.trim().toUpperCase());
-
-        if (parts[0].includes("KINDER")) {
-          const match = parts[0].match(/\d+/);
-          gradeSearch = match ? `KINDER ${match[0]}` : "KINDER";
-        } else if (parts[0].match(/\d+/)) {
-          gradeSearch = `GRADE ${parts[0].match(/\d+/)![0]}`;
-        } else {
-          gradeSearch = parts[0];
-        }
-        sectionSearch = parts[1];
+  for (const sheetName of studentWorkbook.SheetNames) {
+    let gradeSearch = "";
+    let sectionSearch = "";
+    if (sheetName.includes("-")) {
+      const parts = sheetName.split("-").map((p) => p.trim().toUpperCase());
+      if (parts[0].includes("KINDER")) {
+        const match = parts[0].match(/\d+/);
+        gradeSearch = match ? `KINDER ${match[0]}` : "KINDER";
+      } else if (parts[0].match(/\d+/)) {
+        gradeSearch = `GRADE ${parts[0].match(/\d+/)![0]}`;
+      } else {
+        gradeSearch = parts[0];
       }
-
-      const targetGrade = allGrades.find(
-        (g) => g.grade_level_name.toUpperCase() === gradeSearch,
-      );
-      const targetSection = allSections.find(
-        (s) =>
-          s.grade_level_id === targetGrade?.id &&
-          (sectionSearch.includes(s.section_name.toUpperCase()) ||
-            s.section_name.toUpperCase().includes(sectionSearch)),
-      );
-
-      if (!targetGrade || !targetSection) continue;
-
-      const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
-        defval: null,
-      });
-      let currentStrandId: number | null = null;
-
-      for (const row of rawData as any[]) {
-        const firstCol = String(Object.values(row)[0] || "")
-          .trim()
-          .toUpperCase();
-        const foundStrand = allStrands.find((s) => s.strand_name === firstCol);
-
-        if (foundStrand) {
-          currentStrandId = foundStrand.id;
-          console.log(
-            `📍 Strand set to ${foundStrand.strand_name} for following students`,
-          );
-          continue;
-        }
-
-        if (!row["NAME"] || String(row["NAME"]).toUpperCase() === "NAME")
-          continue;
-
-        const { firstName, middleName, lastName } = parseFullName(row["NAME"]);
-        const studentId = `STU-${String(studentCounter++).padStart(4, "0")}-2026`;
-
-        let finalContact = "N/A";
-        if (row["CONTACT NUMBER"]) {
-          const firstChunk = String(row["CONTACT NUMBER"])
-            .split(/[;:\\\/ ]/)[0]
-            .trim();
-          let cleanNumber = firstChunk.replace(/\D/g, "");
-
-          if (cleanNumber.length === 10 && cleanNumber.startsWith("9")) {
-            cleanNumber = `0${cleanNumber}`;
-          }
-
-          const isValidMobile = /^09\d{9}$/.test(cleanNumber);
-          finalContact = isValidMobile ? cleanNumber : "N/A";
-        }
-
-        const rawEsc = row["ESC GRANT"];
-        const isEscGrant =
-          rawEsc === true ||
-          String(rawEsc).toUpperCase() === "YES" ||
-          String(rawEsc).toUpperCase() === "TRUE" ||
-          rawEsc == 1;
-
-        await db.insert(students).values({
-          id: studentId,
-          first_name: firstName,
-          middle_name: middleName,
-          last_name: lastName,
-          address: row["ADDRESS"] || "N/A",
-          contact_number: finalContact,
-        });
-
-        const [enrollmentResult] = await db.insert(enrollments).values({
-          student_id: studentId,
-          grade_level_id: targetGrade.id,
-          section_id: targetSection.id,
-          academic_year_id: activeAy.id,
-          strand_id: currentStrandId,
-          enroll_status: "ENROLLED",
-        });
-
-        // --- CALCULATE ASSESSMENT ---
-        const studentFees = await db
-          .select()
-          .from(gradeLevelFees)
-          .where(
-            and(
-              eq(gradeLevelFees.grade_level_id, targetGrade.id),
-              currentStrandId
-                ? eq(gradeLevelFees.strand_id, currentStrandId)
-                : isNull(gradeLevelFees.strand_id),
-            ),
-          );
-
-        let totalDue = 0;
-        const feeIdsToLink: number[] = [];
-
-        for (const feeEntry of studentFees) {
-          const feeType = allFees.find((f) => f.id === feeEntry.fee_id);
-
-          if (isEscGrant && feeType?.fee_name === "Tuition Fee") {
-            continue;
-          }
-
-          totalDue += Number(feeEntry.amount);
-          feeIdsToLink.push(feeEntry.fee_id);
-        }
-
-        const [assessmentResult] = await db.insert(assessments).values({
-          enrollment_id: enrollmentResult.insertId,
-          student_id: studentId,
-          total_amount_due: totalDue.toFixed(2),
-          total_paid: "0.00",
-        });
-
-        if (feeIdsToLink.length > 0) {
-          await db.insert(assessmentFees).values(
-            feeIdsToLink.map((fid) => ({
-              assessment_id: assessmentResult.insertId,
-              fee_id: fid,
-            })),
-          );
-        }
-      }
-      console.log(`✅ Processed Sheet: ${sheetName}`);
+      sectionSearch = parts[1];
     }
+    const targetGrade = allGrades.find(
+      (g) => g.grade_level_name.toUpperCase() === gradeSearch,
+    );
+    const targetSection = allSections.find(
+      (s) =>
+        s.grade_level_id === targetGrade?.id &&
+        (sectionSearch.includes(s.section_name.toUpperCase()) ||
+          s.section_name.toUpperCase().includes(sectionSearch)),
+    );
+    if (!targetGrade || !targetSection) continue;
+
+    const gradeName = targetGrade.grade_level_name.toUpperCase();
+    const isJHS = ["GRADE 7", "GRADE 8", "GRADE 9", "GRADE 10"].includes(
+      gradeName,
+    );
+    const isSHS = ["GRADE 11", "GRADE 12"].includes(gradeName);
+
+    const rawData = XLSX.utils.sheet_to_json(
+      studentWorkbook.Sheets[sheetName],
+      { defval: null },
+    );
+    let currentStrandId: number | null = null;
+
+    for (const row of rawData as any[]) {
+      const firstCol = String(Object.values(row)[0] || "")
+        .trim()
+        .toUpperCase();
+      const foundStrand = allStrands.find((s) => s.strand_name === firstCol);
+      if (foundStrand) {
+        currentStrandId = foundStrand.id;
+        continue;
+      }
+      if (!row["NAME"] || String(row["NAME"]).toUpperCase() === "NAME")
+        continue;
+
+      const { firstName, middleName, lastName } = parseStudentListName(
+        row["NAME"],
+      );
+      const studentId = `STU-${String(studentCounter++).padStart(4, "0")}-2026`;
+      const rawEsc = row["ESC GRANT"];
+      const isEscGrant =
+        rawEsc === true ||
+        String(rawEsc).toUpperCase() === "YES" ||
+        String(rawEsc).toUpperCase() === "TRUE" ||
+        rawEsc == 1;
+
+      let finalContact = "N/A";
+      if (row["CONTACT NUMBER"]) {
+        const firstChunk = String(row["CONTACT NUMBER"])
+          .split(/[;:\\\/ ]/)[0]
+          .trim();
+        let cleanNumber = firstChunk.replace(/\D/g, "");
+        if (cleanNumber.length === 10 && cleanNumber.startsWith("9"))
+          cleanNumber = `0${cleanNumber}`;
+        finalContact = /^09\d{9}$/.test(cleanNumber) ? cleanNumber : "N/A";
+      }
+
+      await db.insert(students).values({
+        id: studentId,
+        first_name: firstName,
+        middle_name: middleName,
+        last_name: lastName,
+        address: row["ADDRESS"] || "N/A",
+        contact_number: finalContact,
+      });
+      const [enrollmentResult] = await db.insert(enrollments).values({
+        student_id: studentId,
+        grade_level_id: targetGrade.id,
+        section_id: targetSection.id,
+        academic_year_id: activeAy.id,
+        strand_id: currentStrandId,
+        enroll_status: "ENROLLED",
+      });
+
+      const studentFees = await db
+        .select()
+        .from(gradeLevelFees)
+        .where(
+          and(
+            eq(gradeLevelFees.grade_level_id, targetGrade.id),
+            currentStrandId
+              ? eq(gradeLevelFees.strand_id, currentStrandId)
+              : isNull(gradeLevelFees.strand_id),
+          ),
+        );
+      let totalDue = 0;
+      const feeIdsToLink: number[] = [];
+      for (const feeEntry of studentFees) {
+        const feeType = allFees.find((f) => f.id === feeEntry.fee_id);
+        if (isSHS && isEscGrant && feeType?.fee_name === "Tuition Fee")
+          continue;
+        totalDue += Number(feeEntry.amount);
+        feeIdsToLink.push(feeEntry.fee_id);
+      }
+      if (isJHS && isEscGrant) totalDue -= 9000.0;
+      if (totalDue < 0) totalDue = 0;
+      const roundedTotal = Math.ceil(totalDue);
+
+      const [assessmentResult] = await db.insert(assessments).values({
+        enrollment_id: enrollmentResult.insertId,
+        student_id: studentId,
+        total_amount_due: roundedTotal.toFixed(2),
+        total_paid: "0.00",
+        is_esc_grant: isEscGrant,
+        is_cash_discount: false,
+      });
+      if (feeIdsToLink.length > 0) {
+        await db.insert(assessmentFees).values(
+          feeIdsToLink.map((fid) => ({
+            assessment_id: assessmentResult.insertId,
+            fee_id: fid,
+          })),
+        );
+      }
+    }
+    console.log(`   ✅ Processed Sheet: ${sheetName}`);
+  }
+
+  // =========================================================
+  // 3. SEED PAYMENTS (transaction.xlsx)
+  // =========================================================
+  console.log("💸 Seeding Payments from transaction.xlsx...");
+  const transactionFile = "transaction.xlsx";
+  const txnPath = path.join(__dirname, transactionFile);
+  const txnWorkbook = XLSX.read(readFileSync(txnPath), { type: "buffer" });
+
+  for (const sheetName of txnWorkbook.SheetNames) {
+    const monthName =
+      sheetName.charAt(0).toUpperCase() + sheetName.slice(1).toLowerCase();
+    console.log(
+      `   📂 Processing Payment Month: ${monthName} (Sheet: ${sheetName})`,
+    );
+
+    const rawRows = XLSX.utils.sheet_to_json(txnWorkbook.Sheets[sheetName], {
+      header: 1,
+    }) as any[][];
+    let headerRowIndex = -1;
+    let nameIdx = -1;
+    let totalIdx = -1;
+    let dateIdx = -1;
+    let remarksIdx = -1; // --- NEW: Added Remarks Column Index
+
+    for (let i = 0; i < Math.min(rawRows.length, 10); i++) {
+      const row = rawRows[i].map((c) => String(c).trim().toUpperCase());
+      if (row.includes("NAME") && row.includes("TOTAL")) {
+        headerRowIndex = i;
+        nameIdx = row.indexOf("NAME");
+        totalIdx = row.indexOf("TOTAL");
+        dateIdx = row.indexOf("DATE");
+        remarksIdx = row.indexOf("REMARKS"); // Look for REMARKS header
+        console.log(
+          `      🔎 Found Header at Row ${i} | Name: ${nameIdx} | Total: ${totalIdx} | Remarks: ${remarksIdx}`,
+        );
+        break;
+      }
+    }
+
+    if (headerRowIndex === -1 || nameIdx === -1 || totalIdx === -1) {
+      console.warn(
+        `      ⚠️  Skipping: Could not find 'NAME' and 'TOTAL' header.`,
+      );
+      continue;
+    }
+
+    let count = 0;
+    let missingCount = 0;
+
+    for (let i = headerRowIndex + 1; i < rawRows.length; i++) {
+      const row = rawRows[i];
+      if (!row || row.length === 0) continue;
+
+      const rawName = row[nameIdx];
+      const rawTotal = row[totalIdx];
+      const rawDate = dateIdx !== -1 ? row[dateIdx] : null;
+      const rawRemarks = remarksIdx !== -1 ? row[remarksIdx] : ""; // Get Remarks
+
+      if (!rawName || !rawTotal) continue;
+
+      const amount = Number(String(rawTotal).replace(/,/g, ""));
+      if (isNaN(amount) || amount <= 0) continue;
+
+      const nameInfo = parseTransactionName(String(rawName));
+      if (!nameInfo) continue;
+
+      const txnDate = parseTransactionDate(rawDate);
+
+      // --- NEW: Calculate Item Type based on Remarks ---
+      const finalItemType = getItemTypeFromRemarks(
+        String(rawRemarks),
+        monthName,
+      );
+
+      const studentMatches = await db
+        .select()
+        .from(students)
+        .where(
+          and(
+            eq(students.last_name, nameInfo.lastName),
+            like(students.first_name, `%${nameInfo.firstNameFirstWord}%`),
+          ),
+        );
+
+      if (studentMatches.length === 0) {
+        if (missingCount < 3)
+          console.warn(`      ⚠️  Match Failed: ${rawName}`);
+        missingCount++;
+        continue;
+      }
+      const student = studentMatches[0];
+
+      const assessmentList = await db
+        .select()
+        .from(assessments)
+        .where(eq(assessments.student_id, student.id));
+      if (assessmentList.length === 0) continue;
+      const assessment = assessmentList[assessmentList.length - 1];
+
+      await db.transaction(async (tx) => {
+        const [txn] = await tx
+          .insert(transactions)
+          .values({
+            assessment_id: assessment.id,
+            student_id: student.id,
+            total_amount: amount.toFixed(2),
+            status: "paid",
+            date_paid: txnDate,
+          })
+          .$returningId();
+
+        await tx.insert(transaction_items).values({
+          transaction_id: txn.transaction_id,
+          item_type: finalItemType, // Use calculated type (Downpayment or Month)
+          amount: amount.toFixed(2),
+        });
+
+        const currentPaid = Number(assessment.total_paid || 0);
+        await tx
+          .update(assessments)
+          .set({ total_paid: String((currentPaid + amount).toFixed(2)) })
+          .where(eq(assessments.id, assessment.id));
+      });
+      count++;
+    }
+    console.log(`      -> Seeded ${count} transactions.`);
   }
 }
 

@@ -22,7 +22,7 @@ const formData = ref({
   }],
 });
 
-const { data: assessments } = await useFetch('/api/private/assessment?allAssessments=true');
+const { data: assessments } = useFetch('/api/private/assessment?allAssessments=true');
 
 const students = computed(() => {
   const uniqueStudents = new Map();
