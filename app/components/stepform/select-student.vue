@@ -31,7 +31,7 @@ const { data: assessments, pending, refresh } = useFetch('/api/private/assessmen
   lazy: true,
   query: computed(() => ({
     search: debouncedSearch.value,
-    pageSize: 20, // Limit results for dropdown
+    pageSize: 20, 
   })),
 });
 

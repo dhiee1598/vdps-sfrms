@@ -17,65 +17,7 @@ watch(() => props.data, (newVal) => {
   localStudentAssessment.value = newVal;
 });
 
-// 1. Define Whitelists
-const ALL_MONTHS = [
-  "January", "February", "March", "April", "May", "June", 
-  "July", "August", "September", "October", "November", "December"
-];
-
-const TUITION_KEYWORDS = [
-  "Full Payment", "Downpayment", "Down Payment", "DP", 
-  "Partial Payment", "Partial", "Tuition", "Tuition Fee", 
-  "Upon Enrollment", "1st Quarter", "2nd Quarter", "3rd Quarter", "4th Quarter"
-];
-
-const RESERVATION_KEYWORDS = ["Reservation Fee", "RF", "Advance Payment"];
-
-// 2. Calculate Reservation/Advance Payments (Strict Item Check)
-const reservationPaid = computed(() => {
-  if (!localStudentAssessment.value?.transactions?.length) {
-    return 0;
-  }
-  return localStudentAssessment.value.transactions.reduce((totalSum: number, txn: any) => {
-      // Only count PAID transactions
-      if (txn.status !== 'paid') return totalSum;
-
-      const txnSum = (txn.items || []).reduce((sum: number, item: any) => {
-          if (RESERVATION_KEYWORDS.includes(item.item_type)) {
-              return sum + (Number(item.amount) || 0);
-          }
-          return sum;
-      }, 0);
-      return totalSum + txnSum;
-  }, 0);
-});
-
-// 3. Calculate Tuition/Standard Payments (Strict Item Check)
-const tuitionPaid = computed(() => {
-  if (!localStudentAssessment.value?.transactions?.length) {
-    return 0;
-  }
-  return localStudentAssessment.value.transactions.reduce((totalSum: number, txn: any) => {
-      // Only count PAID transactions
-      if (txn.status !== 'paid') return totalSum;
-
-      const txnSum = (txn.items || []).reduce((sum: number, item: any) => {
-          const type = item.item_type;
-          
-          const isMonth = ALL_MONTHS.includes(type);
-          const isKeyword = TUITION_KEYWORDS.some(k => type.toLowerCase() === k.toLowerCase());
-          const isTuitionLike = type.toLowerCase().includes('tuition');
-
-          if (isMonth || isKeyword || isTuitionLike) {
-              return sum + (Number(item.amount) || 0);
-          }
-          return sum;
-      }, 0);
-      return totalSum + txnSum;
-  }, 0);
-});
-
-// 3. Calculate Gross Subtotal
+// 1. Calculate Gross Subtotal
 const feesSubtotal = computed(() => {
   if (!localStudentAssessment.value?.fees?.length) {
     return 0;
@@ -83,22 +25,12 @@ const feesSubtotal = computed(() => {
   return localStudentAssessment.value.fees.reduce((sum: number, fee: any) => sum + Number(fee.amount), 0);
 });
 
-// 4. Calculate Discount Amount
+// 2. Calculate Discount Amount
 const discountAmount = computed(() => {
   if (!localStudentAssessment.value) return 0;
   const due = Number(localStudentAssessment.value.total_amount_due);
   const sub = feesSubtotal.value;
   return Math.max(0, sub - due);
-});
-
-// 5. Calculate Balance
-const balance = computed(() => {
-  if (!localStudentAssessment.value) {
-    return 0;
-  }
-  const calculatedBalance = Number(localStudentAssessment.value.total_amount_due) - tuitionPaid.value;
-  
-  return Math.max(0, calculatedBalance);
 });
 </script>
 
@@ -161,7 +93,7 @@ const balance = computed(() => {
         Financial Summary
       </h3>
       
-      <div class="grid grid-cols-1 gap-4 text-sm" :class="reservationPaid > 0 ? 'md:grid-cols-4' : 'md:grid-cols-3'">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
         
         <div class="stats shadow border border-base-200">
             <div class="stat px-4">
@@ -169,32 +101,6 @@ const balance = computed(() => {
                 <div class="stat-value text-success text-xl">₱ {{ parseFloat(localStudentAssessment.total_amount_due).toFixed(2) }}</div>
                 <div v-if="discountAmount > 0" class="stat-desc text-warning text-xs">
                     (Net of Discounts)
-                </div>
-            </div>
-        </div>
-
-        <div v-if="reservationPaid > 0" class="stats shadow border border-base-200 bg-base-200/50">
-            <div class="stat px-4">
-                <div class="stat-title text-xs uppercase font-bold opacity-60">Reservation / Advance</div>
-                <div class="stat-value text-xl opacity-70">₱ {{ reservationPaid.toFixed(2) }}</div>
-                <div class="stat-desc text-xs">
-                    (Not deducted from bal)
-                </div>
-            </div>
-        </div>
-
-        <div class="stats shadow border border-base-200">
-            <div class="stat px-4">
-                <div class="stat-title text-xs uppercase font-bold opacity-60">Tuition Paid</div>
-                <div class="stat-value text-info text-xl">₱ {{ tuitionPaid.toFixed(2) }}</div>
-            </div>
-        </div>
-
-        <div class="stats shadow border border-base-200">
-            <div class="stat px-4">
-                <div class="stat-title text-xs uppercase font-bold opacity-60">Current Balance</div>
-                <div class="stat-value text-xl" :class="{ 'text-error': balance > 0, 'text-success': balance === 0 }">
-                    ₱ {{ balance.toFixed(2) }}
                 </div>
             </div>
         </div>

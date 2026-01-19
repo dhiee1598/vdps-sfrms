@@ -14,7 +14,8 @@ import {
 const enrollments = mysqlTable(
   "enrollments",
   {
-    id: int().primaryKey().autoincrement(),
+    id: int("id").primaryKey().autoincrement(),
+
     student_id: varchar("student_id", { length: 255 }).notNull(),
     strand_id: int("strand_id"),
     grade_level_id: int("grade_level_id").notNull(),
@@ -26,13 +27,12 @@ const enrollments = mysqlTable(
     date_enrolled: timestamp("date_enrolled").notNull().defaultNow(),
     createdAt: timestamp("created_at").defaultNow(),
   },
-  (table) => {
-    return {
-      unique_student_academic_year: uniqueIndex(
-        "unique_student_academic_year",
-      ).on(table.student_id, table.academic_year_id),
-    };
-  },
+  (table) => [
+    uniqueIndex("unique_student_academic_year").on(
+      table.student_id,
+      table.academic_year_id,
+    ),
+  ],
 );
 
 const enrollmentsInsertSchema = createInsertSchema(enrollments).omit({

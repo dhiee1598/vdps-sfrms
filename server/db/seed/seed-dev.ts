@@ -3,7 +3,6 @@ import "dotenv/config";
 import db from "..";
 import { users } from "../schema/user-schema";
 import { students } from "../schema/student-schema";
-import { enrollments } from "../schema/enrollment-schema";
 import { academicYears } from "../schema/academic-years-schema";
 import { gradeLevel } from "../schema/grade-level-schema";
 import { fees } from "../schema/fees-schema";
@@ -11,6 +10,7 @@ import { sundries } from "../schema/sundry-schema";
 import { strands } from "../schema/strands-schema";
 import { sql, eq } from "drizzle-orm";
 import { sections } from "../schema/section-schema";
+import { enrollments } from "../schema/enrollment-schema";
 
 function randomItem<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -180,14 +180,21 @@ async function seedStudentsAndEnrollments() {
     });
 
     const grade = randomItem(allGradeLevels);
-    
+
     let strandIdForEnrollment: number | null = null;
-    if (['Grade 11', 'Grade 12'].includes(grade.grade_level_name) && allStrands.length > 0) {
-        strandIdForEnrollment = randomItem(allStrands).id;
+    if (
+      ["Grade 11", "Grade 12"].includes(grade.grade_level_name) &&
+      allStrands.length > 0
+    ) {
+      strandIdForEnrollment = randomItem(allStrands).id;
     }
-    
-    const sectionsForGrade = allSections.filter((s) => s.grade_level_id === grade.id);
-    const section = randomItem(sectionsForGrade.length > 0 ? sectionsForGrade : allSections);
+
+    const sectionsForGrade = allSections.filter(
+      (s) => s.grade_level_id === grade.id,
+    );
+    const section = randomItem(
+      sectionsForGrade.length > 0 ? sectionsForGrade : allSections,
+    );
 
     enrollmentData.push({
       student_id: id,
@@ -254,11 +261,20 @@ async function seedSections() {
   const sectionsData = [];
 
   for (const grade of allGradeLevels) {
-    sectionsData.push({ section_name: `${grade.grade_level_name} - A`, grade_level_id: grade.id });
-    sectionsData.push({ section_name: `${grade.grade_level_name} - B`, grade_level_id: grade.id });
+    sectionsData.push({
+      section_name: `${grade.grade_level_name} - A`,
+      grade_level_id: grade.id,
+    });
+    sectionsData.push({
+      section_name: `${grade.grade_level_name} - B`,
+      grade_level_id: grade.id,
+    });
   }
 
-  await db.insert(sections).values(sectionsData).onDuplicateKeyUpdate({ set: { section_name: sql`VALUES(section_name)` } });
+  await db
+    .insert(sections)
+    .values(sectionsData)
+    .onDuplicateKeyUpdate({ set: { section_name: sql`VALUES(section_name)` } });
 }
 
 async function seedFees() {

@@ -1,25 +1,24 @@
 import db from "~~/server/db";
 import { academicYears } from "~~/server/db/schema/academic-years-schema";
-import { enrollments } from "~~/server/db/schema/enrollment-schema";
 import {
   students,
   studentSelectSchema,
 } from "~~/server/db/schema/student-schema";
 import { and, desc, eq, isNull, ne, or, like, sql } from "drizzle-orm";
 import { getQuery } from "h3";
+import { enrollments } from "~~/server/db/schema/enrollment-schema";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const enrolled = query.enrolled === "true";
   const carryOver = query.carryOver === "true";
 
-  // Pagination & Search params
   const page = Number(query.page) || 1;
   const pageSize = Number(query.pageSize) || 10;
   const search = (query.search as string) || "";
   const offset = (page - 1) * pageSize;
 
-  // 1. get active academic year
+  // 1. Get Active Academic Year
   const activeYear = (
     await db
       .select({ year: academicYears })
@@ -32,19 +31,21 @@ export default defineEventHandler(async (event) => {
     return { message: "No active academic year found", data: [] };
   }
 
+  // 2. Fetch Students NOT Enrolled in Active Year
   if (enrolled) {
-    // 🔹 Students NOT enrolled in the current active year
     const conditions = [isNull(enrollments.student_id)];
 
     if (search) {
-      conditions.push(
-        or(
-          like(students.first_name, `%${search}%`),
-          like(students.last_name, `%${search}%`),
-          like(students.middle_name, `%${search}%`),
-          like(students.address, `%${search}%`)
-        )
+      const searchFilter = or(
+        like(students.first_name, `%${search}%`),
+        like(students.last_name, `%${search}%`),
+        like(students.middle_name, `%${search}%`),
+        like(students.address, `%${search}%`),
       );
+
+      if (searchFilter) {
+        conditions.push(searchFilter);
+      }
     }
 
     const notEnrolledStudents = await db
@@ -71,8 +72,8 @@ export default defineEventHandler(async (event) => {
     };
   }
 
+  // 3. Fetch Students Enrolled in PREVIOUS Years (For Carry Over)
   if (carryOver) {
-    // 🔹 Students who are enrolled, but only in a *different* academic year (previous year)
     const prevEnrolled = await db
       .select({ student: students })
       .from(students)
@@ -80,7 +81,7 @@ export default defineEventHandler(async (event) => {
         enrollments,
         and(
           eq(enrollments.student_id, students.id),
-          ne(enrollments.academic_year_id, activeYear.id), // not in current year
+          ne(enrollments.academic_year_id, activeYear.id),
         ),
       )
       .orderBy(desc(students.last_name));
@@ -95,25 +96,23 @@ export default defineEventHandler(async (event) => {
     };
   }
 
-  // 🔹 fallback → all students (Paginated & Searchable)
+  // 4. Standard Fetch (All Students with Pagination)
   const searchCondition = search
     ? or(
-        like(students.first_name, `%${search}%`),
-        like(students.last_name, `%${search}%`),
-        like(students.middle_name, `%${search}%`),
-        like(students.address, `%${search}%`),
-        like(students.id, `%${search}%`)
-      )
+      like(students.first_name, `%${search}%`),
+      like(students.last_name, `%${search}%`),
+      like(students.middle_name, `%${search}%`),
+      like(students.address, `%${search}%`),
+      like(students.id, `%${search}%`),
+    )
     : undefined;
 
-  // Get total count
   const totalCountResult = await db
     .select({ count: sql<number>`count(*)` })
     .from(students)
     .where(searchCondition);
   const total = Number(totalCountResult[0]?.count || 0);
 
-  // Get paginated data
   const allStudents = await db
     .select()
     .from(students)

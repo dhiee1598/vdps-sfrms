@@ -8,7 +8,6 @@ export default defineEventHandler(async (event) => {
 
   const { grade_level_id, section_names } = body;
 
-  // Ensure section_names is an array and has at least one value
   if (!Array.isArray(section_names) || section_names.length === 0) {
     throw createError({
       statusCode: 400,

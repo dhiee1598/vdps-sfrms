@@ -140,8 +140,6 @@ async function handleFormSubmit() {
           <th>Middle Name</th>
           <th>Last Name</th>
           <th>Total Fees</th>
-          <th>Total Paid</th>
-          <th>Remaining</th>
           <th class="text-center">
             Action
           </th>
@@ -149,12 +147,12 @@ async function handleFormSubmit() {
       </thead>
       <tbody>
         <tr v-if="pending">
-          <td colspan="8" class="text-center py-4">
+          <td colspan="6" class="text-center py-4">
             <span class="loading loading-ring loading-lg" />
           </td>
         </tr>
         <tr v-else-if="error">
-          <td colspan="7" class="text-center text-red-500 py-4">
+          <td colspan="6" class="text-center text-red-500 py-4">
             Failed to load students. Please try again.
           </td>
         </tr>
@@ -169,8 +167,6 @@ async function handleFormSubmit() {
           <td>{{ item?.student.middle_name }}</td>
           <td>{{ item?.student.last_name }}</td>
           <td>{{ item?.total_amount_due }}</td>
-          <td>{{ item?.total_paid }}</td>
-          <td>{{ item?.balance }}</td>
           <td class="flex gap-2 justify-center items-center">
             <button
               class="btn btn-sm btn-success tooltip"
@@ -182,7 +178,7 @@ async function handleFormSubmit() {
           </td>
         </tr>
         <tr v-if="(studentAssessments?.data || []).length === 0">
-          <td colspan="8" class="text-center text-gray-500 py-4">
+          <td colspan="6" class="text-center text-gray-500 py-4">
             No students found
           </td>
         </tr>

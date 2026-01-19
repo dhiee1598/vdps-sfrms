@@ -16,69 +16,80 @@ const formData = ref({
   student_id: '',
   total_amount: 0,
   status: 'paid',
-  transaction_items: [{
-    item_type: 'Fullpayment',
-    amount: 0,
-  }],
+  transaction_items: [] as any[],
 });
 
+// Fetch data
 const { data: assessments } = useFetch('/api/private/assessment?allAssessments=true');
+const { data: sundriesData } = useFetch('/api/private/sundries');
+
+const sundryList = computed(() => sundriesData.value?.data || []);
 
 const students = computed(() => {
   const uniqueStudents = new Map();
 
   assessments.value?.data.forEach((assessment) => {
-    const due = Number.parseFloat(assessment.total_amount_due);
-    const paid = Number.parseFloat(assessment.total_paid);
-
-    if (due !== paid) {
-      const studentId = assessment.student.id || assessment.student.student_id; // adjust if necessary
-
-      if (!uniqueStudents.has(studentId)) {
+    // We list all students who have assessments
+    const studentId = assessment.student.id || assessment.student.student_id;
+    if (!uniqueStudents.has(studentId)) {
         uniqueStudents.set(studentId, assessment.student);
-      }
     }
   });
 
   return Array.from(uniqueStudents.values());
 });
 
-const unpaidAssessmentsForSelectedStudent = computed(() => {
-  if (!selectedStudent.value)
-    return [];
-
-  return assessments.value?.data.filter((assessment) => {
-    const due = Number.parseFloat(assessment.total_amount_due);
-    const paid = Number.parseFloat(assessment.total_paid);
-    const studentId = assessment.student.id || assessment.student.student_id;
-
-    return studentId === selectedStudent.value.id && due !== paid;
-  }) ?? [];
-});
-
 const selectedAssessment = computed(() => {
-  return unpaidAssessmentsForSelectedStudent.value[0] || null;
+    if (!selectedStudent.value) return null;
+    // Find assessment for student
+    return assessments.value?.data.find((a) => {
+        const sId = a.student.id || a.student.student_id;
+        return sId === selectedStudent.value.id;
+    });
 });
 
 watch(selectedAssessment, (assessment) => {
   if (assessment && selectedStudent.value) {
-    const balance = Number(assessment.total_amount_due) - Number(assessment.total_paid);
-
     formData.value = {
       transaction_id: uuidv4(),
       assessment_id: assessment.id,
       student_id: selectedStudent.value.id,
-      total_amount: balance,
+      total_amount: 0,
       status: 'paid',
-      transaction_items: [{
-        item_type: 'Fullpayment',
-        amount: balance,
-      }],
+      transaction_items: [],
     };
   }
 });
 
+// Toggle Sundry Logic
+function toggleSundry(sundry: { sundry_name: string; sundry_amount: string }) {
+  const items = formData.value.transaction_items;
+  const existingIndex = items.findIndex(
+    (item: any) => item.item_type === sundry.sundry_name,
+  );
+
+  if (existingIndex !== -1) {
+    items.splice(existingIndex, 1);
+  } else {
+    items.push({
+      item_type: sundry.sundry_name,
+      amount: Number(sundry.sundry_amount) || 0,
+    });
+  }
+  recalculateTotal();
+}
+
+function recalculateTotal() {
+    const total = formData.value.transaction_items.reduce((sum, item) => sum + item.amount, 0);
+    formData.value.total_amount = Math.round((total + Number.EPSILON) * 100) / 100;
+}
+
 async function handleSubmit() {
+  if (formData.value.total_amount <= 0) {
+      emit('showMessage', 'Please select at least one item to pay.', true);
+      return;
+  }
+
   isSubmitting.value = true;
   try {
     const response = await $fetch(`/api/private/transactions`, {
@@ -89,16 +100,14 @@ async function handleSubmit() {
     selectedStudent.value = null;
     emit('showMessage', response.message, false);
     emit('showModal');
+    // Reset
     formData.value = {
       transaction_id: '',
       assessment_id: '',
       student_id: '',
       total_amount: 0,
       status: 'paid',
-      transaction_items: [{
-        item_type: 'Fullpayment',
-        amount: 0,
-      }],
+      transaction_items: [],
     };
   }
   catch (e) {
@@ -161,11 +170,28 @@ async function handleSubmit() {
         <ul class="text-sm space-y-1">
           <li><span class="font-medium">Grade Level:</span> {{ selectedAssessment?.grade_level || 'N/A' }}</li>
           <li><span class="font-medium">Strand:</span> {{ selectedAssessment?.strand || 'N/A' }}</li>
-          
           <li><span class="font-medium">Academic Year:</span> {{ selectedAssessment?.academic_year || 'N/A' }}</li>
         </ul>
       </div>
     </div>
+
+    <!-- Sundry Selection -->
+     <div class="mt-6 bg-base-100 p-4 rounded-lg border border-base-300" v-if="selectedStudent">
+        <p class="text-sm font-bold mb-2">Select Payment Items (Sundries)</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
+            <div v-for="sundry in sundryList" :key="sundry.id" class="form-control bg-base-200 rounded-md p-2">
+                <label class="cursor-pointer label justify-start gap-2">
+                    <input type="checkbox" class="checkbox checkbox-sm" 
+                        :checked="formData.transaction_items.some((i:any) => i.item_type === sundry.sundry_name)"
+                        @change="toggleSundry(sundry)"
+                    />
+                    <span class="label-text flex-1">{{ sundry.sundry_name }}</span>
+                    <span class="label-text font-bold">₱{{ sundry.sundry_amount }}</span>
+                </label>
+            </div>
+        </div>
+     </div>
+
 
     <!-- Transaction Details -->
     <div class="mt-6 bg-base-300 p-4 rounded-lg">
@@ -179,24 +205,18 @@ async function handleSubmit() {
         </dt> <dd>
           {{ formData.transaction_id }}
         </dd>
-        <dt class="font-medium">
-          Status:
-        </dt>
-        <dd>
-          <span class="badge badge-warning badge-sm">{{ selectedAssessment ? "Unpaid" : "N/A" }}</span>
-        </dd>
-
+        
         <dt class="font-medium">
           Total Amount:
         </dt>
-        <dd class="text-success font-semibold">
-          ₱ {{ selectedAssessment ? selectedAssessment.total_amount_due - selectedAssessment.total_paid : "N/A" }}
+        <dd class="text-success font-semibold text-xl">
+          ₱ {{ formData.total_amount.toFixed(2) }}
         </dd>
       </dl>
     </div>
 
     <!-- Transaction Items Table -->
-    <div class="mt-6">
+    <div class="mt-6" v-if="formData.transaction_items.length > 0">
       <p class="text-sm text-gray-400 mb-2">
         Payment Breakdown
       </p>
@@ -211,10 +231,10 @@ async function handleSubmit() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>Full Payment</td>
+            <tr v-for="(item, idx) in formData.transaction_items" :key="idx">
+              <td>{{ item.item_type }}</td>
               <td class="text-right">
-                ₱ {{ selectedAssessment ? selectedAssessment.total_amount_due - selectedAssessment.total_paid : "N/A" }}
+                ₱ {{ item.amount.toFixed(2) }}
               </td>
             </tr>
           </tbody>
@@ -230,7 +250,7 @@ async function handleSubmit() {
 
       <button
         class="btn btn-accent"
-        :disabled="!selectedStudent || isSubmitting"
+        :disabled="!selectedStudent || isSubmitting || formData.total_amount <= 0"
         @click="handleSubmit"
       >
         {{ isSubmitting ? 'Submitting...' : 'Submit Transaction' }}

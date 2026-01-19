@@ -1,18 +1,17 @@
 import db from "~~/server/db";
 import { academicYears } from "~~/server/db/schema/academic-years-schema";
 import { assessments } from "~~/server/db/schema/asesssment-schema";
-import { enrollments } from "~~/server/db/schema/enrollment-schema";
 import { gradeLevel } from "~~/server/db/schema/grade-level-schema";
 import { sections } from "~~/server/db/schema/section-schema";
 import { strands } from "~~/server/db/schema/strands-schema";
 import { students } from "~~/server/db/schema/student-schema";
 import { and, asc, eq, isNull, like, or, sql } from "drizzle-orm";
+import { enrollments } from "~~/server/db/schema/enrollment-schema";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const conditions = [];
 
-  // Pagination & Filters
   const page = Number(query.page) || 1;
   const pageSize = Number(query.pageSize) || 8;
   const search = (query.search as string) || "";
@@ -20,7 +19,6 @@ export default defineEventHandler(async (event) => {
   const strandFilter = (query.strand as string) || "";
   const offset = (page - 1) * pageSize;
 
-  // ✅ Get Active Year
   const [activeYear] = await db
     .select()
     .from(academicYears)
@@ -34,28 +32,24 @@ export default defineEventHandler(async (event) => {
     conditions.push(isNull(assessments.id));
   }
 
-  // Search Filter
   if (search) {
     conditions.push(
       or(
         like(students.first_name, `%${search}%`),
         like(students.last_name, `%${search}%`),
-        like(students.id, `%${search}%`), // Assuming student ID is searchable
+        like(students.id, `%${search}%`),
       ),
     );
   }
 
-  // Grade Level Filter
   if (gradeLevelFilter) {
     conditions.push(eq(gradeLevel.grade_level_name, gradeLevelFilter));
   }
 
-  // Strand Filter
   if (strandFilter) {
     conditions.push(eq(strands.strand_name, strandFilter));
   }
 
-  // Get Total Count
   const totalCountResult = await db
     .select({ count: sql<number>`count(*)` })
     .from(enrollments)
@@ -69,7 +63,6 @@ export default defineEventHandler(async (event) => {
 
   const total = Number(totalCountResult[0]?.count || 0);
 
-  // Get Paginated Data
   const enrolledStudents = await db
     .select({
       id: enrollments.id,

@@ -1,28 +1,35 @@
-import db from '~~/server/db';
-import { academicYears } from '~~/server/db/schema/academic-years-schema';
-import { and, eq, ne } from 'drizzle-orm';
+import db from "~~/server/db";
+import { academicYears } from "~~/server/db/schema/academic-years-schema";
+import { and, eq, ne } from "drizzle-orm";
 
 export default defineEventHandler(async (event) => {
-  // Require a user session (send back 401 if no `user` key in session)
   await requireUserSession(event);
 
   const id = Number(event.context.params?.id);
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'ID is required',
-      message: 'ID is required',
+      statusMessage: "ID is required",
+      message: "ID is required",
     });
   }
 
   const body = await readBody(event);
 
-  const [existingAcademicYear] = await db.select().from(academicYears).where(and(eq(academicYears.academic_year, body.academic_year), ne(academicYears.id, id)));
+  const [existingAcademicYear] = await db
+    .select()
+    .from(academicYears)
+    .where(
+      and(
+        eq(academicYears.academic_year, body.academic_year),
+        ne(academicYears.id, id),
+      ),
+    );
   if (existingAcademicYear) {
     throw createError({
       statusCode: 409,
-      statusMessage: 'Conflict',
-      message: 'An academic year with this name already exists.',
+      statusMessage: "Conflict",
+      message: "An academic year with this name already exists.",
     });
   }
 
@@ -35,13 +42,20 @@ export default defineEventHandler(async (event) => {
       })
       .where(eq(academicYears.id, id))
       .execute();
-  }
-  else {
+  } else {
     await db.update(academicYears).set({ status: false }).execute();
-    result = await db.update(academicYears).set({ status: true }).where(eq(academicYears.id, id)).execute();
+    result = await db
+      .update(academicYears)
+      .set({ status: true })
+      .where(eq(academicYears.id, id))
+      .execute();
   }
 
-  event.context.io.emit('newData', 'A new academic year has been updated.');
+  event.context.io.emit("newData", "A new academic year has been updated.");
 
-  return { success: true, data: result, message: 'Academic year updated successfully' };
+  return {
+    success: true,
+    data: result,
+    message: "Academic year updated successfully",
+  };
 });

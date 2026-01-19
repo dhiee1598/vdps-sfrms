@@ -12,7 +12,6 @@ import { and, eq, sql, isNull, like } from "drizzle-orm";
 import { academicYears } from "../schema/academic-years-schema";
 import { strands } from "../schema/strands-schema";
 import { students } from "../schema/student-schema";
-import { enrollments } from "../schema/enrollment-schema";
 import { fees } from "../schema/fees-schema";
 import { gradeLevelFees } from "../schema/grade-level-fees-schema";
 import { assessmentFees } from "../schema/assessment-fees-schema";
@@ -20,6 +19,7 @@ import { assessments } from "../schema/asesssment-schema";
 import { sundries } from "../schema/sundry-schema";
 import { transactions } from "../schema/transaction-schema";
 import { transaction_items } from "../schema/transaction-items-schema";
+import { enrollments } from "../schema/enrollment-schema";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -633,7 +633,6 @@ async function main() {
         enrollment_id: enrollmentResult.insertId,
         student_id: studentId,
         total_amount_due: roundedTotal.toFixed(2),
-        total_paid: "0.00",
         is_esc_grant: isEscGrant,
         is_cash_discount: false,
       });
@@ -680,7 +679,7 @@ async function main() {
         nameIdx = row.indexOf("NAME");
         totalIdx = row.indexOf("TOTAL");
         dateIdx = row.indexOf("DATE");
-        remarksIdx = row.indexOf("REMARKS"); // Look for REMARKS header
+        remarksIdx = row.indexOf("REMARKS");
         console.log(
           `      🔎 Found Header at Row ${i} | Name: ${nameIdx} | Total: ${totalIdx} | Remarks: ${remarksIdx}`,
         );
@@ -705,7 +704,7 @@ async function main() {
       const rawName = row[nameIdx];
       const rawTotal = row[totalIdx];
       const rawDate = dateIdx !== -1 ? row[dateIdx] : null;
-      const rawRemarks = remarksIdx !== -1 ? row[remarksIdx] : ""; // Get Remarks
+      const rawRemarks = remarksIdx !== -1 ? row[remarksIdx] : "";
 
       if (!rawName || !rawTotal) continue;
 
@@ -717,7 +716,6 @@ async function main() {
 
       const txnDate = parseTransactionDate(rawDate);
 
-      // --- NEW: Calculate Item Type based on Remarks ---
       const finalItemType = getItemTypeFromRemarks(
         String(rawRemarks),
         monthName,
@@ -762,15 +760,9 @@ async function main() {
 
         await tx.insert(transaction_items).values({
           transaction_id: txn.transaction_id,
-          item_type: finalItemType, // Use calculated type (Downpayment or Month)
+          item_type: finalItemType,
           amount: amount.toFixed(2),
         });
-
-        const currentPaid = Number(assessment.total_paid || 0);
-        await tx
-          .update(assessments)
-          .set({ total_paid: String((currentPaid + amount).toFixed(2)) })
-          .where(eq(assessments.id, assessment.id));
       });
       count++;
     }

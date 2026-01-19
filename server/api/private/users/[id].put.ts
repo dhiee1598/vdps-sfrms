@@ -1,17 +1,16 @@
-import db from '~~/server/db';
-import { users, userUpdateSchema } from '~~/server/db/schema/user-schema';
-import { and, eq, ne } from 'drizzle-orm';
+import db from "~~/server/db";
+import { users, userUpdateSchema } from "~~/server/db/schema/user-schema";
+import { and, eq, ne } from "drizzle-orm";
 
 export default defineEventHandler(async (event) => {
-  // Require a user session (send back 401 if no `user` key in session)
   await requireUserSession(event);
 
   const id = Number(event.context.params?.id);
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Invalid ID',
-      message: 'User ID is required in the request URL.',
+      statusMessage: "Invalid ID",
+      message: "User ID is required in the request URL.",
     });
   }
 
@@ -20,42 +19,45 @@ export default defineEventHandler(async (event) => {
   if (!body.success) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Bad Request',
-      message: 'Missing required fields or invalid data.',
+      statusMessage: "Bad Request",
+      message: "Missing required fields or invalid data.",
     });
   }
 
-  // Check if email already exist
-  const [existingEmail] = await db.select().from(users).where(and(eq(users.email, String(body.data.email)), ne(users.id, id)));
+  const [existingEmail] = await db
+    .select()
+    .from(users)
+    .where(and(eq(users.email, String(body.data.email)), ne(users.id, id)));
 
   if (existingEmail) {
     throw createError({
       statusCode: 409,
-      statusMessage: 'Conflict',
-      message: 'The email address is already in use by another account.',
+      statusMessage: "Conflict",
+      message: "The email address is already in use by another account.",
     });
   }
 
-  // Get users to update
   const [userToUpdate] = await db.select().from(users).where(eq(users.id, id));
 
   if (!userToUpdate) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Not Found',
-      message: 'User not found.',
+      statusMessage: "Not Found",
+      message: "User not found.",
     });
   }
 
   if (body.data.new_password && body.data.old_password) {
-    // Validate Password
-    const isPasswordValid = await verifyPassword(userToUpdate.password, body.data.old_password);
+    const isPasswordValid = await verifyPassword(
+      userToUpdate.password,
+      body.data.old_password,
+    );
 
     if (!isPasswordValid) {
       throw createError({
         statusCode: 401,
-        statusMessage: 'Unauthorized',
-        message: 'The current password you entered is incorrect.',
+        statusMessage: "Unauthorized",
+        message: "The current password you entered is incorrect.",
       });
     }
   }
@@ -65,14 +67,16 @@ export default defineEventHandler(async (event) => {
     .set({
       name: body.data.name,
       email: body.data.email,
-      password: body.data.new_password ? await hashPassword(body.data.new_password) : userToUpdate.password,
+      password: body.data.new_password
+        ? await hashPassword(body.data.new_password)
+        : userToUpdate.password,
       profile_image: body.data.profile_image,
     })
     .where(eq(users.id, id));
 
   return {
     statusCode: 200,
-    statusMessage: 'OK',
-    message: 'User updated successfully.',
+    statusMessage: "OK",
+    message: "User updated successfully.",
   };
 });

@@ -18,10 +18,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const body = await readValidatedBody(
-    event,
-    enrollmentUpdateSchema.safeParse,
-  );
+  const body = await readValidatedBody(event, enrollmentUpdateSchema.safeParse);
 
   if (!body.success) {
     throw createError({

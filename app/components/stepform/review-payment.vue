@@ -4,27 +4,9 @@ const props = defineProps<{
   datas: any;
 }>();
 
-// UPDATE: Include months in the tuition types list
-const tuitionTypes = [
-  'Downpayment', 
-  'Full Payment',
-  'June', 'July', 'August', 'September', 'October', 
-  'November', 'December', 'January', 'February', 'March',
-  'April', 'May' // Added just in case
-];
+// Simple computed property for items since we no longer separate tuition
+const paymentItems = computed(() => props.formData.transaction_items);
 
-const tuitionItems = computed(() =>
-  props.formData.transaction_items.filter((item: { item_type: string; amount: number }) =>
-    tuitionTypes.includes(item.item_type),
-  ),
-);
-
-const additionalItems = computed(() =>
-  props.formData.transaction_items.filter(
-    (item: { item_type: string; amount: number }) =>
-      !tuitionTypes.includes(item.item_type),
-  ),
-);
 </script>
 
 <template>
@@ -49,11 +31,11 @@ const additionalItems = computed(() =>
       <div class="space-y-3">
         <ul>
           <p class="text-lg font-semibold text-gray-700 border-b border-gray-300 pb-1 mb-2">
-            Tuition Fees
+            Payment Items
           </p>
-          <template v-if="tuitionItems.length > 0">
+          <template v-if="paymentItems.length > 0">
             <li
-              v-for="(item, index) in tuitionItems"
+              v-for="(item, index) in paymentItems"
               :key="index"
               class="flex justify-between items-center text-base text-gray-600 py-1"
             >
@@ -64,30 +46,7 @@ const additionalItems = computed(() =>
             </li>
           </template>
           <li v-else class="text-gray-500 italic text-sm">
-            No Tuition Fees Selected
-          </li>
-        </ul>
-      </div>
-
-      <div class="space-y-3">
-        <ul>
-          <p class="text-lg font-semibold text-gray-700 border-b border-gray-300 pb-1 mb-2">
-            Additional Fees
-          </p>
-          <template v-if="additionalItems.length > 0">
-            <li
-              v-for="(item, index) in additionalItems"
-              :key="index"
-              class="flex justify-between items-center text-base text-gray-600 py-1"
-            >
-              <div class="flex flex-row justify-between w-full">
-                <span>{{ item.item_type }}</span>
-                <span class="font-medium text-gray-800">₱ {{ Number(item.amount).toFixed(2) }}</span>
-              </div>
-            </li>
-          </template>
-          <li v-else class="text-gray-500 italic text-sm">
-            No Additional Fees Selected
+            No Items Selected
           </li>
         </ul>
       </div>
