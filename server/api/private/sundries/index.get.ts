@@ -1,6 +1,6 @@
 import db from '~~/server/db';
 import { sundries } from '~~/server/db/schema/sundry-schema';
-import { like, and, eq, or, isNull } from 'drizzle-orm';
+import { and, eq, isNull, like, or } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);

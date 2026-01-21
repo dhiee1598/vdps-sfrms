@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
       or(
         like(students.first_name, `%${search}%`),
         like(students.last_name, `%${search}%`),
-        like(students.id, `%${search}%`),
+        eq(students.id, search), // Exact match for Student ID
       ),
     );
   }

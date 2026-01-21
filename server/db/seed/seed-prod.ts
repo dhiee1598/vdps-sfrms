@@ -253,7 +253,6 @@ async function main() {
   const studentWorkbook = XLSX.read(readFileSync(studentPath), {
     type: "buffer",
   });
-  let studentCounter = 1;
 
   for (const sheetName of studentWorkbook.SheetNames) {
     let gradeSearch = "";
@@ -302,7 +301,8 @@ async function main() {
       const { firstName, middleName, lastName } = parseStudentListName(
         row["NAME"],
       );
-      const studentId = `STU-${String(studentCounter++).padStart(4, "0")}-2026`;
+
+      const studentId = row["ID NO."];
 
       let finalContact = "N/A";
       if (row["CONTACT NUMBER"]) {
@@ -323,9 +323,8 @@ async function main() {
         address: row["ADDRESS"] || "N/A",
         contact_number: finalContact,
       });
-      // Random Date in June 2025 (June 1 - June 30)
-      const start = new Date('2025-06-01').getTime();
-      const end = new Date('2025-06-30').getTime();
+      const start = new Date("2025-06-01").getTime();
+      const end = new Date("2025-06-30").getTime();
       const randomDate = new Date(start + Math.random() * (end - start));
 
       await db.insert(enrollments).values({

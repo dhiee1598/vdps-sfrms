@@ -1,6 +1,6 @@
-import { eq } from 'drizzle-orm';
 import db from '~~/server/db';
 import { sundries } from '~~/server/db/schema/sundry-schema';
+import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id');

@@ -5,7 +5,7 @@ import {
   students,
   studentSelectSchema,
 } from '~~/server/db/schema/student-schema';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   await requireUserSession(event);
@@ -20,6 +20,20 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  // Check if Student ID already exists
+  const [existingId] = await db
+    .select()
+    .from(students)
+    .where(eq(students.id, body.data.id));
+
+  if (existingId) {
+    throw createError({
+      statusCode: 409,
+      message: 'Student ID already exists.',
+    });
+  }
+
+  // Check for duplicate name
   const conditions = [
     eq(students.first_name, body.data.first_name),
     eq(students.last_name, body.data.last_name),
@@ -36,39 +50,16 @@ export default defineEventHandler(async (event) => {
   if (existingStudent) {
     throw createError({
       statusCode: 409,
-      message: 'Student already exists.',
+      message: 'Student name already exists.',
     });
   }
 
-  const last = await db
-    .select({ id: students.id })
-    .from(students)
-    .orderBy(desc(students.id))
-    .limit(1);
-
-  let nextNumber = 1;
-  const year = new Date().getFullYear();
-
-  if (last.length > 0) {
-    const lastId = last[0].id;
-    const parts = lastId.split('-');
-    if (parts[2] === String(year)) {
-      nextNumber = Number.parseInt(parts[1], 10) + 1;
-    }
-  }
-
-  const formattedNumber = String(nextNumber).padStart(4, '0');
-  const newId = `STU-${formattedNumber}-${year}`;
-
-  await db.insert(students).values({
-    ...body.data,
-    id: newId,
-  });
+  await db.insert(students).values(body.data);
 
   const [newStudent] = await db
     .select()
     .from(students)
-    .where(eq(students.id, newId));
+    .where(eq(students.id, body.data.id));
 
   const parsedStudent = studentSelectSchema.parse(newStudent);
 

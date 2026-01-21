@@ -19,7 +19,8 @@ const formData = ref({
 });
 
 async function handleDelete() {
-  if (!deletingId.value) return;
+  if (!deletingId.value)
+    return;
   try {
     const response = await $fetch(`/api/private/sundries/${deletingId.value}`, {
       method: 'DELETE',

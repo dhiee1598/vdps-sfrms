@@ -14,24 +14,34 @@ const props = defineProps({
 
 const emit = defineEmits(['update:selectedStudent']);
 const selected = ref({ ...props.selectedStudent });
+const isTyping = ref(false);
 let searchTimeout: NodeJS.Timeout;
 
 const debouncedSearch = ref('');
 
 // Debounce the search input
 function handleSearchChange(query: string) {
+  isTyping.value = true;
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
     debouncedSearch.value = query;
-  }, 300);
+    isTyping.value = false;
+  }, 3000);
 }
 
 const { data: enrollments, pending, refresh } = useFetch('/api/private/enrollment', {
   lazy: true,
+  immediate: false,
   query: computed(() => ({
     search: debouncedSearch.value,
     pageSize: 20,
   })),
+});
+
+watch(debouncedSearch, async (newVal) => {
+  if (newVal) {
+    await refresh();
+  }
 });
 
 watch(selected, (val) => {
@@ -43,14 +53,19 @@ watch(() => props.selectedStudent, (newVal) => {
 });
 
 const studentOptions = computed(() => {
+  if (!debouncedSearch.value)
+    return [];
+
   return (enrollments.value?.data ?? []).map((enrollment: any) => ({
     ...enrollment,
-    name: `${enrollment.last_name ?? ''}, ${enrollment.first_name ?? ''} ${enrollment.middle_name ?? ''}`.trim(),
+    label_display: enrollment.student_id,
   }));
 });
 
 async function handleSocketData() {
-  await refresh();
+  if (debouncedSearch.value) {
+    await refresh();
+  }
 }
 
 onMounted(() => {
@@ -83,18 +98,18 @@ onBeforeUnmount(() => {
 
     <div class="form-control w-full max-w-md mx-auto text-left">
       <label class="label">
-        <span class="label-text">Search by Student Name:</span>
+        <span class="label-text">Search by Student ID:</span>
       </label>
       <Multiselect
         v-model="selected"
         :options="studentOptions"
         :searchable="true"
         :internal-search="false"
-        :loading="pending || disabled"
+        :loading="pending || disabled || isTyping"
         :disabled="disabled"
-        label="name"
+        label="label_display"
         track-by="id"
-        placeholder="Search by name..."
+        placeholder="Enter Student ID (e.g., 0000)..."
         class="w-full border rounded-sm"
         @search-change="handleSearchChange"
       >

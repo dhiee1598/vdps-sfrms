@@ -10,6 +10,6 @@ export const students = mysqlTable('students', {
   contact_number: varchar({ length: 255 }).notNull(),
 });
 
-export const studentInsertSchema = createInsertSchema(students).omit({ id: true });
+export const studentInsertSchema = createInsertSchema(students);
 export const studentUpdateSchema = createUpdateSchema(students);
 export const studentSelectSchema = createSelectSchema(students);
