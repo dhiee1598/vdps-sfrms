@@ -13,37 +13,60 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:selectedStudent']);
+
+// State
 const selected = ref({ ...props.selectedStudent });
 const isTyping = ref(false);
+const debouncedSearch = ref('');
 let searchTimeout: NodeJS.Timeout;
 
-const debouncedSearch = ref('');
-
-// Debounce the search input
+// 1. Handle Search Input with Debounce
 function handleSearchChange(query: string) {
+  // If input is cleared, reset immediately
+  if (!query) {
+    debouncedSearch.value = '';
+    isTyping.value = false;
+    return;
+  }
+
   isTyping.value = true;
   clearTimeout(searchTimeout);
+  
+  // Wait 600ms after typing stops before searching
   searchTimeout = setTimeout(() => {
     debouncedSearch.value = query;
     isTyping.value = false;
-  }, 1500);
+  }, 600);
 }
 
+// 2. Fetch Data
+// We use a specific key to ensure the hook updates the same data object
 const { data: enrollments, pending, refresh } = useFetch('/api/private/enrollment', {
+  key: 'student-search-fetch',
   lazy: true,
-  immediate: false,
+  server: false, // Perform search on client-side only
   query: computed(() => ({
     search: debouncedSearch.value,
     pageSize: 20,
   })),
+  watch: [debouncedSearch], // Auto-fetch when search changes
 });
 
-watch(debouncedSearch, async (newVal) => {
-  if (newVal) {
-    await refresh();
+// 3. Computed Options (The Flicker Fix)
+const studentOptions = computed(() => {
+  // If we are typing OR the fetch is loading, return empty list.
+  // This hides the "old" ID immediately so you don't see the flicker.
+  if (isTyping.value || pending.value || !debouncedSearch.value) {
+    return [];
   }
+
+  return (enrollments.value?.data ?? []).map((enrollment: any) => ({
+    ...enrollment,
+    label_display: enrollment.student_id,
+  }));
 });
 
+// Sync selected value with parent
 watch(selected, (val) => {
   emit('update:selectedStudent', val);
 });
@@ -52,16 +75,7 @@ watch(() => props.selectedStudent, (newVal) => {
   selected.value = newVal;
 });
 
-const studentOptions = computed(() => {
-  if (!debouncedSearch.value)
-    return [];
-
-  return (enrollments.value?.data ?? []).map((enrollment: any) => ({
-    ...enrollment,
-    label_display: enrollment.student_id,
-  }));
-});
-
+// Socket Handler
 async function handleSocketData() {
   if (debouncedSearch.value) {
     await refresh();
@@ -69,12 +83,7 @@ async function handleSocketData() {
 }
 
 onMounted(() => {
-  if (socket.connected) {
-    //
-  }
-  else {
-    socket.connect();
-  }
+  if (!socket.connected) socket.connect();
   socket.on('newData', handleSocketData);
 });
 
@@ -88,6 +97,7 @@ onBeforeUnmount(() => {
     <div class="text-2xl md:text-4xl font-black uppercase py-10">
       Student Payment Kiosk System
     </div>
+    
     <NuxtImg
       src="/vdps-logo.png"
       alt="Logo"
@@ -100,12 +110,13 @@ onBeforeUnmount(() => {
       <label class="label">
         <span class="label-text">Search by Student ID:</span>
       </label>
+      
       <Multiselect
         v-model="selected"
         :options="studentOptions"
         :searchable="true"
         :internal-search="false"
-        :loading="pending || disabled || isTyping"
+        :loading="pending || isTyping"
         :disabled="disabled"
         label="label_display"
         track-by="id"
@@ -114,8 +125,10 @@ onBeforeUnmount(() => {
         @search-change="handleSearchChange"
       >
         <template #noResult>
-          <span>No student found.</span>
+          <span v-if="pending || isTyping" class="text-gray-500">Searching...</span>
+          <span v-else class="text-red-500">No student found.</span>
         </template>
+        
       </Multiselect>
     </div>
   </div>
