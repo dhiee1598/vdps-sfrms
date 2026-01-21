@@ -8,25 +8,27 @@ import db from "..";
 import { users } from "../schema/user-schema";
 import { gradeLevel } from "../schema/grade-level-schema";
 import { sections } from "../schema/section-schema";
-import { and, eq, sql, isNull, like } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { academicYears } from "../schema/academic-years-schema";
 import { strands } from "../schema/strands-schema";
 import { students } from "../schema/student-schema";
 import { sundries } from "../schema/sundry-schema";
 import { enrollments } from "../schema/enrollment-schema";
+import { transactions } from "../schema/transaction-schema";
+import { transaction_items } from "../schema/transaction-items-schema";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // --- HELPER 1: Parse Student List Name ---
 function parseStudentListName(nameString: string) {
-  if (!nameString || !nameString.includes(',')) {
+  if (!nameString || !nameString.includes(",")) {
     return { firstName: nameString || "", middleName: null, lastName: "" };
   }
-  const [lastName, rest] = nameString.split(',').map((s) => s.trim());
+  const [lastName, rest] = nameString.split(",").map((s) => s.trim());
   if (!rest) return { firstName: "", middleName: null, lastName };
 
-  const nameParts = rest.split(' ');
+  const nameParts = rest.split(" ");
   const lastPart = nameParts[nameParts.length - 1];
   const isMiddleInitial = /^[A-Z]\.?$/i.test(lastPart);
 
@@ -34,11 +36,11 @@ function parseStudentListName(nameString: string) {
   let middleName: string | null;
 
   if (isMiddleInitial) {
-    middleName = nameParts.pop()?.replace('.', '') || null;
-    firstName = nameParts.join(' ');
+    middleName = nameParts.pop()?.replace(".", "") || null;
+    firstName = nameParts.join(" ");
   } else {
     middleName = null;
-    firstName = nameParts.join(' ');
+    firstName = nameParts.join(" ");
   }
   return { firstName, middleName, lastName };
 }
@@ -55,6 +57,8 @@ async function main() {
     users,
     strands,
     sundries,
+    transactions,
+    transaction_items,
   ];
   for (const table of tables) await db.execute(sql`TRUNCATE TABLE ${table}`);
   await db.execute(sql`SET FOREIGN_KEY_CHECKS = 1;`);
