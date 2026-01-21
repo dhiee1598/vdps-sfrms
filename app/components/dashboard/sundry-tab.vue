@@ -7,14 +7,33 @@ import { ref } from 'vue';
 const { data: sundries, pending, error, refresh } = await useFetch('/api/private/sundries');
 const { isMessage, isError, responseMessage, showMessage } = useNotification();
 const showModal = ref(false);
+const showDeleteModal = ref(false);
 const isEditing = ref(false);
 const editingId = ref<number | null>(null);
+const deletingId = ref<number | null>(null);
 
 const formData = ref({
   sundry_name: '',
   sundry_description: '',
   sundry_amount: '',
 });
+
+async function handleDelete() {
+  if (!deletingId.value) return;
+  try {
+    const response = await $fetch(`/api/private/sundries/${deletingId.value}`, {
+      method: 'DELETE',
+    });
+    showMessage(response.message, false);
+    showDeleteModal.value = false;
+    deletingId.value = null;
+    await refresh();
+  }
+  catch (err) {
+    const error = err as FetchError;
+    showMessage(error.data?.message || 'Failed to delete fee.', true);
+  }
+}
 
 async function handleClick() {
   let response;
@@ -71,6 +90,11 @@ function openEditModal(item: any) {
 
   showModal.value = true;
 }
+
+function openDeleteModal(id: number) {
+  deletingId.value = id;
+  showDeleteModal.value = true;
+}
 </script>
 
 <template>
@@ -112,17 +136,46 @@ function openEditModal(item: any) {
           <td>{{ sundry.sundry_amount }}</td>
 
           <td>
-            <button
-              class="btn btn-sm btn-info tooltip-info tooltip"
-              data-tip="Update"
-              @click="openEditModal(sundry)"
-            >
-              <Icon name="solar:smartphone-update-broken" size="16" />
-            </button>
+            <div class="flex gap-2">
+              <button
+                class="btn btn-sm btn-info tooltip-info tooltip"
+                data-tip="Update"
+                @click="openEditModal(sundry)"
+              >
+                <Icon name="solar:smartphone-update-broken" size="16" />
+              </button>
+              <button
+                class="btn btn-sm btn-error tooltip-error tooltip"
+                data-tip="Delete"
+                @click="openDeleteModal(sundry.id)"
+              >
+                <Icon name="solar:trash-bin-trash-linear" size="16" />
+              </button>
+            </div>
           </td>
         </tr>
       </tbody>
     </table>
+
+    <!-- DELETE CONFIRMATION MODAL -->
+    <dialog :open="showDeleteModal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg text-error">
+          Delete Fee
+        </h3>
+        <p class="py-4">
+          Are you sure you want to delete this fee? This will archive it and remove it from future selections.
+        </p>
+        <div class="modal-action">
+          <button class="btn" @click="showDeleteModal = false">
+            Cancel
+          </button>
+          <button class="btn btn-error" @click="handleDelete">
+            Yes, Delete
+          </button>
+        </div>
+      </div>
+    </dialog>
 
     <!-- MODAL -->
 

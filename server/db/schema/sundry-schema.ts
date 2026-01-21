@@ -1,4 +1,5 @@
 import {
+  boolean,
   decimal,
   int,
   mysqlTable,
@@ -17,6 +18,7 @@ const sundries = mysqlTable('sundries', {
     precision: 10,
     scale: 2,
   }).notNull(),
+  is_archived: boolean('is_archived').default(false),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -28,6 +30,7 @@ const sundryInsertSchema = createInsertSchema(sundries, {
 }).omit({
   id: true,
   createdAt: true,
+  is_archived: true,
 });
 
 export { sundries, sundryInsertSchema };

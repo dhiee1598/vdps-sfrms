@@ -26,6 +26,25 @@ export default defineEventHandler(async (event) => {
     .where(eq(sundries.sundry_name, sundry_name));
 
   if (existingSundry) {
+    if (existingSundry.is_archived) {
+      // Restore archived fee
+      await db
+        .update(sundries)
+        .set({
+          is_archived: false,
+          sundry_description,
+          sundry_amount,
+        })
+        .where(eq(sundries.id, existingSundry.id));
+
+      event.context.io.emit('newData', 'A sundry has been restored.');
+
+      return {
+        success: true,
+        message: 'Fee restored successfully.',
+      };
+    }
+
     throw createError({
       statusCode: 409,
       statusMessage: 'Conflict',
