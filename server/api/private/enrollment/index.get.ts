@@ -1,11 +1,10 @@
 import db from "~~/server/db";
 import { academicYears } from "~~/server/db/schema/academic-years-schema";
-import { assessments } from "~~/server/db/schema/asesssment-schema";
 import { gradeLevel } from "~~/server/db/schema/grade-level-schema";
 import { sections } from "~~/server/db/schema/section-schema";
 import { strands } from "~~/server/db/schema/strands-schema";
 import { students } from "~~/server/db/schema/student-schema";
-import { and, asc, eq, isNull, like, or, sql } from "drizzle-orm";
+import { and, asc, eq, like, or, sql } from "drizzle-orm";
 import { enrollments } from "~~/server/db/schema/enrollment-schema";
 
 export default defineEventHandler(async (event) => {
@@ -26,10 +25,6 @@ export default defineEventHandler(async (event) => {
 
   if (activeYear) {
     conditions.push(eq(enrollments.academic_year_id, activeYear.id));
-  }
-
-  if (query.withoutAssessment) {
-    conditions.push(isNull(assessments.id));
   }
 
   if (search) {
@@ -54,7 +49,6 @@ export default defineEventHandler(async (event) => {
     .select({ count: sql<number>`count(*)` })
     .from(enrollments)
     .leftJoin(students, eq(students.id, enrollments.student_id))
-    .leftJoin(assessments, eq(assessments.enrollment_id, enrollments.id))
     .leftJoin(gradeLevel, eq(gradeLevel.id, enrollments.grade_level_id))
     .leftJoin(strands, eq(strands.id, enrollments.strand_id))
     .leftJoin(academicYears, eq(academicYears.id, enrollments.academic_year_id))
@@ -84,7 +78,6 @@ export default defineEventHandler(async (event) => {
     })
     .from(enrollments)
     .leftJoin(students, eq(students.id, enrollments.student_id))
-    .leftJoin(assessments, eq(assessments.enrollment_id, enrollments.id))
     .leftJoin(gradeLevel, eq(gradeLevel.id, enrollments.grade_level_id))
     .leftJoin(strands, eq(strands.id, enrollments.strand_id))
     .leftJoin(academicYears, eq(academicYears.id, enrollments.academic_year_id))

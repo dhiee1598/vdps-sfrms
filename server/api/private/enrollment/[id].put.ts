@@ -41,6 +41,8 @@ export default defineEventHandler(async (event) => {
       })
       .where(eq(enrollments.student_id, studentId));
 
+    event.context.io.emit("newData", "A student has been updated");
+
     return {
       success: true,
       message: "Enrollment updated successfully.",

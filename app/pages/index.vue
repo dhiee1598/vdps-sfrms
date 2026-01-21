@@ -14,7 +14,6 @@ const selectedStudent = ref();
 const studentdata = ref();
 const formData = ref({
   transaction_id: '',
-  assessment_id: '',
   student_id: '',
   total_amount: 0,
   transaction_items: [],
@@ -30,7 +29,6 @@ function resetForm() {
   studentdata.value = null;
   formData.value = {
     transaction_id: '',
-    assessment_id: '',
     student_id: '',
     total_amount: 0,
     transaction_items: [],
@@ -111,12 +109,10 @@ onMounted(() => {
 watch(selectedStudent, (newVal) => {
   if (newVal) {
     studentdata.value = studentComputation(newVal);
-    formData.value.assessment_id = studentdata.value.selected_students.id;
     formData.value.transaction_id = uuidv4();
     formData.value.student_id = studentdata.value.selected_students.student_id;
   } else {
     studentdata.value = null;
-    formData.value.assessment_id = '';
     formData.value.student_id = '';
     formData.value.transaction_items = [];
   }
@@ -203,7 +199,6 @@ watch(selectedStudent, (newVal) => {
             if (step === 1) {
               selectedStudent = null;
               studentdata = null;
-              formData.assessment_id = '';
               formData.student_id = '';
               formData.transaction_items = [];
             }

@@ -66,7 +66,7 @@ export default defineEventHandler(async (event) => {
 
   return {
     success: true,
-    message: `Sundry updated successfully.`,
+    message: `Fee updated successfully.`,
     data: result,
   };
 });

@@ -21,11 +21,6 @@
               <Icon name="solar:bill-list-broken" size="25" /> Enrollment
             </NuxtLink>
           </li>
-          <li>
-            <NuxtLink to="/dashboard/assessment" class="font-medium">
-              <Icon name="solar:hand-money-outline" size="25" /> Assessment
-            </NuxtLink>
-          </li>
 
           <li>
             <NuxtLink to="/dashboard/transaction-logs" class="font-medium">

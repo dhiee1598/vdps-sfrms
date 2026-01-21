@@ -27,7 +27,7 @@ function handleSearchChange(query: string) {
   }, 300);
 }
 
-const { data: assessments, pending, refresh } = useFetch('/api/private/assessment', {
+const { data: enrollments, pending, refresh } = useFetch('/api/private/enrollment', {
   lazy: true,
   query: computed(() => ({
     search: debouncedSearch.value,
@@ -44,9 +44,9 @@ watch(() => props.selectedStudent, (newVal) => {
 });
 
 const studentOptions = computed(() => {
-  return (assessments.value?.data ?? []).map((assessment: any) => ({
-    ...assessment,
-    name: `${assessment.student?.last_name ?? ''}, ${assessment.student?.first_name ?? ''} ${assessment.student?.middle_name ?? ''}`.trim(),
+  return (enrollments.value?.data ?? []).map((enrollment: any) => ({
+    ...enrollment,
+    name: `${enrollment.last_name ?? ''}, ${enrollment.first_name ?? ''} ${enrollment.middle_name ?? ''}`.trim(),
   }));
 });
 

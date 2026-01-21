@@ -12,7 +12,6 @@ const selectedStudent = ref();
 const isSubmitting = ref(false);
 const formData = ref({
   transaction_id: '',
-  assessment_id: '',
   student_id: '',
   total_amount: 0,
   status: 'paid',
@@ -20,40 +19,22 @@ const formData = ref({
 });
 
 // Fetch data
-const { data: assessments } = useFetch('/api/private/assessment?allAssessments=true');
+const { data: enrollments } = useFetch('/api/private/enrollment?pageSize=1000');
 const { data: sundriesData } = useFetch('/api/private/sundries');
 
 const sundryList = computed(() => sundriesData.value?.data || []);
 
 const students = computed(() => {
-  const uniqueStudents = new Map();
-
-  assessments.value?.data.forEach((assessment) => {
-    // We list all students who have assessments
-    const studentId = assessment.student.id || assessment.student.student_id;
-    if (!uniqueStudents.has(studentId)) {
-        uniqueStudents.set(studentId, assessment.student);
-    }
-  });
-
-  return Array.from(uniqueStudents.values());
+  // Use enrollments directly. Ensure uniqueness if needed, but typically one active enrollment per student.
+  if (!enrollments.value?.data) return [];
+  return enrollments.value.data;
 });
 
-const selectedAssessment = computed(() => {
-    if (!selectedStudent.value) return null;
-    // Find assessment for student
-    return assessments.value?.data.find((a) => {
-        const sId = a.student.id || a.student.student_id;
-        return sId === selectedStudent.value.id;
-    });
-});
-
-watch(selectedAssessment, (assessment) => {
-  if (assessment && selectedStudent.value) {
+watch(selectedStudent, (student) => {
+  if (student) {
     formData.value = {
       transaction_id: uuidv4(),
-      assessment_id: assessment.id,
-      student_id: selectedStudent.value.id,
+      student_id: student.student_id, // Enrollment object has student_id
       total_amount: 0,
       status: 'paid',
       transaction_items: [],
@@ -103,7 +84,6 @@ async function handleSubmit() {
     // Reset
     formData.value = {
       transaction_id: '',
-      assessment_id: '',
       student_id: '',
       total_amount: 0,
       status: 'paid',
@@ -168,9 +148,9 @@ async function handleSubmit() {
           Enrollment Information
         </p>
         <ul class="text-sm space-y-1">
-          <li><span class="font-medium">Grade Level:</span> {{ selectedAssessment?.grade_level || 'N/A' }}</li>
-          <li><span class="font-medium">Strand:</span> {{ selectedAssessment?.strand || 'N/A' }}</li>
-          <li><span class="font-medium">Academic Year:</span> {{ selectedAssessment?.academic_year || 'N/A' }}</li>
+          <li><span class="font-medium">Grade Level:</span> {{ selectedStudent?.grade_level || 'N/A' }}</li>
+          <li><span class="font-medium">Strand:</span> {{ selectedStudent?.strand_name || 'N/A' }}</li>
+          <li><span class="font-medium">Academic Year:</span> {{ selectedStudent?.academic_year || 'N/A' }}</li>
         </ul>
       </div>
     </div>

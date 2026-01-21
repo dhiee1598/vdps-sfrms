@@ -77,10 +77,10 @@ function openEditModal(item: any) {
   <div class="p-10 w-full">
     <div class="flex flex-row justify-between my-4">
       <p class="text-3xl">
-        List of Sundries
+        List of Available Fees
       </p>
       <button class="btn btn-accent" @click="openCreateModal">
-        <Icon name="solar:add-circle-linear" size="24" />Add Sundry
+        <Icon name="solar:add-circle-linear" size="24" />Add Fee
       </button>
     </div>
 
@@ -129,14 +129,14 @@ function openEditModal(item: any) {
     <dialog :open="showModal" class="modal">
       <div class="modal-box">
         <h3 class="text-lg font-bold">
-          {{ isEditing ? 'Update Sundry' : 'Add Sundry' }}
+          {{ isEditing ? 'Update Fee' : 'New Fee' }}
         </h3>
 
         <div class="modal-action">
           <form class="flex flex-col gap-4 w-full" @submit.prevent="handleClick">
             <fieldset class="fieldset">
               <legend class="fieldset-legend">
-                Sundry Name
+                Name
               </legend>
               <input
                 v-model="formData.sundry_name"

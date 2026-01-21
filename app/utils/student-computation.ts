@@ -1,5 +1,5 @@
 export default function studentComputation(newVal: any) {
-  if (!newVal || !newVal.total_amount_due) {
+  if (!newVal) {
     return {
       selected_students: newVal,
       total_paid: 0,

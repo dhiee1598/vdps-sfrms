@@ -73,6 +73,8 @@ export default defineEventHandler(async (event) => {
     })
     .$returningId();
 
+  event.context.io.emit("newData", "A new student has enrolled");
+
   return {
     success: true,
     data: enrolledStudent,

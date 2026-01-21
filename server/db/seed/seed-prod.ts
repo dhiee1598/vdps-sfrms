@@ -12,13 +12,7 @@ import { and, eq, sql, isNull, like } from "drizzle-orm";
 import { academicYears } from "../schema/academic-years-schema";
 import { strands } from "../schema/strands-schema";
 import { students } from "../schema/student-schema";
-import { fees } from "../schema/fees-schema";
-import { gradeLevelFees } from "../schema/grade-level-fees-schema";
-import { assessmentFees } from "../schema/assessment-fees-schema";
-import { assessments } from "../schema/asesssment-schema";
 import { sundries } from "../schema/sundry-schema";
-import { transactions } from "../schema/transaction-schema";
-import { transaction_items } from "../schema/transaction-items-schema";
 import { enrollments } from "../schema/enrollment-schema";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,13 +20,13 @@ const __dirname = path.dirname(__filename);
 
 // --- HELPER 1: Parse Student List Name ---
 function parseStudentListName(nameString: string) {
-  if (!nameString || !nameString.includes(",")) {
+  if (!nameString || !nameString.includes(',')) {
     return { firstName: nameString || "", middleName: null, lastName: "" };
   }
-  const [lastName, rest] = nameString.split(",").map((s) => s.trim());
+  const [lastName, rest] = nameString.split(',').map((s) => s.trim());
   if (!rest) return { firstName: "", middleName: null, lastName };
 
-  const nameParts = rest.split(" ");
+  const nameParts = rest.split(' ');
   const lastPart = nameParts[nameParts.length - 1];
   const isMiddleInitial = /^[A-Z]\.?$/i.test(lastPart);
 
@@ -40,94 +34,19 @@ function parseStudentListName(nameString: string) {
   let middleName: string | null;
 
   if (isMiddleInitial) {
-    middleName = nameParts.pop()?.replace(".", "") || null;
-    firstName = nameParts.join(" ");
+    middleName = nameParts.pop()?.replace('.', '') || null;
+    firstName = nameParts.join(' ');
   } else {
     middleName = null;
-    firstName = nameParts.join(" ");
+    firstName = nameParts.join(' ');
   }
   return { firstName, middleName, lastName };
-}
-
-// --- HELPER 2: Parse Transaction Name ---
-function parseTransactionName(nameStr: string) {
-  if (!nameStr) return null;
-  const parts = nameStr.split(",").map((s) => s.trim());
-  if (parts.length < 2) return null;
-
-  const lastName = parts[0];
-  const firstNameFull = parts[1];
-  const firstNameFirstWord = firstNameFull.split(" ")[0];
-  return { lastName, firstNameFirstWord };
-}
-
-// --- HELPER 3: Parse Date (Handles "1-Aug-25") ---
-function parseTransactionDate(dateInput: any): Date {
-  if (!dateInput) return new Date();
-
-  if (typeof dateInput === "number") {
-    return new Date(Math.round((dateInput - 25569) * 86400 * 1000));
-  }
-
-  const dateStr = String(dateInput).trim();
-  const dMmmYyRegex = /^(\d{1,2})-([A-Za-z]{3})-(\d{2,4})$/;
-  const match = dateStr.match(dMmmYyRegex);
-
-  if (match) {
-    const day = parseInt(match[1], 10);
-    const monthRaw = match[2].toLowerCase();
-    let year = parseInt(match[3], 10);
-    if (year < 100) year += 2000;
-
-    const monthMap: { [key: string]: number } = {
-      jan: 0,
-      feb: 1,
-      mar: 2,
-      apr: 3,
-      may: 4,
-      jun: 5,
-      jul: 6,
-      aug: 7,
-      sep: 8,
-      oct: 9,
-      nov: 10,
-      dec: 11,
-    };
-    if (monthMap[monthRaw] !== undefined) {
-      return new Date(year, monthMap[monthRaw], day);
-    }
-  }
-
-  const standardDate = new Date(dateStr);
-  return isNaN(standardDate.getTime()) ? new Date() : standardDate;
-}
-
-// --- HELPER 4: Determine Item Type from Remarks ---
-function getItemTypeFromRemarks(remarks: string, defaultMonth: string): string {
-  if (!remarks) return defaultMonth;
-  const upperRemarks = remarks.toUpperCase();
-
-  // If remark contains specific keywords, treat as Downpayment
-  if (
-    upperRemarks.includes("RF") ||
-    upperRemarks.includes("RPF") ||
-    upperRemarks.includes("LRF") ||
-    upperRemarks.includes("DOWNPAYMENT")
-  ) {
-    return "Reservation Fee";
-  }
-
-  return defaultMonth;
 }
 
 async function main() {
   console.log("🧹 Cleaning database...");
   await db.execute(sql`SET FOREIGN_KEY_CHECKS = 0;`);
   const tables = [
-    transaction_items,
-    transactions,
-    assessmentFees,
-    assessments,
     enrollments,
     students,
     sections,
@@ -135,8 +54,6 @@ async function main() {
     academicYears,
     users,
     strands,
-    gradeLevelFees,
-    fees,
     sundries,
   ];
   for (const table of tables) await db.execute(sql`TRUNCATE TABLE ${table}`);
@@ -254,189 +171,7 @@ async function main() {
   await db.insert(sections).values(sectionsToInsert);
   const allSections = await db.select().from(sections);
 
-  console.log("💰 Processing Fee Structures...");
-  const feeTypes = [
-    "Tuition Fee",
-    "Miscellaneous Fee",
-    "Other Fees",
-    "Tech Dev Fee",
-    "Tech Dev/TLE Fee",
-    "TLE Fee",
-  ];
-  for (const name of feeTypes) await db.insert(fees).values({ fee_name: name });
-  const allFees = await db.select().from(fees);
-  const getFeeId = (name: string) =>
-    allFees.find((f) => f.fee_name === name)?.id!;
-
-  // (Standard Fees Seed - same as before)
-  const feeSchedules = [
-    {
-      grades: ["NURSERY", "KINDER 1"],
-      items: [
-        { type: "Tuition Fee", amount: 27185.0 },
-        { type: "Miscellaneous Fee", amount: 3380.0 },
-        { type: "Other Fees", amount: 5465.0 },
-      ],
-    },
-    {
-      grades: ["KINDER 2"],
-      items: [
-        { type: "Tuition Fee", amount: 27185.0 },
-        { type: "Miscellaneous Fee", amount: 3380.0 },
-        { type: "Other Fees", amount: 8395.0 },
-      ],
-    },
-    {
-      grades: ["GRADE 1", "GRADE 2"],
-      items: [
-        { type: "Tuition Fee", amount: 26685.0 },
-        { type: "Miscellaneous Fee", amount: 3760.0 },
-        { type: "Other Fees", amount: 8040.0 },
-        { type: "Tech Dev Fee", amount: 1700.0 },
-      ],
-    },
-    {
-      grades: ["GRADE 3"],
-      items: [
-        { type: "Tuition Fee", amount: 27020.0 },
-        { type: "Miscellaneous Fee", amount: 3835.0 },
-        { type: "Other Fees", amount: 8040.0 },
-        { type: "Tech Dev Fee", amount: 1700.0 },
-      ],
-    },
-    {
-      grades: ["GRADE 4"],
-      items: [
-        { type: "Tuition Fee", amount: 27020.0 },
-        { type: "Miscellaneous Fee", amount: 3835.0 },
-        { type: "Other Fees", amount: 8040.0 },
-        { type: "Tech Dev/TLE Fee", amount: 1780.0 },
-      ],
-    },
-    {
-      grades: ["GRADE 5"],
-      items: [
-        { type: "Tuition Fee", amount: 27345.0 },
-        { type: "Miscellaneous Fee", amount: 3835.0 },
-        { type: "Other Fees", amount: 8040.0 },
-        { type: "Tech Dev/TLE Fee", amount: 1780.0 },
-      ],
-    },
-    {
-      grades: ["GRADE 6"],
-      items: [
-        { type: "Tuition Fee", amount: 27345.0 },
-        { type: "Miscellaneous Fee", amount: 3835.0 },
-        { type: "Other Fees", amount: 10970.0 },
-        { type: "Tech Dev/TLE Fee", amount: 1780.0 },
-      ],
-    },
-    {
-      grades: ["GRADE 7", "GRADE 8"],
-      items: [
-        { type: "Tuition Fee", amount: 30145.0 },
-        { type: "Miscellaneous Fee", amount: 4115.0 },
-        { type: "Other Fees", amount: 8040.0 },
-        { type: "Tech Dev/TLE Fee", amount: 1780.0 },
-      ],
-    },
-    {
-      grades: ["GRADE 9"],
-      items: [
-        { type: "Tuition Fee", amount: 31380.0 },
-        { type: "Miscellaneous Fee", amount: 4115.0 },
-        { type: "Other Fees", amount: 8040.0 },
-        { type: "Tech Dev/TLE Fee", amount: 1780.0 },
-      ],
-    },
-    {
-      grades: ["GRADE 10"],
-      items: [
-        { type: "Tuition Fee", amount: 31380.0 },
-        { type: "Miscellaneous Fee", amount: 4115.0 },
-        { type: "Other Fees", amount: 10970.0 },
-        { type: "Tech Dev/TLE Fee", amount: 1780.0 },
-      ],
-    },
-    {
-      grades: ["GRADE 11"],
-      strands: ["TVL"],
-      items: [
-        { type: "Tuition Fee", amount: 33100.0 },
-        { type: "Miscellaneous Fee", amount: 5010.0 },
-        { type: "Other Fees", amount: 6365.0 },
-        { type: "TLE Fee", amount: 80.0 },
-      ],
-    },
-    {
-      grades: ["GRADE 11"],
-      strands: ["GAS", "HUMSS", "ABM"],
-      items: [
-        { type: "Tuition Fee", amount: 33725.0 },
-        { type: "Miscellaneous Fee", amount: 5010.0 },
-        { type: "Other Fees", amount: 6365.0 },
-      ],
-    },
-    {
-      grades: ["GRADE 11"],
-      strands: ["STEM"],
-      items: [
-        { type: "Tuition Fee", amount: 34345.0 },
-        { type: "Miscellaneous Fee", amount: 5010.0 },
-        { type: "Other Fees", amount: 6365.0 },
-      ],
-    },
-    {
-      grades: ["GRADE 12"],
-      strands: ["TVL"],
-      items: [
-        { type: "Tuition Fee", amount: 33100.0 },
-        { type: "Miscellaneous Fee", amount: 5010.0 },
-        { type: "Other Fees", amount: 9575.0 },
-        { type: "TLE Fee", amount: 80.0 },
-      ],
-    },
-    {
-      grades: ["GRADE 12"],
-      strands: ["GAS", "HUMSS", "ABM"],
-      items: [
-        { type: "Tuition Fee", amount: 33725.0 },
-        { type: "Miscellaneous Fee", amount: 5010.0 },
-        { type: "Other Fees", amount: 9575.0 },
-      ],
-    },
-    {
-      grades: ["GRADE 12"],
-      strands: ["STEM"],
-      items: [
-        { type: "Tuition Fee", amount: 34345.0 },
-        { type: "Miscellaneous Fee", amount: 5010.0 },
-        { type: "Other Fees", amount: 9575.0 },
-      ],
-    },
-  ];
-  for (const schedule of feeSchedules) {
-    const targetGradeIds = allGrades
-      .filter((g) => schedule.grades.includes(g.grade_level_name.toUpperCase()))
-      .map((g) => g.id);
-    if (targetGradeIds.length === 0) continue;
-    let targetStrandIds: (number | null)[] = [null];
-    if (schedule.strands && schedule.strands.length > 0)
-      targetStrandIds = allStrands
-        .filter((s) => schedule.strands?.includes(s.strand_name.toUpperCase()))
-        .map((s) => s.id);
-    for (const gradeId of targetGradeIds) {
-      for (const strandId of targetStrandIds) {
-        for (const item of schedule.items)
-          await db.insert(gradeLevelFees).values({
-            grade_level_id: gradeId,
-            strand_id: strandId,
-            fee_id: getFeeId(item.type),
-            amount: item.amount.toFixed(2),
-          });
-      }
-    }
-  }
+  console.log("💰 Processing Fee Structures... (Skipped - Fees removed)");
 
   console.log("🎒 Seeding Sundries...");
   const sundriesData = [
@@ -506,9 +241,9 @@ async function main() {
     });
 
   // =========================================================
-  // 2. SEED STUDENTS & ASSESSMENTS
+  // 2. SEED STUDENTS & ENROLLMENTS
   // =========================================================
-  console.log("📚 Seeding Students & Assessments...");
+  console.log("📚 Seeding Students & Enrollments...");
   const studentFile = "student1.xlsx";
   const studentPath = path.join(__dirname, studentFile);
   const studentWorkbook = XLSX.read(readFileSync(studentPath), {
@@ -542,12 +277,6 @@ async function main() {
     );
     if (!targetGrade || !targetSection) continue;
 
-    const gradeName = targetGrade.grade_level_name.toUpperCase();
-    const isJHS = ["GRADE 7", "GRADE 8", "GRADE 9", "GRADE 10"].includes(
-      gradeName,
-    );
-    const isSHS = ["GRADE 11", "GRADE 12"].includes(gradeName);
-
     const rawData = XLSX.utils.sheet_to_json(
       studentWorkbook.Sheets[sheetName],
       { defval: null },
@@ -570,17 +299,11 @@ async function main() {
         row["NAME"],
       );
       const studentId = `STU-${String(studentCounter++).padStart(4, "0")}-2026`;
-      const rawEsc = row["ESC GRANT"];
-      const isEscGrant =
-        rawEsc === true ||
-        String(rawEsc).toUpperCase() === "YES" ||
-        String(rawEsc).toUpperCase() === "TRUE" ||
-        rawEsc == 1;
 
       let finalContact = "N/A";
       if (row["CONTACT NUMBER"]) {
         const firstChunk = String(row["CONTACT NUMBER"])
-          .split(/[;:\\\/ ]/)[0]
+          .split(/[;:\/ ]/)[0]
           .trim();
         let cleanNumber = firstChunk.replace(/\D/g, "");
         if (cleanNumber.length === 10 && cleanNumber.startsWith("9"))
@@ -596,7 +319,7 @@ async function main() {
         address: row["ADDRESS"] || "N/A",
         contact_number: finalContact,
       });
-      const [enrollmentResult] = await db.insert(enrollments).values({
+      await db.insert(enrollments).values({
         student_id: studentId,
         grade_level_id: targetGrade.id,
         section_id: targetSection.id,
@@ -604,169 +327,8 @@ async function main() {
         strand_id: currentStrandId,
         enroll_status: "ENROLLED",
       });
-
-      const studentFees = await db
-        .select()
-        .from(gradeLevelFees)
-        .where(
-          and(
-            eq(gradeLevelFees.grade_level_id, targetGrade.id),
-            currentStrandId
-              ? eq(gradeLevelFees.strand_id, currentStrandId)
-              : isNull(gradeLevelFees.strand_id),
-          ),
-        );
-      let totalDue = 0;
-      const feeIdsToLink: number[] = [];
-      for (const feeEntry of studentFees) {
-        const feeType = allFees.find((f) => f.id === feeEntry.fee_id);
-        if (isSHS && isEscGrant && feeType?.fee_name === "Tuition Fee")
-          continue;
-        totalDue += Number(feeEntry.amount);
-        feeIdsToLink.push(feeEntry.fee_id);
-      }
-      if (isJHS && isEscGrant) totalDue -= 9000.0;
-      if (totalDue < 0) totalDue = 0;
-      const roundedTotal = Math.ceil(totalDue);
-
-      const [assessmentResult] = await db.insert(assessments).values({
-        enrollment_id: enrollmentResult.insertId,
-        student_id: studentId,
-        total_amount_due: roundedTotal.toFixed(2),
-        is_esc_grant: isEscGrant,
-        is_cash_discount: false,
-      });
-      if (feeIdsToLink.length > 0) {
-        await db.insert(assessmentFees).values(
-          feeIdsToLink.map((fid) => ({
-            assessment_id: assessmentResult.insertId,
-            fee_id: fid,
-          })),
-        );
-      }
     }
     console.log(`   ✅ Processed Sheet: ${sheetName}`);
-  }
-
-  // =========================================================
-  // 3. SEED PAYMENTS (transaction.xlsx)
-  // =========================================================
-  console.log("💸 Seeding Payments from transaction.xlsx...");
-  const transactionFile = "transaction.xlsx";
-  const txnPath = path.join(__dirname, transactionFile);
-  const txnWorkbook = XLSX.read(readFileSync(txnPath), { type: "buffer" });
-
-  for (const sheetName of txnWorkbook.SheetNames) {
-    const monthName =
-      sheetName.charAt(0).toUpperCase() + sheetName.slice(1).toLowerCase();
-    console.log(
-      `   📂 Processing Payment Month: ${monthName} (Sheet: ${sheetName})`,
-    );
-
-    const rawRows = XLSX.utils.sheet_to_json(txnWorkbook.Sheets[sheetName], {
-      header: 1,
-    }) as any[][];
-    let headerRowIndex = -1;
-    let nameIdx = -1;
-    let totalIdx = -1;
-    let dateIdx = -1;
-    let remarksIdx = -1; // --- NEW: Added Remarks Column Index
-
-    for (let i = 0; i < Math.min(rawRows.length, 10); i++) {
-      const row = rawRows[i].map((c) => String(c).trim().toUpperCase());
-      if (row.includes("NAME") && row.includes("TOTAL")) {
-        headerRowIndex = i;
-        nameIdx = row.indexOf("NAME");
-        totalIdx = row.indexOf("TOTAL");
-        dateIdx = row.indexOf("DATE");
-        remarksIdx = row.indexOf("REMARKS");
-        console.log(
-          `      🔎 Found Header at Row ${i} | Name: ${nameIdx} | Total: ${totalIdx} | Remarks: ${remarksIdx}`,
-        );
-        break;
-      }
-    }
-
-    if (headerRowIndex === -1 || nameIdx === -1 || totalIdx === -1) {
-      console.warn(
-        `      ⚠️  Skipping: Could not find 'NAME' and 'TOTAL' header.`,
-      );
-      continue;
-    }
-
-    let count = 0;
-    let missingCount = 0;
-
-    for (let i = headerRowIndex + 1; i < rawRows.length; i++) {
-      const row = rawRows[i];
-      if (!row || row.length === 0) continue;
-
-      const rawName = row[nameIdx];
-      const rawTotal = row[totalIdx];
-      const rawDate = dateIdx !== -1 ? row[dateIdx] : null;
-      const rawRemarks = remarksIdx !== -1 ? row[remarksIdx] : "";
-
-      if (!rawName || !rawTotal) continue;
-
-      const amount = Number(String(rawTotal).replace(/,/g, ""));
-      if (isNaN(amount) || amount <= 0) continue;
-
-      const nameInfo = parseTransactionName(String(rawName));
-      if (!nameInfo) continue;
-
-      const txnDate = parseTransactionDate(rawDate);
-
-      const finalItemType = getItemTypeFromRemarks(
-        String(rawRemarks),
-        monthName,
-      );
-
-      const studentMatches = await db
-        .select()
-        .from(students)
-        .where(
-          and(
-            eq(students.last_name, nameInfo.lastName),
-            like(students.first_name, `%${nameInfo.firstNameFirstWord}%`),
-          ),
-        );
-
-      if (studentMatches.length === 0) {
-        if (missingCount < 3)
-          console.warn(`      ⚠️  Match Failed: ${rawName}`);
-        missingCount++;
-        continue;
-      }
-      const student = studentMatches[0];
-
-      const assessmentList = await db
-        .select()
-        .from(assessments)
-        .where(eq(assessments.student_id, student.id));
-      if (assessmentList.length === 0) continue;
-      const assessment = assessmentList[assessmentList.length - 1];
-
-      await db.transaction(async (tx) => {
-        const [txn] = await tx
-          .insert(transactions)
-          .values({
-            assessment_id: assessment.id,
-            student_id: student.id,
-            total_amount: amount.toFixed(2),
-            status: "paid",
-            date_paid: txnDate,
-          })
-          .$returningId();
-
-        await tx.insert(transaction_items).values({
-          transaction_id: txn.transaction_id,
-          item_type: finalItemType,
-          amount: amount.toFixed(2),
-        });
-      });
-      count++;
-    }
-    console.log(`      -> Seeded ${count} transactions.`);
   }
 }
 

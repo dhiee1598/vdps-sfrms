@@ -11,7 +11,7 @@ const { data: activeYear } = await useFetch('/api/private/academic-years?activeY
         Admin Dashboard
       </p>
       <p>
-        Manage student enrollments and assessments in one place.
+        Manage student enrollments in one place.
       </p>
     </div>
 

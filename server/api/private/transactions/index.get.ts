@@ -5,7 +5,6 @@ import { strands } from "~~/server/db/schema/strands-schema";
 import { students } from "~~/server/db/schema/student-schema";
 import { transaction_items } from "~~/server/db/schema/transaction-items-schema";
 import { transactions } from "~~/server/db/schema/transaction-schema";
-import { assessments } from "~~/server/db/schema/asesssment-schema";
 import { desc, eq, and, or, like, gte, lte, sql, inArray } from "drizzle-orm";
 import { enrollments } from "~~/server/db/schema/enrollment-schema";
 
@@ -57,12 +56,13 @@ export default defineEventHandler(async (event) => {
     conditions.push(eq(strands.strand_name, filterStrand));
   }
 
+  // NOTE: Joining enrollments on student_id might result in duplicates if a student has multiple enrollments.
+  // Ideally we should filter by the active academic year, but for now we join on student_id.
   const baseQuery = db
     .select({ id: transactions.transaction_id })
     .from(transactions)
     .leftJoin(students, eq(transactions.student_id, students.id))
-    .leftJoin(assessments, eq(transactions.assessment_id, assessments.id))
-    .leftJoin(enrollments, eq(assessments.enrollment_id, enrollments.id))
+    .leftJoin(enrollments, eq(students.id, enrollments.student_id))
     .leftJoin(gradeLevel, eq(enrollments.grade_level_id, gradeLevel.id))
     .leftJoin(strands, eq(enrollments.strand_id, strands.id))
     .where(and(...conditions));
@@ -73,8 +73,7 @@ export default defineEventHandler(async (event) => {
     })
     .from(transactions)
     .leftJoin(students, eq(transactions.student_id, students.id))
-    .leftJoin(assessments, eq(transactions.assessment_id, assessments.id))
-    .leftJoin(enrollments, eq(assessments.enrollment_id, enrollments.id))
+    .leftJoin(enrollments, eq(students.id, enrollments.student_id))
     .leftJoin(gradeLevel, eq(enrollments.grade_level_id, gradeLevel.id))
     .leftJoin(strands, eq(enrollments.strand_id, strands.id))
     .where(and(...conditions));
@@ -118,8 +117,7 @@ export default defineEventHandler(async (event) => {
       eq(transactions.transaction_id, transaction_items.transaction_id),
     )
     .leftJoin(students, eq(transactions.student_id, students.id))
-    .leftJoin(assessments, eq(transactions.assessment_id, assessments.id))
-    .leftJoin(enrollments, eq(assessments.enrollment_id, enrollments.id))
+    .leftJoin(enrollments, eq(students.id, enrollments.student_id))
     .leftJoin(academicYears, eq(enrollments.academic_year_id, academicYears.id))
     .leftJoin(gradeLevel, eq(enrollments.grade_level_id, gradeLevel.id))
     .leftJoin(strands, eq(enrollments.strand_id, strands.id))

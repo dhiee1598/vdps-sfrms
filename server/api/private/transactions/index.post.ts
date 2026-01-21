@@ -29,7 +29,6 @@ export default defineEventHandler(async (event) => {
       .insert(transactions)
       .values({
         transaction_id: body.data.transaction_id,
-        assessment_id: body.data.assessment_id,
         student_id: body.data.student_id,
         total_amount: body.data.total_amount.toFixed(2),
         status: body.data.status ? "paid" : "pending",

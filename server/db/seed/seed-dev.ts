@@ -5,7 +5,7 @@ import { users } from "../schema/user-schema";
 import { students } from "../schema/student-schema";
 import { academicYears } from "../schema/academic-years-schema";
 import { gradeLevel } from "../schema/grade-level-schema";
-import { fees } from "../schema/fees-schema";
+// import { fees } from "../schema/fees-schema";
 import { sundries } from "../schema/sundry-schema";
 import { strands } from "../schema/strands-schema";
 import { sql, eq } from "drizzle-orm";
@@ -277,17 +277,21 @@ async function seedSections() {
     .onDuplicateKeyUpdate({ set: { section_name: sql`VALUES(section_name)` } });
 }
 
-async function seedFees() {
-  const data = [
-    { fee_name: "Tuition Fee", fee_description: "Base tuition fee" },
-    { fee_name: "Miscellaneous Fee", fee_description: "Library, sports, etc." },
-    { fee_name: "Laboratory Fee", fee_description: "Science/Computer labs" },
-  ];
-  await db
-    .insert(fees)
-    .values(data)
-    .onDuplicateKeyUpdate({ set: { fee_name: sql`VALUES(fee_name)` } });
-}
+// async function seedFees() {
+//   console.log("💰 Seeding Fees...");
+//   const feeTypes = [
+//     "Tuition Fee",
+//     "Miscellaneous Fee",
+//     "Other Fees",
+//     "Tech Dev Fee",
+//     "Tech Dev/TLE Fee",
+//     "TLE Fee",
+//   ];
+
+//   await db
+//     .insert(fees)
+//     .values(feeTypes.map((name) => ({ fee_name: name })));
+// }
 
 async function seedSundries() {
   const data = [
@@ -347,7 +351,7 @@ async function seedStrands() {
     await seedStrands();
     await seedSections();
     await seedStudentsAndEnrollments();
-    await seedFees();
+    // await seedFees();
     await seedSundries();
 
     console.log("Seed complete");
