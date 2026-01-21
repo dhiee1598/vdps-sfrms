@@ -15,6 +15,13 @@ const showViewModal = ref(false);
 const selectedGrade = ref('');
 const selectedStrand = ref('');
 const filteredSections = ref<any[]>([]);
+const formData = ref({
+  selectedStudent: { id: '', first_name: '', middle_name: '', last_name: '' },
+  selectedGradeLevel: { id: '', grade_level_name: '' },
+  selectedSection: { id: '', section_name: '' },
+  selectedStrand: { id: '', strand_name: '' },
+  selectedAcademicYear: { id: '', academic_year: '' },
+});
 
 const debouncedSearch = ref('');
 let searchTimeout: NodeJS.Timeout;
@@ -196,15 +203,6 @@ function openEditModal(item: any) {
   };
   showFormModal.value = true;
 }
-
-// reactive form state
-const formData = ref({
-  selectedStudent: { id: '', first_name: '', middle_name: '', last_name: '' },
-  selectedGradeLevel: { id: '', grade_level_name: '' },
-  selectedSection: { id: '', section_name: '' },
-  selectedStrand: { id: '', strand_name: '' },
-  selectedAcademicYear: { id: '', academic_year: '' },
-});
 
 function openAddStudentModal() {
   showFormModal.value = true;

@@ -1,9 +1,9 @@
-import db from "~~/server/db";
+import db from '~~/server/db';
 import {
   enrollments,
   enrollmentsInsertSchema,
-} from "~~/server/db/schema/enrollment-schema";
-import { and, eq, isNull } from "drizzle-orm";
+} from '~~/server/db/schema/enrollment-schema';
+import { and, eq, isNull } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   await requireUserSession(event);
@@ -14,18 +14,18 @@ export default defineEventHandler(async (event) => {
   );
 
   if (!body.success) {
-    if (!body.error.issues.find((issue) => issue.path.includes("student_id"))) {
+    if (!body.error.issues.find(issue => issue.path.includes('student_id'))) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Bad Request",
-        message: "Invalid data provided. Please check the required fields.",
+        statusMessage: 'Bad Request',
+        message: 'Invalid data provided. Please check the required fields.',
       });
     }
 
     throw createError({
       statusCode: 400,
-      statusMessage: "Bad Request",
-      message: "Student ID is required for enrollment.",
+      statusMessage: 'Bad Request',
+      message: 'Student ID is required for enrollment.',
     });
   }
 
@@ -57,8 +57,8 @@ export default defineEventHandler(async (event) => {
   if (existingEnrollStudent) {
     throw createError({
       statusCode: 409,
-      statusMessage: "Conflict",
-      message: "Student already enrolled.",
+      statusMessage: 'Conflict',
+      message: 'Student already enrolled.',
     });
   }
 
@@ -73,11 +73,11 @@ export default defineEventHandler(async (event) => {
     })
     .$returningId();
 
-  event.context.io.emit("newData", "A new student has enrolled");
+  event.context.io.emit('newData', 'A new student has enrolled');
 
   return {
     success: true,
     data: enrolledStudent,
-    message: "Student Enrolled Successfully.",
+    message: 'Student Enrolled Successfully.',
   };
 });

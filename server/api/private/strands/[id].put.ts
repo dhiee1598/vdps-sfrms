@@ -1,6 +1,6 @@
-import db from "~~/server/db";
-import { strands } from "~~/server/db/schema/strands-schema";
-import { and, eq, ne } from "drizzle-orm";
+import db from '~~/server/db';
+import { strands } from '~~/server/db/schema/strands-schema';
+import { and, eq, ne } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   await requireUserSession(event);
@@ -9,8 +9,8 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: "ID is required",
-      message: "ID is required",
+      statusMessage: 'ID is required',
+      message: 'ID is required',
     });
   }
 
@@ -23,8 +23,8 @@ export default defineEventHandler(async (event) => {
   if (existingStrand) {
     throw createError({
       statusCode: 409,
-      statusMessage: "Conflict",
-      message: "A Strand with this name already exists.",
+      statusMessage: 'Conflict',
+      message: 'A Strand with this name already exists.',
     });
   }
   const result = await db
@@ -39,6 +39,6 @@ export default defineEventHandler(async (event) => {
   return {
     success: true,
     data: result,
-    message: "Strand updated successfully",
+    message: 'Strand updated successfully',
   };
 });

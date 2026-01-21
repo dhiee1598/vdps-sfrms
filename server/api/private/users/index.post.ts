@@ -1,6 +1,6 @@
-import db from "~~/server/db";
-import { userInsertSchema, users } from "~~/server/db/schema/user-schema";
-import { eq } from "drizzle-orm";
+import db from '~~/server/db';
+import { userInsertSchema, users } from '~~/server/db/schema/user-schema';
+import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   await requireUserSession(event);
@@ -10,8 +10,8 @@ export default defineEventHandler(async (event) => {
   if (!body.success) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Bad Request",
-      message: "Missing required fields or invalid data.",
+      statusMessage: 'Bad Request',
+      message: 'Missing required fields or invalid data.',
     });
   }
 
@@ -25,8 +25,8 @@ export default defineEventHandler(async (event) => {
   if (existingEmail) {
     throw createError({
       statusCode: 409,
-      statusMessage: "Conflict",
-      message: "This email is already taken.",
+      statusMessage: 'Conflict',
+      message: 'This email is already taken.',
     });
   }
 
@@ -48,8 +48,8 @@ export default defineEventHandler(async (event) => {
 
   return {
     statusCode: 201,
-    statusMessage: "Created",
-    message: "User created successfully.",
+    statusMessage: 'Created',
+    message: 'User created successfully.',
     user,
   };
 });

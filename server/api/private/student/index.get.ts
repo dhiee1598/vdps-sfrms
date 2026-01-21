@@ -1,21 +1,21 @@
-import db from "~~/server/db";
-import { academicYears } from "~~/server/db/schema/academic-years-schema";
+import db from '~~/server/db';
+import { academicYears } from '~~/server/db/schema/academic-years-schema';
+import { enrollments } from '~~/server/db/schema/enrollment-schema';
 import {
   students,
   studentSelectSchema,
-} from "~~/server/db/schema/student-schema";
-import { and, desc, eq, isNull, ne, or, like, sql } from "drizzle-orm";
-import { getQuery } from "h3";
-import { enrollments } from "~~/server/db/schema/enrollment-schema";
+} from '~~/server/db/schema/student-schema';
+import { and, desc, eq, isNull, like, ne, or, sql } from 'drizzle-orm';
+import { getQuery } from 'h3';
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const enrolled = query.enrolled === "true";
-  const carryOver = query.carryOver === "true";
+  const enrolled = query.enrolled === 'true';
+  const carryOver = query.carryOver === 'true';
 
   const page = Number(query.page) || 1;
   const pageSize = Number(query.pageSize) || 10;
-  const search = (query.search as string) || "";
+  const search = (query.search as string) || '';
   const offset = (page - 1) * pageSize;
 
   // 1. Get Active Academic Year
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
   )[0]?.year;
 
   if (!activeYear) {
-    return { message: "No active academic year found", data: [] };
+    return { message: 'No active academic year found', data: [] };
   }
 
   // 2. Fetch Students NOT Enrolled in Active Year
@@ -64,10 +64,10 @@ export default defineEventHandler(async (event) => {
 
     const parsed = studentSelectSchema
       .array()
-      .parse(notEnrolledStudents.map((s) => s.student));
+      .parse(notEnrolledStudents.map(s => s.student));
 
     return {
-      message: "Not enrolled students (current year)",
+      message: 'Not enrolled students (current year)',
       data: parsed,
     };
   }
@@ -88,10 +88,10 @@ export default defineEventHandler(async (event) => {
 
     const parsed = studentSelectSchema
       .array()
-      .parse(prevEnrolled.map((s) => s.student));
+      .parse(prevEnrolled.map(s => s.student));
 
     return {
-      message: "Previously enrolled students (carry over to new year)",
+      message: 'Previously enrolled students (carry over to new year)',
       data: parsed,
     };
   }
@@ -99,12 +99,12 @@ export default defineEventHandler(async (event) => {
   // 4. Standard Fetch (All Students with Pagination)
   const searchCondition = search
     ? or(
-      like(students.first_name, `%${search}%`),
-      like(students.last_name, `%${search}%`),
-      like(students.middle_name, `%${search}%`),
-      like(students.address, `%${search}%`),
-      like(students.id, `%${search}%`),
-    )
+        like(students.first_name, `%${search}%`),
+        like(students.last_name, `%${search}%`),
+        like(students.middle_name, `%${search}%`),
+        like(students.address, `%${search}%`),
+        like(students.id, `%${search}%`),
+      )
     : undefined;
 
   const totalCountResult = await db
@@ -124,7 +124,7 @@ export default defineEventHandler(async (event) => {
   const parsedAll = studentSelectSchema.array().parse(allStudents);
 
   return {
-    message: "All students fetched successfully",
+    message: 'All students fetched successfully',
     data: parsedAll,
     total,
     page,

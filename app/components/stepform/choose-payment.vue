@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { Sundries } from '~~/server/lib/zod-schema';
-
 const props = defineProps<{
   formData: any;
   datas: any;
@@ -44,7 +42,8 @@ function toggleSundry(sundry: { sundry_name: string; sundry_amount: string }) {
 
   if (existingIndex !== -1) {
     items.splice(existingIndex, 1);
-  } else {
+  }
+  else {
     items.push({
       item_type: sundry.sundry_name,
       amount: Number(sundry.sundry_amount) || 0,
@@ -56,18 +55,29 @@ function toggleSundry(sundry: { sundry_name: string; sundry_amount: string }) {
 <template>
   <div class="flex flex-col gap-4 mx-auto w-full max-w-2xl">
     <div class="border rounded-lg w-full overflow-hidden border-accent-content">
-      <h4 class="p-3 font-medium bg-base-200">Select Sundries / Additional Fees</h4>
+      <h4 class="p-3 font-medium bg-base-200">
+        Select Sundries / Additional Fees
+      </h4>
       <div class="overflow-x-auto overflow-y-auto max-h-[400px]">
         <table class="table w-full text-sm table-sm">
           <thead>
             <tr>
-              <th class="w-10"></th>
-              <th class="p-3 font-medium text-left">Name</th>
-              <th class="p-3 font-medium text-right">Amount</th>
+              <th class="w-10" />
+              <th class="p-3 font-medium text-left">
+                Name
+              </th>
+              <th class="p-3 font-medium text-right">
+                Amount
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(sundry, index) in sundryList" :key="index" class="hover:bg-base-100 cursor-pointer" @click.stop="toggleSundry(sundry)">
+            <tr
+              v-for="(sundry, index) in sundryList"
+              :key="index"
+              class="hover:bg-base-100 cursor-pointer"
+              @click.stop="toggleSundry(sundry)"
+            >
               <td>
                 <label>
                   <input
@@ -78,8 +88,12 @@ function toggleSundry(sundry: { sundry_name: string; sundry_amount: string }) {
                   >
                 </label>
               </td>
-              <td class="p-3">{{ sundry.sundry_name }}</td>
-              <td class="p-3 text-right">₱ {{ parseFloat(sundry.sundry_amount).toFixed(2) }}</td>
+              <td class="p-3">
+                {{ sundry.sundry_name }}
+              </td>
+              <td class="p-3 text-right">
+                ₱ {{ parseFloat(sundry.sundry_amount).toFixed(2) }}
+              </td>
             </tr>
           </tbody>
         </table>

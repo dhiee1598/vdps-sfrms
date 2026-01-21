@@ -1,12 +1,12 @@
-import db from "~~/server/db";
-import { academicYears } from "~~/server/db/schema/academic-years-schema";
-import { gradeLevel } from "~~/server/db/schema/grade-level-schema";
-import { strands } from "~~/server/db/schema/strands-schema";
-import { students } from "~~/server/db/schema/student-schema";
-import { transaction_items } from "~~/server/db/schema/transaction-items-schema";
-import { transactions } from "~~/server/db/schema/transaction-schema";
-import { desc, eq, and, or, like, gte, lte, sql, inArray } from "drizzle-orm";
-import { enrollments } from "~~/server/db/schema/enrollment-schema";
+import db from '~~/server/db';
+import { academicYears } from '~~/server/db/schema/academic-years-schema';
+import { enrollments } from '~~/server/db/schema/enrollment-schema';
+import { gradeLevel } from '~~/server/db/schema/grade-level-schema';
+import { strands } from '~~/server/db/schema/strands-schema';
+import { students } from '~~/server/db/schema/student-schema';
+import { transaction_items } from '~~/server/db/schema/transaction-items-schema';
+import { transactions } from '~~/server/db/schema/transaction-schema';
+import { and, desc, eq, gte, inArray, like, lte, or, sql } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   // Pagination & Filters
   const page = Number(query.page) || 1;
   const pageSize = Number(query.pageSize) || 10;
-  const search = (query.search as string) || "";
+  const search = (query.search as string) || '';
   const startDate = query.startDate as string;
   const endDate = query.endDate as string;
   const status = query.status as string;
@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
 
   // Status Filter
   if (status) {
-    conditions.push(eq(transactions.status, status as "paid" | "pending"));
+    conditions.push(eq(transactions.status, status as 'paid' | 'pending'));
   }
 
   if (search) {
@@ -80,19 +80,19 @@ export default defineEventHandler(async (event) => {
 
   const total = Number(totalCountResult[0]?.count || 0);
 
-  const orderCol =
-    status === "pending" ? transactions.createdAt : transactions.date_paid;
+  const orderCol
+    = status === 'pending' ? transactions.createdAt : transactions.date_paid;
 
   const pagedIds = await baseQuery
     .limit(pageSize)
     .offset(offset)
     .orderBy(desc(orderCol || transactions.createdAt));
 
-  const ids = pagedIds.map((r) => r.id);
+  const ids = pagedIds.map(r => r.id);
 
   if (ids.length === 0) {
     return {
-      message: "No transactions found",
+      message: 'No transactions found',
       data: [],
       total,
       page,
@@ -155,7 +155,7 @@ export default defineEventHandler(async (event) => {
   }, []);
 
   return {
-    message: "Fetch All transactions",
+    message: 'Fetch All transactions',
     data: grouped,
     total,
     page,

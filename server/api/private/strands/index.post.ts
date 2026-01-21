@@ -1,9 +1,10 @@
-import db from "~~/server/db";
+import db from '~~/server/db';
 import {
   strands,
   strandsInsertSchema,
-} from "~~/server/db/schema/strands-schema";
-import { eq } from "drizzle-orm";
+} from '~~/server/db/schema/strands-schema';
+import { eq } from 'drizzle-orm';
+
 export default defineEventHandler(async (event) => {
   await requireUserSession(event);
 
@@ -12,9 +13,9 @@ export default defineEventHandler(async (event) => {
   if (!body.success) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Bad Request",
+      statusMessage: 'Bad Request',
       data: body.error,
-      message: "Invalid data provided. Please check the required fields.",
+      message: 'Invalid data provided. Please check the required fields.',
     });
   }
 
@@ -28,8 +29,8 @@ export default defineEventHandler(async (event) => {
   if (existingStrand) {
     throw createError({
       statusCode: 409,
-      statusMessage: "Conflict",
-      message: "A strand with this name already exists.",
+      statusMessage: 'Conflict',
+      message: 'A strand with this name already exists.',
     });
   }
 
@@ -44,6 +45,6 @@ export default defineEventHandler(async (event) => {
   return {
     success: true,
     data: createdStrand,
-    message: "Strand created successfully.",
+    message: 'Strand created successfully.',
   };
 });

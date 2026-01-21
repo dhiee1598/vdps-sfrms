@@ -1,9 +1,9 @@
-import db from "~~/server/db";
+import db from '~~/server/db';
 import {
   sundries,
   sundryInsertSchema,
-} from "~~/server/db/schema/sundry-schema";
-import { eq } from "drizzle-orm";
+} from '~~/server/db/schema/sundry-schema';
+import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   await requireUserSession(event);
@@ -13,8 +13,8 @@ export default defineEventHandler(async (event) => {
   if (!body.success) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Bad Request",
-      message: "Invalid data provided. Please check the required fields.",
+      statusMessage: 'Bad Request',
+      message: 'Invalid data provided. Please check the required fields.',
     });
   }
 
@@ -28,8 +28,8 @@ export default defineEventHandler(async (event) => {
   if (existingSundry) {
     throw createError({
       statusCode: 409,
-      statusMessage: "Conflict",
-      message: "A sundry with this name already exists.",
+      statusMessage: 'Conflict',
+      message: 'A sundry with this name already exists.',
     });
   }
 
@@ -42,11 +42,11 @@ export default defineEventHandler(async (event) => {
     })
     .$returningId();
 
-  event.context.io.emit("newData", "A new sundries has been added.");
+  event.context.io.emit('newData', 'A new sundries has been added.');
 
   return {
     success: true,
     data: createdSundry,
-    message: "Fee created successfully.",
+    message: 'Fee created successfully.',
   };
 });

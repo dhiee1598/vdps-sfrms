@@ -1,13 +1,13 @@
-import db from "~~/server/db";
+import db from '~~/server/db';
 import {
   transaction_items,
   transactionItemInsertSchema,
-} from "~~/server/db/schema/transaction-items-schema";
+} from '~~/server/db/schema/transaction-items-schema';
 import {
   transactions,
   transactionsInsertSchema,
-} from "~~/server/db/schema/transaction-schema";
-import z from "zod";
+} from '~~/server/db/schema/transaction-schema';
+import z from 'zod';
 
 export default defineEventHandler(async (event) => {
   const requestBody = transactionsInsertSchema.extend({
@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   if (!body.success) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Bad Request",
+      statusMessage: 'Bad Request',
       message: body.error.message,
     });
   }
@@ -31,14 +31,14 @@ export default defineEventHandler(async (event) => {
         transaction_id: body.data.transaction_id,
         student_id: body.data.student_id,
         total_amount: body.data.total_amount.toFixed(2),
-        status: body.data.status ? "paid" : "pending",
+        status: body.data.status ? 'paid' : 'pending',
         date_paid: body.data.status ? new Date() : null,
       })
       .$returningId();
 
     if (body.data.transaction_items.length > 0) {
       await tx.insert(transaction_items).values(
-        body.data.transaction_items.map((item) => ({
+        body.data.transaction_items.map(item => ({
           transaction_id:
             newTransaction.transaction_id ?? newTransaction.transaction_id,
           item_type: item.item_type,
@@ -48,12 +48,12 @@ export default defineEventHandler(async (event) => {
     }
   });
 
-  event.context.io.emit("newData", "A new transactions has been added.");
-  event.context.io.emit("newTransaction", "A new transactions has been added.");
+  event.context.io.emit('newData', 'A new transactions has been added.');
+  event.context.io.emit('newTransaction', 'A new transactions has been added.');
 
   return {
     success: true,
     data: result,
-    message: "Transaction created successfully.",
+    message: 'Transaction created successfully.',
   };
 });

@@ -1,7 +1,7 @@
-import db from "~~/server/db";
-import { users } from "~~/server/db/schema/user-schema";
-import { loginSchema } from "~~/server/lib/zod-schema";
-import { eq } from "drizzle-orm";
+import db from '~~/server/db';
+import { users } from '~~/server/db/schema/user-schema';
+import { loginSchema } from '~~/server/lib/zod-schema';
+import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, loginSchema.safeParse);
@@ -9,8 +9,8 @@ export default defineEventHandler(async (event) => {
   if (!body.success) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Bad Request",
-      message: "Missing required fields or invalid data.",
+      statusMessage: 'Bad Request',
+      message: 'Missing required fields or invalid data.',
     });
   }
 
@@ -21,8 +21,8 @@ export default defineEventHandler(async (event) => {
   if (!user) {
     throw createError({
       statusCode: 401,
-      statusMessage: "Unauthorized",
-      message: "Invalid email or password.",
+      statusMessage: 'Unauthorized',
+      message: 'Invalid email or password.',
     });
   }
 
@@ -31,8 +31,8 @@ export default defineEventHandler(async (event) => {
   if (!passwordMatch) {
     throw createError({
       statusCode: 401,
-      statusMessage: "Unauthorized",
-      message: "Invalid email or password.",
+      statusMessage: 'Unauthorized',
+      message: 'Invalid email or password.',
     });
   }
 

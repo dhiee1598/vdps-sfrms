@@ -14,7 +14,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:selectedStudent']);
 const selected = ref({ ...props.selectedStudent });
-const studentSearch = ref('');
 let searchTimeout: NodeJS.Timeout;
 
 const debouncedSearch = ref('');
@@ -31,7 +30,7 @@ const { data: enrollments, pending, refresh } = useFetch('/api/private/enrollmen
   lazy: true,
   query: computed(() => ({
     search: debouncedSearch.value,
-    pageSize: 20, 
+    pageSize: 20,
   })),
 });
 
@@ -57,7 +56,8 @@ async function handleSocketData() {
 onMounted(() => {
   if (socket.connected) {
     //
-  } else {
+  }
+  else {
     socket.connect();
   }
   socket.on('newData', handleSocketData);

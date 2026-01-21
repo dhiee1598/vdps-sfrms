@@ -14,7 +14,7 @@ async function logout() {
         alt="Profile"
         height="56"
         width="56"
-      />
+      >
       <div class="ml-2">
         <div class="text-xs font-bold md:text-xl">
           Student Financial Record Management System

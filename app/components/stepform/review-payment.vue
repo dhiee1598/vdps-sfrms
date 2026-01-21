@@ -6,7 +6,6 @@ const props = defineProps<{
 
 // Simple computed property for items since we no longer separate tuition
 const paymentItems = computed(() => props.formData.transaction_items);
-
 </script>
 
 <template>

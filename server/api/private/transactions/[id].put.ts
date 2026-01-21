@@ -1,6 +1,7 @@
-import db from "~~/server/db";
-import { transactions } from "~~/server/db/schema/transaction-schema";
-import { eq } from "drizzle-orm";
+import db from '~~/server/db';
+import { transactions } from '~~/server/db/schema/transaction-schema';
+import { eq } from 'drizzle-orm';
+
 export default defineEventHandler(async (event) => {
   await requireUserSession(event);
 
@@ -8,8 +9,8 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: "ID is required",
-      message: "ID is required",
+      statusMessage: 'ID is required',
+      message: 'ID is required',
     });
   }
 
@@ -24,7 +25,7 @@ export default defineEventHandler(async (event) => {
     .where(eq(transactions.transaction_id, id))
     .execute();
 
-  event.context.io.emit("newData", "A transaction has been updated.");
+  event.context.io.emit('newData', 'A transaction has been updated.');
 
-  return { success: true, message: "Transaction updated successfully" };
+  return { success: true, message: 'Transaction updated successfully' };
 });

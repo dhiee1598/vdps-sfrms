@@ -1,6 +1,6 @@
-import db from "~~/server/db";
-import { academicYears } from "~~/server/db/schema/academic-years-schema";
-import { and, eq, ne } from "drizzle-orm";
+import db from '~~/server/db';
+import { academicYears } from '~~/server/db/schema/academic-years-schema';
+import { and, eq, ne } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   await requireUserSession(event);
@@ -9,8 +9,8 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: "ID is required",
-      message: "ID is required",
+      statusMessage: 'ID is required',
+      message: 'ID is required',
     });
   }
 
@@ -28,8 +28,8 @@ export default defineEventHandler(async (event) => {
   if (existingAcademicYear) {
     throw createError({
       statusCode: 409,
-      statusMessage: "Conflict",
-      message: "An academic year with this name already exists.",
+      statusMessage: 'Conflict',
+      message: 'An academic year with this name already exists.',
     });
   }
 
@@ -42,7 +42,8 @@ export default defineEventHandler(async (event) => {
       })
       .where(eq(academicYears.id, id))
       .execute();
-  } else {
+  }
+  else {
     await db.update(academicYears).set({ status: false }).execute();
     result = await db
       .update(academicYears)
@@ -51,11 +52,11 @@ export default defineEventHandler(async (event) => {
       .execute();
   }
 
-  event.context.io.emit("newData", "A new academic year has been updated.");
+  event.context.io.emit('newData', 'A new academic year has been updated.');
 
   return {
     success: true,
     data: result,
-    message: "Academic year updated successfully",
+    message: 'Academic year updated successfully',
   };
 });

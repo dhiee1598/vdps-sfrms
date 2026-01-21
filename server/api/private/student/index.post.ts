@@ -1,11 +1,11 @@
 // server/api/private/student.post.ts
-import db from "~~/server/db";
+import db from '~~/server/db';
 import {
   studentInsertSchema,
   students,
   studentSelectSchema,
-} from "~~/server/db/schema/student-schema";
-import { and, desc, eq } from "drizzle-orm";
+} from '~~/server/db/schema/student-schema';
+import { and, desc, eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   await requireUserSession(event);
@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
   if (!body.success) {
     throw createError({
       statusCode: 400,
-      message: "Invalid request body provided.",
+      message: 'Invalid request body provided.',
     });
   }
 
@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
   if (existingStudent) {
     throw createError({
       statusCode: 409,
-      message: "Student already exists.",
+      message: 'Student already exists.',
     });
   }
 
@@ -51,13 +51,13 @@ export default defineEventHandler(async (event) => {
 
   if (last.length > 0) {
     const lastId = last[0].id;
-    const parts = lastId.split("-");
+    const parts = lastId.split('-');
     if (parts[2] === String(year)) {
       nextNumber = Number.parseInt(parts[1], 10) + 1;
     }
   }
 
-  const formattedNumber = String(nextNumber).padStart(4, "0");
+  const formattedNumber = String(nextNumber).padStart(4, '0');
   const newId = `STU-${formattedNumber}-${year}`;
 
   await db.insert(students).values({
@@ -74,7 +74,7 @@ export default defineEventHandler(async (event) => {
 
   setResponseStatus(event, 201);
   return {
-    message: "Student successfully created.",
+    message: 'Student successfully created.',
     data: parsedStudent,
   };
 });

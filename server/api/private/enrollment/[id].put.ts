@@ -1,9 +1,9 @@
-import db from "~~/server/db";
+import db from '~~/server/db';
 import {
   enrollments,
   enrollmentUpdateSchema,
-} from "~~/server/db/schema/enrollment-schema";
-import { eq } from "drizzle-orm";
+} from '~~/server/db/schema/enrollment-schema';
+import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   await requireUserSession(event);
@@ -13,8 +13,8 @@ export default defineEventHandler(async (event) => {
   if (!studentId) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Bad Request",
-      message: "Student ID is required.",
+      statusMessage: 'Bad Request',
+      message: 'Student ID is required.',
     });
   }
 
@@ -23,8 +23,8 @@ export default defineEventHandler(async (event) => {
   if (!body.success) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Bad Request",
-      message: "Invalid data provided. Please check the fields.",
+      statusMessage: 'Bad Request',
+      message: 'Invalid data provided. Please check the fields.',
     });
   }
 
@@ -41,17 +41,18 @@ export default defineEventHandler(async (event) => {
       })
       .where(eq(enrollments.student_id, studentId));
 
-    event.context.io.emit("newData", "A student has been updated");
+    event.context.io.emit('newData', 'A student has been updated');
 
     return {
       success: true,
-      message: "Enrollment updated successfully.",
+      message: 'Enrollment updated successfully.',
     };
-  } catch (error) {
+  }
+  catch {
     throw createError({
       statusCode: 500,
-      statusMessage: "Internal Server Error",
-      message: "Failed to update enrollment.",
+      statusMessage: 'Internal Server Error',
+      message: 'Failed to update enrollment.',
     });
   }
 });

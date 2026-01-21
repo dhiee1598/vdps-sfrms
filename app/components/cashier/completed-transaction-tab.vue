@@ -8,7 +8,7 @@ const selectedGrade = ref('');
 const selectedStrand = ref('');
 
 const currentPage = ref(1);
-const itemsPerPage = 8; 
+const itemsPerPage = 8;
 
 const debouncedSearch = ref('');
 let searchTimeout: NodeJS.Timeout;
@@ -50,26 +50,32 @@ const totalPages = computed(() => {
 const visiblePages = computed(() => {
   const total = totalPages.value;
   const current = currentPage.value;
-  const delta = 1; 
+  const delta = 1;
 
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (total <= 7)
+    return Array.from({ length: total }, (_, i) => i + 1);
 
   const pages: (number | string)[] = [];
   const left = current - delta;
   const right = current + delta;
 
   pages.push(1);
-  if (left > 2) pages.push('...');
-  else if (left === 2) pages.push(2);
+  if (left > 2)
+    pages.push('...');
+  else if (left === 2)
+    pages.push(2);
 
   for (let i = Math.max(2, left); i <= Math.min(total - 1, right); i++) {
     pages.push(i);
   }
 
-  if (right < total - 1) pages.push('...');
-  else if (right === total - 1) pages.push(total - 1);
+  if (right < total - 1)
+    pages.push('...');
+  else if (right === total - 1)
+    pages.push(total - 1);
 
-  if (total > 1) pages.push(total);
+  if (total > 1)
+    pages.push(total);
 
   return pages;
 });
@@ -85,9 +91,9 @@ function openModal(item: any) {
   selectedItem.value = item;
 }
 
-const componentRef = ref(); 
+const componentRef = ref();
 const { handlePrint } = useVueToPrint({
-  content: () => componentRef.value, 
+  content: () => componentRef.value,
   documentTitle: 'Transaction-Receipt',
   onAfterPrint: () => {
     isOpen.value = false;
@@ -104,7 +110,11 @@ const { handlePrint } = useVueToPrint({
       </h2>
 
       <div class="flex flex-col md:flex-row gap-2">
-        <select v-model="selectedGrade" class="select select-bordered w-44" :disabled="pending">
+        <select
+          v-model="selectedGrade"
+          class="select select-bordered w-44"
+          :disabled="pending"
+        >
           <option value="">
             All Grades
           </option>
@@ -117,7 +127,11 @@ const { handlePrint } = useVueToPrint({
           </option>
         </select>
 
-        <select v-model="selectedStrand" class="select select-bordered w-44" :disabled="pending">
+        <select
+          v-model="selectedStrand"
+          class="select select-bordered w-44"
+          :disabled="pending"
+        >
           <option value="">
             All Strands
           </option>
@@ -157,14 +171,18 @@ const { handlePrint } = useVueToPrint({
         <tbody>
           <tr v-if="pending">
             <td colspan="9" class="text-center py-20">
-              <span class="loading loading-spinner loading-lg text-primary"></span>
-              <p class="mt-2 text-gray-500 text-sm">Loading transactions...</p>
+              <span class="loading loading-spinner loading-lg text-primary" />
+              <p class="mt-2 text-gray-500 text-sm">
+                Loading transactions...
+              </p>
             </td>
           </tr>
 
           <template v-else>
             <tr v-for="item in transactions?.data || []" :key="item.transaction.transaction_id">
-              <td class="font-mono text-xs">{{ item.transaction.transaction_id.slice(0, 15) }}...</td>
+              <td class="font-mono text-xs">
+                {{ item.transaction.transaction_id.slice(0, 15) }}...
+              </td>
               <td>{{ item.student.id }}</td>
               <td>{{ item.student.first_name }} {{ item.student.middle_name }} {{ item.student.last_name }}</td>
               <td>{{ item.grade_level.grade_level_name }}</td>
@@ -172,7 +190,9 @@ const { handlePrint } = useVueToPrint({
               <td>
                 <span class="badge badge-success badge-sm uppercase font-bold text-xs">{{ item.transaction.status }}</span>
               </td>
-              <td class="font-mono">₱ {{ Number(item.transaction.total_amount).toFixed(2) }}</td>
+              <td class="font-mono">
+                ₱ {{ Number(item.transaction.total_amount).toFixed(2) }}
+              </td>
               <td>{{ new Date(item.transaction.date_paid).toLocaleDateString('en-US', { timeZone: "UTC", month: 'short', day: 'numeric', year: 'numeric' }) }}</td>
               <td>
                 <button
@@ -236,7 +256,9 @@ const { handlePrint } = useVueToPrint({
 
         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="bg-base-300 p-4 rounded-lg">
-            <p class="text-sm text-gray-400 mb-2">Student Information</p>
+            <p class="text-sm text-gray-400 mb-2">
+              Student Information
+            </p>
             <ul class="text-sm space-y-1">
               <li><span class="font-medium">ID:</span> {{ selectedItem?.student.id }}</li>
               <li><span class="font-medium">Name:</span> {{ selectedItem?.student.first_name }} {{ selectedItem?.student.middle_name }} {{ selectedItem?.student.last_name }}</li>
@@ -244,7 +266,9 @@ const { handlePrint } = useVueToPrint({
             </ul>
           </div>
           <div class="bg-base-300 p-4 rounded-lg">
-            <p class="text-sm text-gray-400 mb-2">Enrollment Information</p>
+            <p class="text-sm text-gray-400 mb-2">
+              Enrollment Information
+            </p>
             <ul class="text-sm space-y-1">
               <li><span class="font-medium">Grade Level:</span> {{ selectedItem?.grade_level.grade_level_name }}</li>
               <li><span class="font-medium">Strand:</span> {{ selectedItem?.strand?.strand_name || 'N/A' }}</li>
@@ -254,28 +278,48 @@ const { handlePrint } = useVueToPrint({
         </div>
 
         <div class="mt-6 bg-base-300 p-4 rounded-lg">
-          <p class="text-sm text-gray-400 mb-2">Transaction Details</p>
+          <p class="text-sm text-gray-400 mb-2">
+            Transaction Details
+          </p>
           <dl class="grid grid-cols-1 md:grid-cols-2 gap-y-2 text-sm">
-            <dt class="font-medium">Transaction ID:</dt>
-            <dd class="truncate">{{ selectedItem?.transaction.transaction_id }}</dd>
-            <dt class="font-medium">Status:</dt>
+            <dt class="font-medium">
+              Transaction ID:
+            </dt>
+            <dd class="truncate">
+              {{ selectedItem?.transaction.transaction_id }}
+            </dd>
+            <dt class="font-medium">
+              Status:
+            </dt>
             <dd><span class="badge badge-success badge-sm">{{ selectedItem?.transaction.status }}</span></dd>
-            <dt class="font-medium">Total Amount:</dt>
-            <dd class="text-success font-semibold">₱ {{ Number(selectedItem?.transaction.total_amount).toFixed(2) }}</dd>
+            <dt class="font-medium">
+              Total Amount:
+            </dt>
+            <dd class="text-success font-semibold">
+              ₱ {{ Number(selectedItem?.transaction.total_amount).toFixed(2) }}
+            </dd>
           </dl>
         </div>
 
         <div class="mt-6">
-          <p class="text-sm text-gray-400 mb-2">Payment Breakdown</p>
+          <p class="text-sm text-gray-400 mb-2">
+            Payment Breakdown
+          </p>
           <div class="overflow-x-auto">
             <table class="table w-full table-sm">
               <thead>
-                <tr><th>Payment Type</th><th class="text-right">Amount</th></tr>
+                <tr>
+                  <th>Payment Type</th><th class="text-right">
+                    Amount
+                  </th>
+                </tr>
               </thead>
               <tbody>
                 <tr v-for="item in selectedItem?.transaction_items" :key="item.id">
                   <td>{{ item.item_type }}</td>
-                  <td class="text-right">₱ {{ Number(item.amount).toFixed(2) }}</td>
+                  <td class="text-right">
+                    ₱ {{ Number(item.amount).toFixed(2) }}
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -283,18 +327,33 @@ const { handlePrint } = useVueToPrint({
         </div>
 
         <div class="modal-action flex justify-end gap-3 mt-6">
-          <button class="btn btn-outline" @click="isOpen = false">Close</button>
-          <button class="btn btn-primary" @click="handlePrint">Print Receipt</button>
+          <button class="btn btn-outline" @click="isOpen = false">
+            Close
+          </button>
+          <button class="btn btn-primary" @click="handlePrint">
+            Print Receipt
+          </button>
         </div>
       </div>
     </dialog>
 
     <div ref="componentRef" class="print-area mx-auto my-6 max-w-md bg-white text-black p-6 rounded-lg shadow-md hidden print:block">
       <div class="text-center border-b pb-4 mb-4 flex flex-col justify-center items-center">
-        <NuxtImg src="/vdps-logo.png" alt="Profile" height="56" width="56" />
-        <h2 class="text-lg font-bold">Virgen Del Pilar School Rodriguez, Inc.</h2>
-        <p class="text-sm">Iloilo St, Brgy, Rodriguez, Rizal</p>
-        <p class="text-sm">Official Receipt</p>
+        <NuxtImg
+          src="/vdps-logo.png"
+          alt="Profile"
+          height="56"
+          width="56"
+        />
+        <h2 class="text-lg font-bold">
+          Virgen Del Pilar School Rodriguez, Inc.
+        </h2>
+        <p class="text-sm">
+          Iloilo St, Brgy, Rodriguez, Rizal
+        </p>
+        <p class="text-sm">
+          Official Receipt
+        </p>
       </div>
       <div class="mb-4 text-sm">
         <p><span class="font-medium">Student ID:</span> {{ selectedItem?.student.id }}</p>
@@ -312,15 +371,27 @@ const { handlePrint } = useVueToPrint({
         <p><span class="font-medium">Total Amount:</span> ₱ {{ Number(selectedItem?.transaction.total_amount).toFixed(2) }}</p>
       </div>
       <div class="mb-4">
-        <h3 class="font-semibold text-sm mb-2">Payment Breakdown</h3>
+        <h3 class="font-semibold text-sm mb-2">
+          Payment Breakdown
+        </h3>
         <table class="w-full text-sm border-t border-b">
           <thead>
-            <tr class="text-left"><th class="py-1">Payment Type</th><th class="py-1 text-right">Amount</th></tr>
+            <tr class="text-left">
+              <th class="py-1">
+                Payment Type
+              </th><th class="py-1 text-right">
+                Amount
+              </th>
+            </tr>
           </thead>
           <tbody>
             <tr v-for="item in selectedItem?.transaction_items" :key="item.id">
-              <td class="py-1">{{ item.item_type }}</td>
-              <td class="py-1 text-right">₱ {{ Number(item.amount).toFixed(2) }}</td>
+              <td class="py-1">
+                {{ item.item_type }}
+              </td>
+              <td class="py-1 text-right">
+                ₱ {{ Number(item.amount).toFixed(2) }}
+              </td>
             </tr>
           </tbody>
         </table>

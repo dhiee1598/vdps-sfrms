@@ -1,6 +1,6 @@
-import db from "~~/server/db";
-import { transactions } from "~~/server/db/schema/transaction-schema";
-import { eq, and, sql, gte, lte } from "drizzle-orm";
+import db from '~~/server/db';
+import { transactions } from '~~/server/db/schema/transaction-schema';
+import { and, eq, gte, lte, sql } from 'drizzle-orm';
 
 export default defineEventHandler(async () => {
   const today = new Date();
@@ -12,7 +12,7 @@ export default defineEventHandler(async () => {
   const pendingResult = await db
     .select({ count: sql<number>`count(*)` })
     .from(transactions)
-    .where(eq(transactions.status, "pending"));
+    .where(eq(transactions.status, 'pending'));
 
   const pendingCount = pendingResult[0]?.count || 0;
 
@@ -24,7 +24,7 @@ export default defineEventHandler(async () => {
     .from(transactions)
     .where(
       and(
-        eq(transactions.status, "paid"),
+        eq(transactions.status, 'paid'),
         gte(transactions.date_paid, today),
         lte(transactions.date_paid, tomorrow),
       ),

@@ -1,6 +1,6 @@
-import db from "~~/server/db";
-import { users, userUpdateSchema } from "~~/server/db/schema/user-schema";
-import { and, eq, ne } from "drizzle-orm";
+import db from '~~/server/db';
+import { users, userUpdateSchema } from '~~/server/db/schema/user-schema';
+import { and, eq, ne } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   await requireUserSession(event);
@@ -9,8 +9,8 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Invalid ID",
-      message: "User ID is required in the request URL.",
+      statusMessage: 'Invalid ID',
+      message: 'User ID is required in the request URL.',
     });
   }
 
@@ -19,8 +19,8 @@ export default defineEventHandler(async (event) => {
   if (!body.success) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Bad Request",
-      message: "Missing required fields or invalid data.",
+      statusMessage: 'Bad Request',
+      message: 'Missing required fields or invalid data.',
     });
   }
 
@@ -32,8 +32,8 @@ export default defineEventHandler(async (event) => {
   if (existingEmail) {
     throw createError({
       statusCode: 409,
-      statusMessage: "Conflict",
-      message: "The email address is already in use by another account.",
+      statusMessage: 'Conflict',
+      message: 'The email address is already in use by another account.',
     });
   }
 
@@ -42,8 +42,8 @@ export default defineEventHandler(async (event) => {
   if (!userToUpdate) {
     throw createError({
       statusCode: 404,
-      statusMessage: "Not Found",
-      message: "User not found.",
+      statusMessage: 'Not Found',
+      message: 'User not found.',
     });
   }
 
@@ -56,8 +56,8 @@ export default defineEventHandler(async (event) => {
     if (!isPasswordValid) {
       throw createError({
         statusCode: 401,
-        statusMessage: "Unauthorized",
-        message: "The current password you entered is incorrect.",
+        statusMessage: 'Unauthorized',
+        message: 'The current password you entered is incorrect.',
       });
     }
   }
@@ -76,7 +76,7 @@ export default defineEventHandler(async (event) => {
 
   return {
     statusCode: 200,
-    statusMessage: "OK",
-    message: "User updated successfully.",
+    statusMessage: 'OK',
+    message: 'User updated successfully.',
   };
 });

@@ -4,7 +4,7 @@ import { like } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const search = (query.search as string) || "";
+  const search = (query.search as string) || '';
 
   const allSundries = await db
     .select()

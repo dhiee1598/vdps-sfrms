@@ -1,15 +1,15 @@
-import db from "~~/server/db";
-import { transactions } from "~~/server/db/schema/transaction-schema";
-import { transaction_items } from "~~/server/db/schema/transaction-items-schema";
-import { eq } from "drizzle-orm";
+import db from '~~/server/db';
+import { transaction_items } from '~~/server/db/schema/transaction-items-schema';
+import { transactions } from '~~/server/db/schema/transaction-schema';
+import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, "id");
+  const id = getRouterParam(event, 'id');
 
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Transaction ID is required",
+      statusMessage: 'Transaction ID is required',
     });
   }
 
@@ -21,14 +21,14 @@ export default defineEventHandler(async (event) => {
   if (!transaction) {
     throw createError({
       statusCode: 404,
-      statusMessage: "Transaction not found",
+      statusMessage: 'Transaction not found',
     });
   }
 
-  if (transaction.status !== "pending") {
+  if (transaction.status !== 'pending') {
     throw createError({
       statusCode: 400,
-      statusMessage: "Only pending transactions can be cancelled",
+      statusMessage: 'Only pending transactions can be cancelled',
     });
   }
 
@@ -41,6 +41,6 @@ export default defineEventHandler(async (event) => {
 
   return {
     success: true,
-    message: "Transaction cancelled successfully",
+    message: 'Transaction cancelled successfully',
   };
 });

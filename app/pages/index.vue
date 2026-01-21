@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { v4 as uuidv4 } from 'uuid';
+
 import { socket } from '~/components/socket';
 
 useHead({
@@ -101,7 +102,7 @@ onMounted(() => {
     console.warn(message);
     // Only reset if the Academic Year changes (prevent resetting during transaction submission)
     if (typeof message === 'string' && message.toLowerCase().includes('academic year')) {
-      resetForm(); 
+      resetForm();
     }
   });
 });
@@ -111,7 +112,8 @@ watch(selectedStudent, (newVal) => {
     studentdata.value = studentComputation(newVal);
     formData.value.transaction_id = uuidv4();
     formData.value.student_id = studentdata.value.selected_students.student_id;
-  } else {
+  }
+  else {
     studentdata.value = null;
     formData.value.student_id = '';
     formData.value.transaction_items = [];
@@ -206,7 +208,7 @@ watch(selectedStudent, (newVal) => {
         >
           Back
         </button>
-        
+
         <button
           class="btn btn-accent w-full max-w-md"
           :disabled="!isMounted

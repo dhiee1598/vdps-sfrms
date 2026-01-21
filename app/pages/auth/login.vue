@@ -50,7 +50,7 @@ function togglePasswordVisibility() {
           height="200"
           width="200"
           class="mb-6"
-        />
+        >
         <h1 class="text-2xl font-bold">
           Student Financial Record
         </h1>

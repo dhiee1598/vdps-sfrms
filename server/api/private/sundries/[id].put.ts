@@ -1,7 +1,7 @@
-import db from "~~/server/db";
-import { sundries } from "~~/server/db/schema/sundry-schema";
-import { and, eq, ne } from "drizzle-orm";
-import { readBody } from "h3";
+import db from '~~/server/db';
+import { sundries } from '~~/server/db/schema/sundry-schema';
+import { and, eq, ne } from 'drizzle-orm';
+import { readBody } from 'h3';
 
 export default defineEventHandler(async (event) => {
   await requireUserSession(event);
@@ -10,8 +10,8 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Invalid ID",
-      message: "Sundry ID is required in the request URL.",
+      statusMessage: 'Invalid ID',
+      message: 'Sundry ID is required in the request URL.',
     });
   }
 
@@ -24,8 +24,8 @@ export default defineEventHandler(async (event) => {
   if (!body || !body.sundry_name || !body.sundry_amount) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Missing Fields",
-      message: "Name, Amount, and Type ID are required.",
+      statusMessage: 'Missing Fields',
+      message: 'Name, Amount, and Type ID are required.',
     });
   }
 
@@ -39,16 +39,16 @@ export default defineEventHandler(async (event) => {
   if (existingSundry) {
     throw createError({
       statusCode: 409,
-      statusMessage: "Conflict",
-      message: "A sundry with this name already exists.",
+      statusMessage: 'Conflict',
+      message: 'A sundry with this name already exists.',
     });
   }
 
   if (!Number(body.sundry_amount) || Number(body.sundry_amount) <= 0) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Bad Request",
-      message: "Amount must be a positive number.",
+      statusMessage: 'Bad Request',
+      message: 'Amount must be a positive number.',
     });
   }
 
@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
     .where(eq(sundries.id, id))
     .execute();
 
-  event.context.io.emit("newData", "A new sundries has been updated.");
+  event.context.io.emit('newData', 'A new sundries has been updated.');
 
   return {
     success: true,

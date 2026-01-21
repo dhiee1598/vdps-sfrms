@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const selectedTx = ref();
-const selectedStatus = ref('');
 const searchQuery = ref('');
 
 const currentPage = ref(1);
@@ -44,7 +43,7 @@ const computedDates = computed(() => {
   return { startDate: '', endDate: '' };
 });
 
-const { data: transactions, pending, error, refresh } = useFetch('/api/private/transactions', {
+const { data: transactions, pending, error } = useFetch('/api/private/transactions', {
   lazy: true,
   query: computed(() => ({
     page: currentPage.value,
@@ -62,7 +61,7 @@ function openModal(tx: any) {
 }
 
 const totalPages = computed(() =>
-  transactions.value?.totalPages || 1
+  transactions.value?.totalPages || 1,
 );
 
 // --- Smart Pagination Logic ---
@@ -83,7 +82,8 @@ const visiblePages = computed(() => {
 
   if (left > 2) {
     pages.push('...');
-  } else if (left === 2) {
+  }
+  else if (left === 2) {
     pages.push(2);
   }
 
@@ -95,7 +95,8 @@ const visiblePages = computed(() => {
 
   if (right < total - 1) {
     pages.push('...');
-  } else if (right === total - 1) {
+  }
+  else if (right === total - 1) {
     pages.push(total - 1);
   }
 
@@ -201,16 +202,22 @@ function goToPage(page: number | string) {
       <tbody>
         <tr v-if="pending">
           <td colspan="7" class="text-center py-4">
-             <span class="loading loading-ring loading-lg" />
+            <span class="loading loading-ring loading-lg" />
           </td>
         </tr>
         <tr v-else-if="error">
           <td colspan="7" class="text-center text-red-500 py-4">
-             Failed to load transactions.
+            Failed to load transactions.
           </td>
         </tr>
-        <tr v-for="(item, index) in transactions?.data || []" v-else :key="index">
-          <td class="font-mono text-xs">{{ item.transaction.transaction_id.slice(0, 15) }}...</td>
+        <tr
+          v-for="(item, index) in transactions?.data || []"
+          v-else
+          :key="index"
+        >
+          <td class="font-mono text-xs">
+            {{ item.transaction.transaction_id.slice(0, 15) }}...
+          </td>
           <td>{{ item.student.id }}</td>
           <td>
             {{ item.student.first_name }}
@@ -259,7 +266,7 @@ function goToPage(page: number | string) {
       </tbody>
     </table>
   </div>
-  
+
   <div class="flex justify-center items-center gap-2 my-4">
     <button
       class="btn btn-sm"
@@ -321,7 +328,7 @@ function goToPage(page: number | string) {
           <ul class="text-sm space-y-1">
             <li><span class="font-medium">Grade Level:</span> {{ selectedTx?.grade_level?.grade_level_name }}</li>
             <li><span class="font-medium">Strand:</span> {{ selectedTx?.strand?.strand_name || 'N/A' }}</li>
-            
+
             <li><span class="font-medium">Academic Year:</span> {{ selectedTx?.academic_year?.academic_year }}</li>
           </ul>
         </div>
@@ -352,7 +359,7 @@ function goToPage(page: number | string) {
             Date Paid:
           </dt>
           <dd>
-             {{ new Date(selectedTx?.transaction.date_paid || selectedTx?.transaction.createdAt).toLocaleDateString() }}
+            {{ new Date(selectedTx?.transaction.date_paid || selectedTx?.transaction.createdAt).toLocaleDateString() }}
           </dd>
 
           <dt class="font-medium">

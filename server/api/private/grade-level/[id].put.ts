@@ -1,9 +1,9 @@
-import db from "~~/server/db";
+import db from '~~/server/db';
 import {
   gradeLevel,
   gradeLevelInsertSchema,
-} from "~~/server/db/schema/grade-level-schema";
-import { and, eq, ne } from "drizzle-orm";
+} from '~~/server/db/schema/grade-level-schema';
+import { and, eq, ne } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   await requireUserSession(event);
@@ -14,16 +14,16 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: "ID is required",
-      message: "ID is required",
+      statusMessage: 'ID is required',
+      message: 'ID is required',
     });
   }
 
   if (!body.success) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Bad Request",
-      message: "Minimum of 3 and maximum of 50 characters allowed",
+      statusMessage: 'Bad Request',
+      message: 'Minimum of 3 and maximum of 50 characters allowed',
     });
   }
 
@@ -40,8 +40,8 @@ export default defineEventHandler(async (event) => {
   if (existingGradeLevel) {
     throw createError({
       statusCode: 409,
-      statusMessage: "Conflict",
-      message: "A Grade level with this name already exists.",
+      statusMessage: 'Conflict',
+      message: 'A Grade level with this name already exists.',
     });
   }
 
@@ -54,6 +54,6 @@ export default defineEventHandler(async (event) => {
   return {
     success: true,
     data: result,
-    message: "Grade level updated successfully",
+    message: 'Grade level updated successfully',
   };
 });

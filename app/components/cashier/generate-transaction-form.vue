@@ -26,7 +26,8 @@ const sundryList = computed(() => sundriesData.value?.data || []);
 
 const students = computed(() => {
   // Use enrollments directly. Ensure uniqueness if needed, but typically one active enrollment per student.
-  if (!enrollments.value?.data) return [];
+  if (!enrollments.value?.data)
+    return [];
   return enrollments.value.data;
 });
 
@@ -51,7 +52,8 @@ function toggleSundry(sundry: { sundry_name: string; sundry_amount: string }) {
 
   if (existingIndex !== -1) {
     items.splice(existingIndex, 1);
-  } else {
+  }
+  else {
     items.push({
       item_type: sundry.sundry_name,
       amount: Number(sundry.sundry_amount) || 0,
@@ -61,14 +63,14 @@ function toggleSundry(sundry: { sundry_name: string; sundry_amount: string }) {
 }
 
 function recalculateTotal() {
-    const total = formData.value.transaction_items.reduce((sum, item) => sum + item.amount, 0);
-    formData.value.total_amount = Math.round((total + Number.EPSILON) * 100) / 100;
+  const total = formData.value.transaction_items.reduce((sum, item) => sum + item.amount, 0);
+  formData.value.total_amount = Math.round((total + Number.EPSILON) * 100) / 100;
 }
 
 async function handleSubmit() {
   if (formData.value.total_amount <= 0) {
-      emit('showMessage', 'Please select at least one item to pay.', true);
-      return;
+    emit('showMessage', 'Please select at least one item to pay.', true);
+    return;
   }
 
   isSubmitting.value = true;
@@ -156,22 +158,29 @@ async function handleSubmit() {
     </div>
 
     <!-- Sundry Selection -->
-     <div class="mt-6 bg-base-100 p-4 rounded-lg border border-base-300" v-if="selectedStudent">
-        <p class="text-sm font-bold mb-2">Select Payment Items (Sundries)</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
-            <div v-for="sundry in sundryList" :key="sundry.id" class="form-control bg-base-200 rounded-md p-2">
-                <label class="cursor-pointer label justify-start gap-2">
-                    <input type="checkbox" class="checkbox checkbox-sm" 
-                        :checked="formData.transaction_items.some((i:any) => i.item_type === sundry.sundry_name)"
-                        @change="toggleSundry(sundry)"
-                    />
-                    <span class="label-text flex-1">{{ sundry.sundry_name }}</span>
-                    <span class="label-text font-bold">₱{{ sundry.sundry_amount }}</span>
-                </label>
-            </div>
+    <div v-if="selectedStudent" class="mt-6 bg-base-100 p-4 rounded-lg border border-base-300">
+      <p class="text-sm font-bold mb-2">
+        Select Payment Items (Sundries)
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
+        <div
+          v-for="sundry in sundryList"
+          :key="sundry.id"
+          class="form-control bg-base-200 rounded-md p-2"
+        >
+          <label class="cursor-pointer label justify-start gap-2">
+            <input
+              type="checkbox"
+              class="checkbox checkbox-sm"
+              :checked="formData.transaction_items.some((i:any) => i.item_type === sundry.sundry_name)"
+              @change="toggleSundry(sundry)"
+            >
+            <span class="label-text flex-1">{{ sundry.sundry_name }}</span>
+            <span class="label-text font-bold">₱{{ sundry.sundry_amount }}</span>
+          </label>
         </div>
-     </div>
-
+      </div>
+    </div>
 
     <!-- Transaction Details -->
     <div class="mt-6 bg-base-300 p-4 rounded-lg">
@@ -185,7 +194,7 @@ async function handleSubmit() {
         </dt> <dd>
           {{ formData.transaction_id }}
         </dd>
-        
+
         <dt class="font-medium">
           Total Amount:
         </dt>
@@ -196,7 +205,7 @@ async function handleSubmit() {
     </div>
 
     <!-- Transaction Items Table -->
-    <div class="mt-6" v-if="formData.transaction_items.length > 0">
+    <div v-if="formData.transaction_items.length > 0" class="mt-6">
       <p class="text-sm text-gray-400 mb-2">
         Payment Breakdown
       </p>

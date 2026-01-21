@@ -1,11 +1,11 @@
-import db from "~~/server/db";
-import { academicYears } from "~~/server/db/schema/academic-years-schema";
-import { gradeLevel } from "~~/server/db/schema/grade-level-schema";
-import { sections } from "~~/server/db/schema/section-schema";
-import { strands } from "~~/server/db/schema/strands-schema";
-import { students } from "~~/server/db/schema/student-schema";
-import { and, asc, eq, like, or, sql } from "drizzle-orm";
-import { enrollments } from "~~/server/db/schema/enrollment-schema";
+import db from '~~/server/db';
+import { academicYears } from '~~/server/db/schema/academic-years-schema';
+import { enrollments } from '~~/server/db/schema/enrollment-schema';
+import { gradeLevel } from '~~/server/db/schema/grade-level-schema';
+import { sections } from '~~/server/db/schema/section-schema';
+import { strands } from '~~/server/db/schema/strands-schema';
+import { students } from '~~/server/db/schema/student-schema';
+import { and, asc, eq, like, or, sql } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -13,9 +13,9 @@ export default defineEventHandler(async (event) => {
 
   const page = Number(query.page) || 1;
   const pageSize = Number(query.pageSize) || 8;
-  const search = (query.search as string) || "";
-  const gradeLevelFilter = (query.gradeLevel as string) || "";
-  const strandFilter = (query.strand as string) || "";
+  const search = (query.search as string) || '';
+  const gradeLevelFilter = (query.gradeLevel as string) || '';
+  const strandFilter = (query.strand as string) || '';
   const offset = (page - 1) * pageSize;
 
   const [activeYear] = await db

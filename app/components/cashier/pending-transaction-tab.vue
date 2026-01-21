@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { FetchError } from 'ofetch';
-import { ref, computed, watch, onBeforeUnmount, onMounted } from 'vue';
+
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useVueToPrint } from 'vue-to-print';
+
 import { socket } from '../socket';
 
 const isConnected = ref(false);
@@ -64,24 +66,30 @@ const visiblePages = computed(() => {
   const current = currentPage.value;
   const delta = 1;
 
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (total <= 7)
+    return Array.from({ length: total }, (_, i) => i + 1);
 
   const pages: (number | string)[] = [];
   const left = current - delta;
   const right = current + delta;
 
   pages.push(1);
-  if (left > 2) pages.push('...');
-  else if (left === 2) pages.push(2);
+  if (left > 2)
+    pages.push('...');
+  else if (left === 2)
+    pages.push(2);
 
   for (let i = Math.max(2, left); i <= Math.min(total - 1, right); i++) {
     pages.push(i);
   }
 
-  if (right < total - 1) pages.push('...');
-  else if (right === total - 1) pages.push(total - 1);
+  if (right < total - 1)
+    pages.push('...');
+  else if (right === total - 1)
+    pages.push(total - 1);
 
-  if (total > 1) pages.push(total);
+  if (total > 1)
+    pages.push(total);
 
   return pages;
 });
@@ -103,7 +111,8 @@ function confirmCancel(item: any) {
 }
 
 async function handleCancel() {
-  if (!itemToCancel.value) return;
+  if (!itemToCancel.value)
+    return;
   isCancelling.value = true;
   try {
     const response = await $fetch(`/api/private/transactions/${itemToCancel.value.transaction.transaction_id}`, {
@@ -113,10 +122,12 @@ async function handleCancel() {
     showCancelModal.value = false;
     itemToCancel.value = null;
     await refresh();
-  } catch (e) {
+  }
+  catch (e) {
     const error = e as FetchError;
     showMessage(error.data?.message || 'Failed to cancel transaction.', true);
-  } finally {
+  }
+  finally {
     isCancelling.value = false;
   }
 }
@@ -161,7 +172,8 @@ onMounted(() => {
 });
 
 async function handleSubmit() {
-  if (!selectedItem.value) return;
+  if (!selectedItem.value)
+    return;
 
   isSubmitting.value = true;
   try {
@@ -175,10 +187,12 @@ async function handleSubmit() {
 
     showMessage(response.message, false);
     await refresh();
-  } catch (e) {
+  }
+  catch (e) {
     const error = e as FetchError;
     showMessage(error.data.message || 'An unexpected error occurred.', true);
-  } finally {
+  }
+  finally {
     isSubmitting.value = false;
   }
 }
@@ -192,20 +206,36 @@ async function handleSubmit() {
       </h2>
 
       <div class="flex flex-col md:flex-row gap-2">
-        <select v-model="selectedGrade" class="select select-bordered w-44" :disabled="pending">
+        <select
+          v-model="selectedGrade"
+          class="select select-bordered w-44"
+          :disabled="pending"
+        >
           <option value="">
             All Grades
           </option>
-          <option v-for="grade in gradeLevels?.data" :key="grade.id" :value="grade.grade_level_name">
+          <option
+            v-for="grade in gradeLevels?.data"
+            :key="grade.id"
+            :value="grade.grade_level_name"
+          >
             {{ grade.grade_level_name }}
           </option>
         </select>
 
-        <select v-model="selectedStrand" class="select select-bordered w-44" :disabled="pending">
+        <select
+          v-model="selectedStrand"
+          class="select select-bordered w-44"
+          :disabled="pending"
+        >
           <option value="">
             All Strands
           </option>
-          <option v-for="strand in strands?.data" :key="strand.id" :value="strand.strand_name">
+          <option
+            v-for="strand in strands?.data"
+            :key="strand.id"
+            :value="strand.strand_name"
+          >
             {{ strand.strand_name }}
           </option>
         </select>
@@ -218,7 +248,7 @@ async function handleSubmit() {
         >
       </div>
     </div>
-    
+
     <div class="overflow-x-auto min-h-[400px]">
       <table class="table w-full">
         <thead>
@@ -237,20 +267,26 @@ async function handleSubmit() {
         <tbody>
           <tr v-if="pending">
             <td colspan="9" class="text-center py-20">
-              <span class="loading loading-spinner loading-lg text-primary"></span>
-              <p class="mt-2 text-gray-500 text-sm">Loading pending transactions...</p>
+              <span class="loading loading-spinner loading-lg text-primary" />
+              <p class="mt-2 text-gray-500 text-sm">
+                Loading pending transactions...
+              </p>
             </td>
           </tr>
 
           <template v-else>
             <tr v-for="item in transactions?.data || []" :key="item.transaction.transaction_id">
-              <td class="font-mono text-xs">{{ item.transaction.transaction_id.slice(0, 15) }}...</td>
+              <td class="font-mono text-xs">
+                {{ item.transaction.transaction_id.slice(0, 15) }}...
+              </td>
               <td>{{ item.student.id }}</td>
               <td>{{ item.student.first_name }} {{ item.student.middle_name }} {{ item.student.last_name }}</td>
               <td>{{ item.grade_level.grade_level_name }}</td>
               <td>{{ item.strand?.strand_name || 'N/A' }}</td>
               <td><span class="badge badge-warning badge-sm font-bold uppercase text-xs">{{ item.transaction.status }}</span></td>
-              <td class="font-mono">₱ {{ Number(item.transaction.total_amount).toFixed(2) }}</td>
+              <td class="font-mono">
+                ₱ {{ Number(item.transaction.total_amount).toFixed(2) }}
+              </td>
               <td>{{ new Date(item.transaction.createdAt).toLocaleDateString('en-US', { timeZone: "UTC", month: 'short', day: 'numeric', year: 'numeric' }) }}</td>
               <td>
                 <div class="flex gap-2">
@@ -322,7 +358,9 @@ async function handleSubmit() {
         </div>
         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="bg-base-300 p-4 rounded-lg">
-            <p class="text-sm text-gray-400 mb-2">Student Information</p>
+            <p class="text-sm text-gray-400 mb-2">
+              Student Information
+            </p>
             <ul class="text-sm space-y-1">
               <li><span class="font-medium">ID:</span> {{ selectedItem?.student.id }}</li>
               <li><span class="font-medium">Name:</span> {{ selectedItem?.student.first_name }} {{ selectedItem?.student.middle_name }} {{ selectedItem?.student.last_name }}</li>
@@ -330,7 +368,9 @@ async function handleSubmit() {
             </ul>
           </div>
           <div class="bg-base-300 p-4 rounded-lg">
-            <p class="text-sm text-gray-400 mb-2">Enrollment Information</p>
+            <p class="text-sm text-gray-400 mb-2">
+              Enrollment Information
+            </p>
             <ul class="text-sm space-y-1">
               <li><span class="font-medium">Grade Level:</span> {{ selectedItem?.grade_level.grade_level_name }}</li>
               <li><span class="font-medium">Strand:</span> {{ selectedItem?.strand?.strand_name || 'N/A' }}</li>
@@ -339,34 +379,62 @@ async function handleSubmit() {
           </div>
         </div>
         <div class="mt-6 bg-base-300 p-4 rounded-lg">
-          <p class="text-sm text-gray-400 mb-2">Transaction Details</p>
+          <p class="text-sm text-gray-400 mb-2">
+            Transaction Details
+          </p>
           <dl class="grid grid-cols-1 md:grid-cols-2 gap-y-2 text-sm">
-            <dt class="font-medium">Transaction ID:</dt>
-            <dd class="truncate">{{ selectedItem?.transaction.transaction_id }}</dd>
-            <dt class="font-medium">Status:</dt>
+            <dt class="font-medium">
+              Transaction ID:
+            </dt>
+            <dd class="truncate">
+              {{ selectedItem?.transaction.transaction_id }}
+            </dd>
+            <dt class="font-medium">
+              Status:
+            </dt>
             <dd><span class="badge badge-warning badge-sm">{{ selectedItem?.transaction.status }}</span></dd>
-            <dt class="font-medium">Total Amount:</dt>
-            <dd class="text-success font-semibold">₱ {{ Number(selectedItem?.transaction.total_amount).toFixed(2) }}</dd>
+            <dt class="font-medium">
+              Total Amount:
+            </dt>
+            <dd class="text-success font-semibold">
+              ₱ {{ Number(selectedItem?.transaction.total_amount).toFixed(2) }}
+            </dd>
           </dl>
         </div>
         <div class="mt-6">
-          <p class="text-sm text-gray-400 mb-2">Payment Breakdown</p>
+          <p class="text-sm text-gray-400 mb-2">
+            Payment Breakdown
+          </p>
           <div class="overflow-x-auto">
             <table class="table w-full table-sm">
-              <thead><tr><th>Payment Type</th><th class="text-right">Amount</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Payment Type</th><th class="text-right">
+                    Amount
+                  </th>
+                </tr>
+              </thead>
               <tbody>
                 <tr v-for="item in selectedItem?.transaction_items" :key="item.id">
                   <td>{{ item.item_type }}</td>
-                  <td class="text-right">₱ {{ Number(item.amount).toFixed(2) }}</td>
+                  <td class="text-right">
+                    ₱ {{ Number(item.amount).toFixed(2) }}
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
         <div class="modal-action flex justify-end gap-3 mt-6">
-          <button class="btn btn-outline" @click="isOpen = false">Cancel</button>
-          <button class="btn btn-primary" :disabled="isSubmitting" @click="handleSubmit">
-            <span v-if="isSubmitting" class="loading loading-spinner loading-xs"></span>
+          <button class="btn btn-outline" @click="isOpen = false">
+            Cancel
+          </button>
+          <button
+            class="btn btn-primary"
+            :disabled="isSubmitting"
+            @click="handleSubmit"
+          >
+            <span v-if="isSubmitting" class="loading loading-spinner loading-xs" />
             Mark as Paid
           </button>
         </div>
@@ -375,16 +443,24 @@ async function handleSubmit() {
 
     <dialog :open="showCancelModal" class="modal">
       <div class="modal-box">
-        <h3 class="font-bold text-lg text-error">Cancel Transaction</h3>
+        <h3 class="font-bold text-lg text-error">
+          Cancel Transaction
+        </h3>
         <p class="py-4">
-          Are you sure you want to cancel this transaction for 
+          Are you sure you want to cancel this transaction for
           <span class="font-bold">{{ itemToCancel?.student.first_name }} {{ itemToCancel?.student.last_name }}</span>?
           This action cannot be undone.
         </p>
         <div class="modal-action">
-          <button class="btn" @click="showCancelModal = false">No, Keep it</button>
-          <button class="btn btn-error" :disabled="isCancelling" @click="handleCancel">
-            <span v-if="isCancelling" class="loading loading-spinner"></span>
+          <button class="btn" @click="showCancelModal = false">
+            No, Keep it
+          </button>
+          <button
+            class="btn btn-error"
+            :disabled="isCancelling"
+            @click="handleCancel"
+          >
+            <span v-if="isCancelling" class="loading loading-spinner" />
             Yes, Cancel Transaction
           </button>
         </div>
@@ -393,10 +469,21 @@ async function handleSubmit() {
 
     <div ref="componentRef" class="print-area mx-auto my-6 max-w-md bg-white text-black p-6 rounded-lg shadow-md hidden print:block">
       <div class="text-center border-b pb-4 mb-4 flex flex-col justify-center items-center">
-        <NuxtImg src="/vdps-logo.png" alt="Profile" height="56" width="56" />
-        <h2 class="text-lg font-bold">Virgen Del Pilar School Rodriguez, Inc.</h2>
-        <p class="text-sm">Iloilo St, Brgy, Rodriguez, Rizal</p>
-        <p class="text-sm">Official Receipt</p>
+        <NuxtImg
+          src="/vdps-logo.png"
+          alt="Profile"
+          height="56"
+          width="56"
+        />
+        <h2 class="text-lg font-bold">
+          Virgen Del Pilar School Rodriguez, Inc.
+        </h2>
+        <p class="text-sm">
+          Iloilo St, Brgy, Rodriguez, Rizal
+        </p>
+        <p class="text-sm">
+          Official Receipt
+        </p>
       </div>
       <div class="mb-4 text-sm">
         <p><span class="font-medium">Student ID:</span> {{ selectedItem?.student.id }}</p>
@@ -414,15 +501,27 @@ async function handleSubmit() {
         <p><span class="font-medium">Total Amount:</span> ₱ {{ Number(selectedItem?.transaction.total_amount).toFixed(2) }}</p>
       </div>
       <div class="mb-4">
-        <h3 class="font-semibold text-sm mb-2">Payment Breakdown</h3>
+        <h3 class="font-semibold text-sm mb-2">
+          Payment Breakdown
+        </h3>
         <table class="w-full text-sm border-t border-b">
           <thead>
-            <tr class="text-left"><th class="py-1">Payment Type</th><th class="py-1 text-right">Amount</th></tr>
+            <tr class="text-left">
+              <th class="py-1">
+                Payment Type
+              </th><th class="py-1 text-right">
+                Amount
+              </th>
+            </tr>
           </thead>
           <tbody>
             <tr v-for="item in selectedItem?.transaction_items" :key="item.id">
-              <td class="py-1">{{ item.item_type }}</td>
-              <td class="py-1 text-right">₱ {{ Number(item.amount).toFixed(2) }}</td>
+              <td class="py-1">
+                {{ item.item_type }}
+              </td>
+              <td class="py-1 text-right">
+                ₱ {{ Number(item.amount).toFixed(2) }}
+              </td>
             </tr>
           </tbody>
         </table>
