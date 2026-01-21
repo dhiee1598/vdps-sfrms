@@ -323,6 +323,11 @@ async function main() {
         address: row["ADDRESS"] || "N/A",
         contact_number: finalContact,
       });
+      // Random Date in June 2025 (June 1 - June 30)
+      const start = new Date('2025-06-01').getTime();
+      const end = new Date('2025-06-30').getTime();
+      const randomDate = new Date(start + Math.random() * (end - start));
+
       await db.insert(enrollments).values({
         student_id: studentId,
         grade_level_id: targetGrade.id,
@@ -330,6 +335,7 @@ async function main() {
         academic_year_id: activeAy.id,
         strand_id: currentStrandId,
         enroll_status: "ENROLLED",
+        date_enrolled: randomDate,
       });
     }
     console.log(`   ✅ Processed Sheet: ${sheetName}`);
