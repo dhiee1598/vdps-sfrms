@@ -26,7 +26,7 @@ function handleSearchChange(query: string) {
   searchTimeout = setTimeout(() => {
     debouncedSearch.value = query;
     isTyping.value = false;
-  }, 3000);
+  }, 1500);
 }
 
 const { data: enrollments, pending, refresh } = useFetch('/api/private/enrollment', {
