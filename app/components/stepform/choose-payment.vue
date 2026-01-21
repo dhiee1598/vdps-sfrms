@@ -56,7 +56,7 @@ function toggleSundry(sundry: { sundry_name: string; sundry_amount: string }) {
   <div class="flex flex-col gap-4 mx-auto w-full max-w-2xl">
     <div class="border rounded-lg w-full overflow-hidden border-accent-content">
       <h4 class="p-3 font-medium bg-base-200">
-        Select Sundries / Additional Fees
+        Select Payment Items
       </h4>
       <div class="overflow-x-auto overflow-y-auto max-h-[400px]">
         <table class="table w-full text-sm table-sm">
