@@ -31,7 +31,7 @@ function handleSearchChange(query: string) {
 
   isTyping.value = true;
   clearTimeout(searchTimeout);
-  
+
   // Wait 600ms after typing stops before searching
   searchTimeout = setTimeout(() => {
     debouncedSearch.value = query;
@@ -83,7 +83,8 @@ async function handleSocketData() {
 }
 
 onMounted(() => {
-  if (!socket.connected) socket.connect();
+  if (!socket.connected)
+    socket.connect();
   socket.on('newData', handleSocketData);
 });
 
@@ -97,7 +98,7 @@ onBeforeUnmount(() => {
     <div class="text-2xl md:text-4xl font-black uppercase py-10">
       Student Payment Kiosk System
     </div>
-    
+
     <NuxtImg
       src="/vdps-logo.png"
       alt="Logo"
@@ -110,7 +111,7 @@ onBeforeUnmount(() => {
       <label class="label">
         <span class="label-text">Search by Student ID:</span>
       </label>
-      
+
       <Multiselect
         v-model="selected"
         :options="studentOptions"
@@ -128,7 +129,6 @@ onBeforeUnmount(() => {
           <span v-if="pending || isTyping" class="text-gray-500">Searching...</span>
           <span v-else class="text-red-500">No student found.</span>
         </template>
-        
       </Multiselect>
     </div>
   </div>
