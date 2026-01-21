@@ -20,9 +20,6 @@ const paymentItems = computed(() => props.formData.transaction_items);
           Student ID: <span class="font-medium text-gray-800">{{ props.formData.student_id }}</span>
         </p>
         <p class="text-sm text-gray-600">
-          Student Name: <span class="font-medium text-gray-800">{{ props.datas.selected_students.first_name }} {{ props.datas.selected_students.last_name }}</span>
-        </p>
-        <p class="text-sm text-gray-600">
           Transaction ID: <span class="font-medium text-gray-800">{{ props.formData.transaction_id }}</span>
         </p>
       </div>

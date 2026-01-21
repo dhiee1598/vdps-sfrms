@@ -302,7 +302,27 @@ async function main() {
         row["NAME"],
       );
 
-      const studentId = row["ID NO."];
+      // Use ID from Excel if available
+      const rawId = row["ID NO."];
+      if (!rawId) {
+        console.warn(`      ⚠️  Skipping: Missing ID NO. for ${row["NAME"]}`);
+        continue;
+      }
+      const studentId = String(rawId).trim();
+
+      // Check for duplicate ID
+      const [existingStudent] = await db
+        .select()
+        .from(students)
+        .where(eq(students.id, studentId));
+
+      if (existingStudent) {
+        const fullName = `${firstName} ${middleName ? middleName + " " : ""}${lastName}`;
+        console.warn(
+          `      ⚠️  Skipping Duplicate Student ID: ${studentId} - ${fullName}`,
+        );
+        continue;
+      }
 
       let finalContact = "N/A";
       if (row["CONTACT NUMBER"]) {
