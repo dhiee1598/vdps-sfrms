@@ -99,7 +99,7 @@ onBeforeUnmount(() => {
       Student Payment Kiosk System
     </div>
 
-    <NuxtImg
+    <img
       src="/vdps-logo.png"
       alt="Logo"
       height="200"
