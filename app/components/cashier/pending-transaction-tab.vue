@@ -469,18 +469,18 @@ async function handleSubmit() {
 
     <div ref="componentRef" class="print-area hidden print:block bg-white text-black p-2 font-mono text-[10px]">
       <div class="text-center border-b border-black pb-2 mb-2 flex flex-col justify-center items-center">
-        <NuxtImg
+        <img
           src="/vdps-logo.png"
           alt="Profile"
           height="40"
           width="40"
           class="mb-1"
         />
-        <h2 class="text-[12px] font-bold leading-tight">
+        <h2 class="text-[14px] font-bold leading-tight">
           Virgen Del Pilar School Rodriguez, Inc.
         </h2>
         <p class="text-[10px]">
-          TIN #: 219-842-713-00000
+          NON-VAT Reg. TIN: 219-842-713-00000
         </p>
         <p class="text-[10px]">
           Iloilo St, Brgy, Rodriguez, Rizal
