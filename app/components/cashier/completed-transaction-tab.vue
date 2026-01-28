@@ -353,7 +353,7 @@ const { handlePrint } = useVueToPrint({
           Iloilo St, Brgy, Rodriguez, Rizal
         </p>
         <p class="text-[10px] font-bold mt-1">
-          OFFICIAL RECEIPT
+          TIN #: 219-842-713-00000
         </p>
       </div>
 
