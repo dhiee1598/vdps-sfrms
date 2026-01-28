@@ -480,10 +480,10 @@ async function handleSubmit() {
           Virgen Del Pilar School Rodriguez, Inc.
         </h2>
         <p class="text-[10px]">
-          Iloilo St, Brgy, Rodriguez, Rizal
-        </p>
-        <p class="text-[10px] font-bold mt-1">
           TIN #: 219-842-713-00000
+        </p>
+        <p class="text-[10px]">
+          Iloilo St, Brgy, Rodriguez, Rizal
         </p>
       </div>
 
