@@ -337,71 +337,85 @@ const { handlePrint } = useVueToPrint({
       </div>
     </dialog>
 
-    <div ref="componentRef" class="print-area mx-auto my-6 max-w-md bg-white text-black p-6 rounded-lg shadow-md hidden print:block">
-      <div class="text-center border-b pb-4 mb-4 flex flex-col justify-center items-center">
+    <div ref="componentRef" class="print-area hidden print:block bg-white text-black p-2 font-mono text-[10px]">
+      <div class="text-center border-b border-black pb-2 mb-2 flex flex-col justify-center items-center">
         <NuxtImg
           src="/vdps-logo.png"
           alt="Profile"
-          height="56"
-          width="56"
+          height="40"
+          width="40"
+          class="mb-1"
         />
-        <h2 class="text-lg font-bold">
+        <h2 class="text-[12px] font-bold leading-tight">
           Virgen Del Pilar School Rodriguez, Inc.
         </h2>
-        <p class="text-sm">
+        <p class="text-[10px]">
           Iloilo St, Brgy, Rodriguez, Rizal
         </p>
-        <p class="text-sm">
-          Official Receipt
+        <p class="text-[10px] font-bold mt-1">
+          OFFICIAL RECEIPT
         </p>
       </div>
-      <div class="mb-4 text-sm">
-        <p><span class="font-medium">Student ID:</span> {{ selectedItem?.student.id }}</p>
-        <p><span class="font-medium">Name:</span> {{ selectedItem?.student.first_name }} {{ selectedItem?.student.middle_name }} {{ selectedItem?.student.last_name }}</p>
-        <p><span class="font-medium">Address:</span> {{ selectedItem?.student.address }}</p>
+
+      <div class="mb-2 space-y-0.5">
+        <p><span class="font-bold">Student ID:</span> {{ selectedItem?.student.id }}</p>
+        <p><span class="font-bold">Name:</span> {{ selectedItem?.student.first_name }} {{ selectedItem?.student.last_name }}</p>
+        <p><span class="font-bold">Grade:</span> {{ selectedItem?.grade_level.grade_level_name }}</p>
+        <p v-if="selectedItem?.strand"><span class="font-bold">Strand:</span> {{ selectedItem?.strand?.strand_name }}</p>
+        <p><span class="font-bold">A.Y.:</span> {{ selectedItem?.academic_year.academic_year }}</p>
       </div>
-      <div class="mb-4 text-sm">
-        <p><span class="font-medium">Grade Level:</span> {{ selectedItem?.grade_level.grade_level_name }}</p>
-        <p><span class="font-medium">Strand:</span> {{ selectedItem?.strand?.strand_name || 'N/A' }}</p>
-        <p><span class="font-medium">Academic Year:</span> {{ selectedItem?.academic_year.academic_year }}</p>
+
+      <div class="mb-2 border-t border-b border-black py-1">
+        <p><span class="font-bold">Trans ID:</span> {{ selectedItem?.transaction.transaction_id.slice(0, 20) }}</p>
+        <p><span class="font-bold">Status:</span> {{ selectedItem?.transaction.status.toUpperCase() }}</p>
       </div>
-      <div class="mb-4 text-sm">
-        <p><span class="font-medium">Transaction ID:</span> {{ selectedItem?.transaction.transaction_id }}</p>
-        <p><span class="font-medium">Status:</span> <span class="text-green-600 font-semibold">{{ selectedItem?.transaction.status }}</span></p>
-        <p><span class="font-medium">Total Amount:</span> ₱ {{ Number(selectedItem?.transaction.total_amount).toFixed(2) }}</p>
-      </div>
-      <div class="mb-4">
-        <h3 class="font-semibold text-sm mb-2">
-          Payment Breakdown
-        </h3>
-        <table class="w-full text-sm border-t border-b">
+
+      <div class="mb-2">
+        <table class="w-full text-[10px]">
           <thead>
-            <tr class="text-left">
-              <th class="py-1">
-                Payment Type
-              </th><th class="py-1 text-right">
-                Amount
-              </th>
+            <tr class="border-b border-black">
+              <th class="text-left py-1">Description</th>
+              <th class="text-right py-1">Amount</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="item in selectedItem?.transaction_items" :key="item.id">
-              <td class="py-1">
-                {{ item.item_type }}
-              </td>
-              <td class="py-1 text-right">
-                ₱ {{ Number(item.amount).toFixed(2) }}
-              </td>
+              <td class="py-0.5">{{ item.item_type }}</td>
+              <td class="text-right py-0.5">₱{{ Number(item.amount).toFixed(2) }}</td>
             </tr>
           </tbody>
+          <tfoot>
+            <tr class="border-t border-black font-bold">
+              <td class="py-1">TOTAL</td>
+              <td class="text-right py-1">₱{{ Number(selectedItem?.transaction.total_amount).toFixed(2) }}</td>
+            </tr>
+          </tfoot>
         </table>
       </div>
-      <div class="mt-6 text-sm">
-        <p><span class="font-medium">Date:</span> {{ new Date(selectedItem?.transaction.date_paid).toLocaleDateString() }}</p>
-        <div class="mt-8 flex justify-between">
-          <div>______________________ <br><span class="text-xs">Cashier</span></div>
+
+      <div class="mt-4 text-[10px]">
+        <p><span class="font-bold">Date:</span> {{ new Date(selectedItem?.transaction.date_paid).toLocaleDateString() }}</p>
+        <div class="mt-6 text-center">
+          <p>__________________________</p>
+          <p class="text-[9px]">CASHIER SIGNATURE</p>
         </div>
+        <p class="text-center mt-4 italic">Thank you for your payment!</p>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+@media print {
+  @page {
+    size: 57mm auto;
+    margin: 0;
+  }
+  .print-area {
+    width: 57mm;
+    margin: 0;
+    padding: 2mm;
+    display: block !important;
+  }
+}
+</style>
